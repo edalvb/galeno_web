@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Perfiles de Laboratorio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-table { font-size: 12px !important; }
+            body { background: white !important; }
+        }
+        .perfil-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .perfil-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+        }
+        .categoria-basico { border-left-color: #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+        .categoria-completo { border-left-color: #3b82f6; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+        .categoria-especializado { border-left-color: #8b5cf6; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); }
+        .categoria-hormonal { border-left-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+        .categoria-cardiaco { border-left-color: #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); }
+        .categoria-inmunologico { border-left-color: #06b6d4; background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); }
+        .precio-economico { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .precio-moderado { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .precio-premium { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .tiempo-rapido { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .tiempo-normal { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .tiempo-lento { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .examenes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 8px;
+        }
+        .examen-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        .examen-item:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-50 via-white to-blue-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-r from-emerald-600 to-blue-600 p-3 rounded-xl shadow-lg">
+                        <i class="fas fa-vials text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-blue-800 bg-clip-text text-transparent">
+                            Perfiles de Laboratorio
+                        </h1>
+                        <p class="text-gray-600 mt-1">Gestión de perfiles y paquetes de análisis clínicos</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 no-print">
+                    <button onclick="nuevoPerfil()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Perfil
+                    </button>
+                    <button onclick="imprimirPerfiles()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Buscar Perfil</label>
+                    <div class="relative">
+                        <input type="text" id="buscarPerfil" placeholder="Código, nombre, examen..."
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
+                    <select id="filtroCategoria" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <option value="">Todas las categorías</option>
+                        <option value="BASICO">Básicos</option>
+                        <option value="COMPLETO">Completos</option>
+                        <option value="ESPECIALIZADO">Especializados</option>
+                        <option value="HORMONAL">Hormonales</option>
+                        <option value="CARDIACO">Cardíacos</option>
+                        <option value="INMUNOLOGICO">Inmunológicos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tiempo Entrega</label>
+                    <select id="filtroTiempo" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <option value="">Todos los tiempos</option>
+                        <option value="RAPIDO">Rápido (≤ 2 horas)</option>
+                        <option value="NORMAL">Normal (2-24 horas)</option>
+                        <option value="LENTO">Lento (> 24 horas)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Rango de Precio</label>
+                    <select id="filtroPrecio" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                        <option value="">Todos los precios</option>
+                        <option value="ECONOMICO">Económico (< $50,000)</option>
+                        <option value="MODERADO">Moderado ($50,000 - $150,000)</option>
+                        <option value="PREMIUM">Premium (> $150,000)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('tarjetas')" id="btnTarjetas" 
+                                class="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 shadow-md">
+                            <i class="fas fa-th mr-1"></i>Tarjetas
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all duration-200">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="text-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200">
+                    <div class="text-3xl font-bold text-emerald-600" id="totalPerfiles">0</div>
+                    <div class="text-sm text-emerald-800 font-medium">Total Perfiles</div>
+                </div>
+                <div class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                    <div class="text-3xl font-bold text-blue-600" id="perfilesActivos">0</div>
+                    <div class="text-sm text-blue-800 font-medium">Activos</div>
+                </div>
+                <div class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                    <div class="text-3xl font-bold text-purple-600" id="totalExamenes">0</div>
+                    <div class="text-sm text-purple-800 font-medium">Exámenes</div>
+                </div>
+                <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200">
+                    <div class="text-3xl font-bold text-yellow-600" id="tiempoPromedio">0h</div>
+                    <div class="text-sm text-yellow-800 font-medium">Tiempo Promedio</div>
+                </div>
+                <div class="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
+                    <div class="text-3xl font-bold text-red-600" id="precioPromedio">$0</div>
+                    <div class="text-sm text-red-800 font-medium">Precio Promedio</div>
+                </div>
+                <div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border border-indigo-200">
+                    <div class="text-3xl font-bold text-indigo-600" id="categorias">0</div>
+                    <div class="text-sm text-indigo-800 font-medium">Categorías</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Cards View -->
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Table View -->
+        <div id="tableContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Código</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nombre del Perfil</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tiempo Entrega Normal</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tiempo Entrega Urgente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Precio/Costo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div id="modalPerfil" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-screen overflow-y-auto">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold" id="modalTitle">Agregar Nuevo Perfil</h3>
+                </div>
+                <form id="formPerfil" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código del Perfil *</label>
+                            <input type="text" id="modalCodPerfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Perfil *</label>
+                            <select id="modalTipoPerfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Seleccionar tipo</option>
+                                <option value="BASICO">Básico</option>
+                                <option value="COMPLETO">Completo</option>
+                                <option value="ESPECIALIZADO">Especializado</option>
+                                <option value="URGENTE">Urgente</option>
+                                <option value="PREMIUM">Premium</option>
+                                <option value="ECONOMICO">Económico</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Perfil *</label>
+                        <input type="text" id="modalNomPerfil" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                        <textarea id="modalDescripcion" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Descripción detallada del perfil y los exámenes incluidos"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tiempo Entrega Normal (horas) *</label>
+                            <input type="number" id="modalTiempEntn" min="1" max="168" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tiempo Entrega Urgente (horas) *</label>
+                            <input type="number" id="modalTiempEntu" min="1" max="48" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Precio/Costo ($) *</label>
+                            <input type="number" id="modalPreCosto" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                            <select id="modalCategoria" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">Seleccionar categoría</option>
+                                <option value="HEMATOLOGIA">Hematología</option>
+                                <option value="QUIMICA_CLINICA">Química Clínica</option>
+                                <option value="MICROBIOLOGIA">Microbiología</option>
+                                <option value="INMUNOLOGIA">Inmunología</option>
+                                <option value="HORMONAS">Hormonas</option>
+                                <option value="CARDIACO">Marcadores Cardíacos</option>
+                                <option value="HEPATICO">Perfil Hepático</option>
+                                <option value="RENAL">Perfil Renal</option>
+                                <option value="LIPIDICO">Perfil Lipídico</option>
+                                <option value="TIROIDEO">Perfil Tiroideo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Ayuno Requerido</label>
+                            <select id="modalAyuno" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="NO">No requerido</option>
+                                <option value="8_HORAS">8 horas</option>
+                                <option value="12_HORAS">12 horas</option>
+                                <option value="14_HORAS">14 horas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
+                            <select id="modalEstado" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="ACTIVO">Activo</option>
+                                <option value="INACTIVO">Inactivo</option>
+                                <option value="DESCONTINUADO">Descontinuado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Exámenes Incluidos</label>
+                        <textarea id="modalExamenes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Lista de exámenes incluidos en el perfil (separados por comas)"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones</label>
+                        <textarea id="modalObservaciones" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Observaciones adicionales o instrucciones especiales"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let perfiles = [
+            {
+                codperfil: 'PER001',
+                nomperfil: 'HEMOGRAMA COMPLETO',
+                tiempEntn: 24,
+                tiempEntu: 4,
+                preCosto: 25000,
+                tipoPerfil: 'BASICO',
+                categoria: 'HEMATOLOGIA',
+                ayuno: 'NO',
+                descripcion: 'Análisis completo de células sanguíneas, incluyendo recuento de glóbulos rojos, blancos y plaquetas',
+                examenes: 'Glóbulos rojos, Glóbulos blancos, Plaquetas, Hematocrito, Hemoglobina, VCM, HCM, CHCM',
+                estado: 'ACTIVO',
+                observaciones: 'Examen básico de rutina'
+            },
+            {
+                codperfil: 'PER002',
+                nomperfil: 'PERFIL LIPIDICO COMPLETO',
+                tiempEntn: 48,
+                tiempEntu: 8,
+                preCosto: 45000,
+                tipoPerfil: 'COMPLETO',
+                categoria: 'LIPIDICO',
+                ayuno: '12_HORAS',
+                descripcion: 'Evaluación completa del metabolismo lipídico para detección de riesgo cardiovascular',
+                examenes: 'Colesterol total, HDL, LDL, Triglicéridos, VLDL, Índice aterogénico',
+                estado: 'ACTIVO',
+                observaciones: 'Ayuno de 12 horas obligatorio'
+            },
+            {
+                codperfil: 'PER003',
+                nomperfil: 'PERFIL HEPATICO',
+                tiempEntn: 24,
+                tiempEntu: 6,
+                preCosto: 65000,
+                tipoPerfil: 'ESPECIALIZADO',
+                categoria: 'HEPATICO',
+                ayuno: '8_HORAS',
+                descripcion: 'Evaluación integral de la función hepática',
+                examenes: 'ALT, AST, Bilirrubina total y directa, Fosfatasa alcalina, GGT, Proteínas totales, Albúmina',
+                estado: 'ACTIVO',
+                observaciones: 'Incluye marcadores de función hepática'
+            },
+            {
+                codperfil: 'PER004',
+                nomperfil: 'PERFIL TIROIDEO TSH + T4',
+                tiempEntn: 72,
+                tiempEntu: 24,
+                preCosto: 85000,
+                tipoPerfil: 'ESPECIALIZADO',
+                categoria: 'TIROIDEO',
+                ayuno: 'NO',
+                descripcion: 'Evaluación básica de la función tiroidea',
+                examenes: 'TSH, T4 libre',
+                estado: 'ACTIVO',
+                observaciones: 'Perfil básico de tiroides'
+            },
+            {
+                codperfil: 'PER005',
+                nomperfil: 'MARCADORES CARDIACOS',
+                tiempEntn: 6,
+                tiempEntu: 2,
+                preCosto: 180000,
+                tipoPerfil: 'URGENTE',
+                categoria: 'CARDIACO',
+                ayuno: 'NO',
+                descripcion: 'Marcadores de daño cardíaco para diagnóstico de infarto',
+                examenes: 'Troponina I, CK-MB, Mioglobina',
+                estado: 'ACTIVO',
+                observaciones: 'Para emergencias cardíacas - procesamiento urgente'
+            },
+            {
+                codperfil: 'PER006',
+                nomperfil: 'PERFIL RENAL BASICO',
+                tiempEntn: 24,
+                tiempEntu: 6,
+                preCosto: 35000,
+                tipoPerfil: 'BASICO',
+                categoria: 'RENAL',
+                ayuno: 'NO',
+                descripcion: 'Evaluación básica de la función renal',
+                examenes: 'Creatinina, BUN, Ácido úrico, Parcial de orina',
+                estado: 'ACTIVO',
+                observaciones: 'Incluye examen de orina'
+            },
+            {
+                codperfil: 'PER007',
+                nomperfil: 'PERFIL DIABETES COMPLETO',
+                tiempEntn: 48,
+                tiempEntu: 8,
+                preCosto: 95000,
+                tipoPerfil: 'COMPLETO',
+                categoria: 'QUIMICA_CLINICA',
+                ayuno: '8_HORAS',
+                descripcion: 'Evaluación completa para diagnóstico y seguimiento de diabetes',
+                examenes: 'Glucosa basal, Hemoglobina glicosilada, Insulina, Péptido C',
+                estado: 'ACTIVO',
+                observaciones: 'Control diabetológico completo'
+            },
+            {
+                codperfil: 'PER008',
+                nomperfil: 'PERFIL HORMONAL FEMENINO',
+                tiempEntn: 72,
+                tiempEntu: 24,
+                preCosto: 220000,
+                tipoPerfil: 'PREMIUM',
+                categoria: 'HORMONAS',
+                ayuno: 'NO',
+                descripcion: 'Evaluación hormonal completa para mujeres',
+                examenes: 'FSH, LH, Estradiol, Progesterona, Prolactina, Testosterona',
+                estado: 'ACTIVO',
+                observaciones: 'Recolección en día específico del ciclo'
+            },
+            {
+                codperfil: 'PER009',
+                nomperfil: 'EXAMEN GENERAL DE ORINA',
+                tiempEntn: 2,
+                tiempEntu: 1,
+                preCosto: 15000,
+                tipoPerfil: 'ECONOMICO',
+                categoria: 'QUIMICA_CLINICA',
+                ayuno: 'NO',
+                descripcion: 'Análisis básico de orina para detección de alteraciones renales',
+                examenes: 'Aspecto, Color, Densidad, pH, Proteínas, Glucosa, Cetonas, Sedimento',
+                estado: 'ACTIVO',
+                observaciones: 'Examen básico y económico'
+            },
+            {
+                codperfil: 'PER010',
+                nomperfil: 'CULTIVO DE ORINA + ANTIBIOGRAMA',
+                tiempEntn: 96,
+                tiempEntu: 48,
+                preCosto: 55000,
+                tipoPerfil: 'ESPECIALIZADO',
+                categoria: 'MICROBIOLOGIA',
+                ayuno: 'NO',
+                descripcion: 'Identificación de microorganismos en orina y prueba de sensibilidad a antibióticos',
+                examenes: 'Cultivo bacteriano, Identificación, Antibiograma',
+                estado: 'ACTIVO',
+                observaciones: 'Muestra de primera orina de la mañana - técnica estéril'
+            }
+        ];
+
+        let currentView = 'cards';
+        let editingIndex = null;
+
+        function initializeApp() {
+            renderPerfiles();
+            updateStatistics();
+            setupEventListeners();
+            updatePrintDate();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterPerfiles);
+            document.getElementById('tipoFiltro').addEventListener('change', filterPerfiles);
+            document.getElementById('costoFiltro').addEventListener('change', filterPerfiles);
+            document.getElementById('formPerfil').addEventListener('submit', guardarPerfil);
+        }
+
+        function updatePrintDate() {
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function renderPerfiles() {
+            if (currentView === 'cards') {
+                renderCards();
+            } else {
+                renderTable();
+            }
+        }
+
+        function getCardClass(tipoPerfil) {
+            switch(tipoPerfil) {
+                case 'BASICO': return 'perfil-basico';
+                case 'COMPLETO': return 'perfil-completo';
+                case 'ESPECIALIZADO': return 'perfil-especializado';
+                case 'URGENTE': return 'perfil-urgente';
+                case 'PREMIUM': return 'perfil-premium';
+                case 'ECONOMICO': return 'perfil-economico';
+                default: return 'perfil-basico';
+            }
+        }
+
+        function getIconClass(categoria) {
+            switch(categoria) {
+                case 'HEMATOLOGIA': return 'fas fa-tint';
+                case 'QUIMICA_CLINICA': return 'fas fa-flask';
+                case 'MICROBIOLOGIA': return 'fas fa-bacteria';
+                case 'INMUNOLOGIA': return 'fas fa-shield-virus';
+                case 'HORMONAS': return 'fas fa-venus-mars';
+                case 'CARDIACO': return 'fas fa-heartbeat';
+                case 'HEPATICO': return 'fas fa-liver';
+                case 'RENAL': return 'fas fa-kidneys';
+                case 'LIPIDICO': return 'fas fa-chart-line';
+                case 'TIROIDEO': return 'fas fa-gland';
+                default: return 'fas fa-vial';
+            }
+        }
+
+        function formatTiempo(horas) {
+            if (horas < 24) {
+                return `${horas}h`;
+            } else {
+                const dias = Math.floor(horas / 24);
+                const horasRestantes = horas % 24;
+                return horasRestantes > 0 ? `${dias}d ${horasRestantes}h` : `${dias}d`;
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const filteredData = getFilteredPerfiles();
+            
+            container.innerHTML = filteredData.map(perfil => {
+                return `
+                <div class="${getCardClass(perfil.tipoPerfil)} text-white rounded-lg shadow-lg card-hover transition-all duration-300">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                    <i class="${getIconClass(perfil.categoria)} text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold">${perfil.nomperfil}</h3>
+                                    <p class="text-blue-100">Código: ${perfil.codperfil}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-white bg-opacity-20 rounded text-sm font-bold">${perfil.tipoPerfil}</span>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Categoría:</span>
+                                <span class="font-semibold">${perfil.categoria || 'General'}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Precio:</span>
+                                <span class="font-bold text-lg">$${perfil.preCosto.toLocaleString()}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">T. Normal:</span>
+                                <span class="font-semibold">${formatTiempo(perfil.tiempEntn)}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">T. Urgente:</span>
+                                <span class="font-semibold">${formatTiempo(perfil.tiempEntu)}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Ayuno:</span>
+                                <span class="text-xs">${perfil.ayuno === 'NO' ? 'No requerido' : perfil.ayuno.replace('_', ' ')}</span>
+                            </div>
+                            ${perfil.descripcion ? `
+                            <div class="text-sm">
+                                <span class="block mb-1">Descripción:</span>
+                                <span class="text-xs">${perfil.descripcion}</span>
+                            </div>
+                            ` : ''}
+                            ${perfil.examenes ? `
+                            <div class="text-sm">
+                                <span class="block mb-1">Exámenes:</span>
+                                <span class="text-xs italic">${perfil.examenes}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="flex space-x-2 no-print">
+                            <button onclick="editarPerfil(${getOriginalIndex(perfil)})" 
+                                    class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Editar
+                            </button>
+                            <button onclick="eliminarPerfil(${getOriginalIndex(perfil)})" 
+                                    class="flex-1 bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filteredData = getFilteredPerfiles();
+            
+            tbody.innerHTML = filteredData.map(perfil => {
+                const tipoBadge = getTipoBadge(perfil.tipoPerfil);
+                
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${perfil.codperfil}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        <div class="font-medium">${perfil.nomperfil}</div>
+                        <div class="text-xs text-gray-500">${perfil.categoria || 'General'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatTiempo(perfil.tiempEntn)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatTiempo(perfil.tiempEntu)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                        $${perfil.preCosto.toLocaleString()}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${tipoBadge}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarPerfil(${getOriginalIndex(perfil)})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarPerfil(${getOriginalIndex(perfil)})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function getTipoBadge(tipo) {
+            const badgeClasses = {
+                'BASICO': 'bg-green-100 text-green-800',
+                'COMPLETO': 'bg-blue-100 text-blue-800',
+                'ESPECIALIZADO': 'bg-purple-100 text-purple-800',
+                'URGENTE': 'bg-red-100 text-red-800',
+                'PREMIUM': 'bg-yellow-100 text-yellow-800',
+                'ECONOMICO': 'bg-gray-100 text-gray-800'
+            };
+            
+            const icons = {
+                'BASICO': 'fas fa-flask',
+                'COMPLETO': 'fas fa-microscope',
+                'ESPECIALIZADO': 'fas fa-dna',
+                'URGENTE': 'fas fa-bolt',
+                'PREMIUM': 'fas fa-crown',
+                'ECONOMICO': 'fas fa-dollar-sign'
+            };
+            
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClasses[tipo]}">
+                        <i class="${icons[tipo]} mr-1"></i>${tipo}
+                    </span>`;
+        }
+
+        function getOriginalIndex(perfil) {
+            return perfiles.findIndex(p => p.codperfil === perfil.codperfil);
+        }
+
+        function getFilteredPerfiles() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tipoFiltro = document.getElementById('tipoFiltro').value;
+            const costoFiltro = document.getElementById('costoFiltro').value;
+            
+            return perfiles.filter(perfil => {
+                const matchesSearch = !searchTerm || 
+                    perfil.codperfil.toLowerCase().includes(searchTerm) ||
+                    perfil.nomperfil.toLowerCase().includes(searchTerm);
+                
+                const matchesTipo = !tipoFiltro || perfil.tipoPerfil === tipoFiltro;
+                
+                let matchesCosto = true;
+                if (costoFiltro) {
+                    switch(costoFiltro) {
+                        case 'BAJO':
+                            matchesCosto = perfil.preCosto <= 50000;
+                            break;
+                        case 'MEDIO':
+                            matchesCosto = perfil.preCosto > 50000 && perfil.preCosto <= 150000;
+                            break;
+                        case 'ALTO':
+                            matchesCosto = perfil.preCosto > 150000;
+                            break;
+                    }
+                }
+                
+                return matchesSearch && matchesTipo && matchesCosto;
+            });
+        }
+
+        function filterPerfiles() {
+            renderPerfiles();
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const viewCards = document.getElementById('viewCards');
+            const viewTable = document.getElementById('viewTable');
+            
+            if (view === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                viewCards.classList.remove('bg-gray-300', 'text-gray-700');
+                viewCards.classList.add('bg-blue-500', 'text-white');
+                viewTable.classList.remove('bg-blue-500', 'text-white');
+                viewTable.classList.add('bg-gray-300', 'text-gray-700');
+            } else {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                viewTable.classList.remove('bg-gray-300', 'text-gray-700');
+                viewTable.classList.add('bg-blue-500', 'text-white');
+                viewCards.classList.remove('bg-blue-500', 'text-white');
+                viewCards.classList.add('bg-gray-300', 'text-gray-700');
+            }
+            
+            renderPerfiles();
+        }
+
+        function updateStatistics() {
+            const total = perfiles.length;
+            const basicos = perfiles.filter(p => p.tipoPerfil === 'BASICO').length;
+            const completos = perfiles.filter(p => p.tipoPerfil === 'COMPLETO').length;
+            const especializados = perfiles.filter(p => p.tipoPerfil === 'ESPECIALIZADO').length;
+            const costoPromedio = perfiles.reduce((sum, p) => sum + p.preCosto, 0) / total;
+            
+            document.getElementById('totalPerfiles').textContent = total;
+            document.getElementById('totalBasicos').textContent = basicos;
+            document.getElementById('totalCompletos').textContent = completos;
+            document.getElementById('totalEspecializados').textContent = especializados;
+            document.getElementById('costoPromedio').textContent = '$' + Math.round(costoPromedio).toLocaleString();
+        }
+
+        function agregarPerfil() {
+            editingIndex = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Nuevo Perfil';
+            document.getElementById('formPerfil').reset();
+            document.getElementById('modalPerfil').classList.remove('hidden');
+        }
+
+        function editarPerfil(index) {
+            editingIndex = index;
+            const perfil = perfiles[index];
+            
+            document.getElementById('modalTitle').textContent = 'Editar Perfil';
+            document.getElementById('modalCodPerfil').value = perfil.codperfil;
+            document.getElementById('modalNomPerfil').value = perfil.nomperfil;
+            document.getElementById('modalTiempEntn').value = perfil.tiempEntn;
+            document.getElementById('modalTiempEntu').value = perfil.tiempEntu;
+            document.getElementById('modalPreCosto').value = perfil.preCosto;
+            document.getElementById('modalTipoPerfil').value = perfil.tipoPerfil;
+            document.getElementById('modalCategoria').value = perfil.categoria || '';
+            document.getElementById('modalAyuno').value = perfil.ayuno || 'NO';
+            document.getElementById('modalDescripcion').value = perfil.descripcion || '';
+            document.getElementById('modalExamenes').value = perfil.examenes || '';
+            document.getElementById('modalEstado').value = perfil.estado;
+            document.getElementById('modalObservaciones').value = perfil.observaciones || '';
+            
+            document.getElementById('modalPerfil').classList.remove('hidden');
+        }
+
+        function guardarPerfil(event) {
+            event.preventDefault();
+            
+            const formData = {
+                codperfil: document.getElementById('modalCodPerfil').value.trim(),
+                nomperfil: document.getElementById('modalNomPerfil').value.trim().toUpperCase(),
+                tiempEntn: parseInt(document.getElementById('modalTiempEntn').value),
+                tiempEntu: parseInt(document.getElementById('modalTiempEntu').value),
+                preCosto: parseFloat(document.getElementById('modalPreCosto').value),
+                tipoPerfil: document.getElementById('modalTipoPerfil').value,
+                categoria: document.getElementById('modalCategoria').value,
+                ayuno: document.getElementById('modalAyuno').value,
+                descripcion: document.getElementById('modalDescripcion').value.trim(),
+                examenes: document.getElementById('modalExamenes').value.trim(),
+                estado: document.getElementById('modalEstado').value,
+                observaciones: document.getElementById('modalObservaciones').value.trim()
+            };
+            
+            if (editingIndex !== null) {
+                // Edit existing
+                perfiles[editingIndex] = formData;
+            } else {
+                // Add new
+                if (perfiles.find(p => p.codperfil === formData.codperfil)) {
+                    alert('Ya existe un perfil con ese código');
+                    return;
+                }
+                perfiles.push(formData);
+            }
+            
+            renderPerfiles();
+            updateStatistics();
+            cerrarModal();
+        }
+
+        function eliminarPerfil(index) {
+            if (confirm('¿Está seguro de que desea eliminar este perfil?')) {
+                perfiles.splice(index, 1);
+                renderPerfiles();
+                updateStatistics();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalPerfil').classList.add('hidden');
+            editingIndex = null;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

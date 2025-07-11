@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Sistema de Gestión Médica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+    <!-- Header / Navbar -->
+    <header class="bg-blue-800 text-white shadow-lg">
+        <div class="flex items-center justify-between px-4 py-2">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-heartbeat text-2xl text-red-400"></i>
+                <h1 class="text-xl font-bold">MEG@SYS</h1>
+                <span class="text-sm text-blue-200">Sistema de Gestión Médica</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="usuarioInfo" class="text-sm bg-blue-700 px-3 py-1 rounded">
+                    <i class="fas fa-user mr-1"></i>
+                    Usuario: <span id="nombreUsuario">Admin</span>
+                </span>
+                <span id="fechaHora" class="text-sm"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Bar -->
+    <nav class="bg-gray-200 border-b border-gray-300">
+        <div class="flex flex-wrap">
+            <!-- Archivos Menu -->
+            <div class="relative group">
+                <button class="px-4 py-2 hover:bg-gray-300 focus:outline-none focus:bg-gray-300 flex items-center">
+                    <i class="fas fa-folder mr-1"></i>
+                    Archivos
+                    <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </button>
+                <div class="absolute left-0 mt-0 w-56 bg-white border border-gray-300 shadow-lg hidden group-hover:block z-50">
+                    <a href="#" onclick="abrirMantenimiento()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-cogs mr-2 text-blue-600"></i>
+                        Mantenimiento
+                    </a>
+                    <a href="#" onclick="abrirMovimientos()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-file-medical mr-2 text-green-600"></i>
+                        Orden de Servicios
+                    </a>
+                    <a href="#" onclick="abrirServiciosInternacion()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-bed mr-2 text-purple-600"></i>
+                        Servicios de Internación
+                    </a>
+                    <a href="#" onclick="abrirHistoriaClinica()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-notes-medical mr-2 text-indigo-600"></i>
+                        Atención Médica
+                    </a>
+                    <a href="#" onclick="abrirLiquidaciones()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-calculator mr-2 text-yellow-600"></i>
+                        Liquidaciones
+                    </a>
+                    <hr class="my-1">
+                    <a href="#" onclick="salirSistema()" class="block px-4 py-2 hover:bg-red-50 text-red-600">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Salir
+                    </a>
+                </div>
+            </div>
+
+            <!-- Informes Menu -->
+            <div class="relative group">
+                <button class="px-4 py-2 hover:bg-gray-300 focus:outline-none focus:bg-gray-300 flex items-center">
+                    <i class="fas fa-chart-bar mr-1"></i>
+                    Informes
+                    <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </button>
+                <div class="absolute left-0 mt-0 w-64 bg-white border border-gray-300 shadow-lg hidden group-hover:block z-50 max-h-96 overflow-y-auto">
+                    <a href="#" onclick="imprimirPacientes()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-users mr-2 text-blue-600"></i>
+                        Pacientes
+                    </a>
+                    <a href="#" onclick="imprimirHistoriaClinica()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-file-medical-alt mr-2 text-green-600"></i>
+                        Historia Clínica
+                    </a>
+                    <a href="#" onclick="imprimirFichaMedica()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-notes-medical mr-2 text-indigo-600"></i>
+                        Ficha Médica
+                    </a>
+                    <a href="#" onclick="imprimirOrdenes()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-clipboard-list mr-2 text-purple-600"></i>
+                        Órdenes de Servicio
+                    </a>
+                    <a href="#" onclick="imprimirFacturas()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-file-invoice mr-2 text-red-600"></i>
+                        Facturas
+                    </a>
+                    <a href="#" onclick="imprimirAranceles()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-money-bill mr-2 text-green-600"></i>
+                        Aranceles
+                    </a>
+                    <a href="#" onclick="imprimirInternaciones()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-bed mr-2 text-indigo-600"></i>
+                        Internaciones
+                    </a>
+                    <a href="#" onclick="imprimirLineas()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-stream mr-2 text-yellow-600"></i>
+                        Líneas
+                    </a>
+                    <a href="#" onclick="imprimirInsumos()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-boxes mr-2 text-orange-600"></i>
+                        Insumos
+                    </a>
+                    <a href="#" onclick="imprimirDoctores()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-user-md mr-2 text-teal-600"></i>
+                        Doctor
+                    </a>
+                    <a href="#" onclick="imprimirAreas()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-map-marker-alt mr-2 text-red-600"></i>
+                        Área
+                    </a>
+                    <a href="#" onclick="imprimirEspecialidades()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-stethoscope mr-2 text-pink-600"></i>
+                        Especialidad
+                    </a>
+                    <a href="#" onclick="imprimirInstitutos()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-hospital mr-2 text-cyan-600"></i>
+                        Institutos
+                    </a>
+                    <a href="#" onclick="imprimirCiudades()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-city mr-2 text-lime-600"></i>
+                        Ciudades
+                    </a>
+                    <a href="#" onclick="imprimirUsuarios()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-users-cog mr-2 text-gray-600"></i>
+                        Usuarios
+                    </a>
+                    <a href="#" onclick="imprimirRecetas()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-prescription-bottle-alt mr-2 text-green-600"></i>
+                        Recetas e Indicaciones
+                    </a>
+                    <a href="#" onclick="imprimirResultados()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-flask mr-2 text-blue-600"></i>
+                        Resultados de Análisis
+                    </a>
+                    <a href="#" onclick="imprimirInsumos()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-boxes mr-2 text-orange-600"></i>
+                        Gestión de Insumos
+                    </a>
+                    <a href="#" onclick="imprimirLiquidacionDoctor()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-user-md mr-2 text-teal-600"></i>
+                        Liquidación Doctores
+                    </a>
+                    <a href="#" onclick="imprimirListadoCompleto()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-users mr-2 text-indigo-600"></i>
+                        Listado Completo Pacientes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Consulta Menu -->
+            <div class="relative group">
+                <button class="px-4 py-2 hover:bg-gray-300 focus:outline-none focus:bg-gray-300 flex items-center">
+                    <i class="fas fa-search mr-1"></i>
+                    Consulta
+                    <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </button>
+                <div class="absolute left-0 mt-0 w-64 bg-white border border-gray-300 shadow-lg hidden group-hover:block z-50 max-h-96 overflow-y-auto">
+                    <a href="#" onclick="consultarPacientes()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-users mr-2 text-blue-600"></i>
+                        Pacientes
+                    </a>
+                    <a href="#" onclick="consultarLineas()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-stream mr-2 text-green-600"></i>
+                        Líneas
+                    </a>
+                    <a href="#" onclick="consultarInsumos()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-boxes mr-2 text-purple-600"></i>
+                        Insumos
+                    </a>
+                    <a href="#" onclick="consultarDoctores()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-user-md mr-2 text-indigo-600"></i>
+                        Doctor
+                    </a>
+                    <a href="#" onclick="consultarAreas()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-map-marker-alt mr-2 text-yellow-600"></i>
+                        Área
+                    </a>
+                    <a href="#" onclick="consultarEspecialidades()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-stethoscope mr-2 text-orange-600"></i>
+                        Especialidad
+                    </a>
+                    <a href="#" onclick="consultarInstitutos()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-hospital mr-2 text-teal-600"></i>
+                        Instituto
+                    </a>
+                    <a href="#" onclick="consultarUsuarios()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-users-cog mr-2 text-red-600"></i>
+                        Usuarios
+                    </a>
+                    <a href="#" onclick="consultarCiudades()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-city mr-2 text-pink-600"></i>
+                        Ciudad
+                    </a>
+                </div>
+            </div>
+
+            <!-- Help Menu -->
+            <div class="relative group ml-auto">
+                <button class="px-4 py-2 hover:bg-gray-300 focus:outline-none focus:bg-gray-300 flex items-center">
+                    <i class="fas fa-question-circle mr-1"></i>
+                    Ayuda
+                    <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </button>
+                <div class="absolute right-0 mt-0 w-48 bg-white border border-gray-300 shadow-lg hidden group-hover:block z-50">
+                    <a href="#" onclick="mostrarAyuda()" class="block px-4 py-2 hover:bg-blue-50 border-b border-gray-100">
+                        <i class="fas fa-book mr-2 text-blue-600"></i>
+                        Manual de Usuario
+                    </a>
+                    <a href="#" onclick="mostrarAcercaDe()" class="block px-4 py-2 hover:bg-blue-50">
+                        <i class="fas fa-info-circle mr-2 text-green-600"></i>
+                        Acerca de MEG@SYS
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toolbar -->
+    <div class="bg-gray-100 border-b border-gray-300 p-2">
+        <div class="flex flex-wrap gap-1">
+            <!-- Navigation -->
+            <div class="flex border-r border-gray-300 pr-2 mr-2">
+                <button onclick="primerRegistro()" class="toolbar-btn" title="Primer registro">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button onclick="registroAnterior()" class="toolbar-btn" title="Registro anterior">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <button onclick="registroSiguiente()" class="toolbar-btn" title="Registro siguiente">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button onclick="ultimoRegistro()" class="toolbar-btn" title="Último registro">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+
+            <!-- Edit operations -->
+            <div class="flex border-r border-gray-300 pr-2 mr-2">
+                <button onclick="cortarRegistro()" class="toolbar-btn" title="Cortar">
+                    <i class="fas fa-cut"></i>
+                </button>
+                <button onclick="copiarRegistro()" class="toolbar-btn" title="Copiar">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button onclick="pegarRegistro()" class="toolbar-btn" title="Pegar">
+                    <i class="fas fa-paste"></i>
+                </button>
+                <button onclick="buscarRegistro()" class="toolbar-btn" title="Buscar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <!-- Record operations -->
+            <div class="flex border-r border-gray-300 pr-2 mr-2">
+                <button onclick="modificarRegistro()" class="toolbar-btn" title="Modificar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="actualizarVista()" class="toolbar-btn" title="Actualizar">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button onclick="agregarRegistro()" class="toolbar-btn" title="Agregar">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Save/Delete -->
+            <div class="flex border-r border-gray-300 pr-2 mr-2">
+                <button onclick="grabarRegistro()" class="toolbar-btn" title="Grabar">
+                    <i class="fas fa-save"></i>
+                </button>
+                <button onclick="imprimirActual()" class="toolbar-btn" title="Imprimir">
+                    <i class="fas fa-print"></i>
+                </button>
+                <button onclick="eliminarRegistro()" class="toolbar-btn" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button onclick="cancelarOperacion()" class="toolbar-btn" title="Cancelar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- System -->
+            <div class="flex">
+                <button onclick="salirSistema()" class="toolbar-btn" title="Salir">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+                <button onclick="mostrarAyuda()" class="toolbar-btn" title="Ayuda">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area (MDI Container) -->
+    <main class="flex-1 relative bg-white overflow-hidden">
+        <!-- Welcome Panel -->
+        <div id="welcomePanel" class="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div class="text-center">
+                <i class="fas fa-heartbeat text-6xl text-blue-600 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Bienvenido a MEG@SYS</h2>
+                <p class="text-lg text-gray-600 mb-6">Sistema Integral de Gestión Médica</p>
+                <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                    <button onclick="abrirMantenimiento()" class="quick-action-btn bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-cogs text-2xl mb-2"></i>
+                        <span>Mantenimiento</span>
+                    </button>
+                    <button onclick="abrirMovimientos()" class="quick-action-btn bg-green-600 hover:bg-green-700">
+                        <i class="fas fa-file-medical text-2xl mb-2"></i>
+                        <span>Órdenes</span>
+                    </button>
+                    <button onclick="abrirHistoriaClinica()" class="quick-action-btn bg-purple-600 hover:bg-purple-700">
+                        <i class="fas fa-notes-medical text-2xl mb-2"></i>
+                        <span>Historia Clínica</span>
+                    </button>
+                    <button onclick="abrirLiquidaciones()" class="quick-action-btn bg-yellow-600 hover:bg-yellow-700">
+                        <i class="fas fa-calculator text-2xl mb-2"></i>
+                        <span>Liquidaciones</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Container -->
+        <div id="contentContainer" class="hidden h-full">
+            <iframe id="contentFrame" class="w-full h-full border-0" src=""></iframe>
+        </div>
+    </main>
+
+    <!-- Status Bar -->
+    <footer class="bg-gray-200 border-t border-gray-300 px-4 py-2">
+        <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center space-x-4">
+                <span id="statusMessage" class="text-gray-700">Listo</span>
+                <span id="recordInfo" class="text-blue-600"></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="connectionStatus" class="text-green-600">
+                    <i class="fas fa-circle text-xs mr-1"></i>
+                    Conectado
+                </span>
+                <span id="systemTime" class="text-gray-600"></span>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .toolbar-btn {
+            @apply px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors duration-150;
+        }
+        
+        .quick-action-btn {
+            @apply text-white p-6 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 flex flex-col items-center;
+        }
+        
+        .group:hover .group-hover\\:block {
+            display: block;
+        }
+        
+        /* Animaciones */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script>
+        let currentModule = null;
+        let isRecordMode = false;
+
+        // Inicialización
+        function inicializar() {
+            actualizarFechaHora();
+            setInterval(actualizarFechaHora, 1000);
+            updateStatus('Sistema iniciado correctamente');
+        }
+
+        function actualizarFechaHora() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES');
+            document.getElementById('fechaHora').textContent = `${fecha} ${hora}`;
+            document.getElementById('systemTime').textContent = hora;
+        }
+
+        function updateStatus(mensaje) {
+            document.getElementById('statusMessage').textContent = mensaje;
+        }
+
+        function updateRecordInfo(info) {
+            document.getElementById('recordInfo').textContent = info;
+        }
+
+        // Funciones de navegación MDI
+        function mostrarContenido(url, titulo) {
+            const welcomePanel = document.getElementById('welcomePanel');
+            const contentContainer = document.getElementById('contentContainer');
+            const contentFrame = document.getElementById('contentFrame');
+            
+            welcomePanel.classList.add('hidden');
+            contentContainer.classList.remove('hidden');
+            contentFrame.src = url;
+            
+            updateStatus(`Cargando: ${titulo}`);
+            
+            // Manejar carga del iframe
+            contentFrame.onload = function() {
+                updateStatus(`${titulo} cargado`);
+            };
+        }
+
+        function volverAlInicio() {
+            const welcomePanel = document.getElementById('welcomePanel');
+            const contentContainer = document.getElementById('contentContainer');
+            
+            contentContainer.classList.add('hidden');
+            welcomePanel.classList.remove('hidden');
+            
+            currentModule = null;
+            updateStatus('Listo');
+            updateRecordInfo('');
+        }
+
+        // Funciones de menú - Archivos
+        function abrirMantenimiento() {
+            mostrarContenido('MANTENIMIENTO.html', 'Mantenimiento del Sistema');
+            currentModule = 'mantenimiento';
+        }
+
+        function abrirMovimientos() {
+            mostrarContenido('MOVIMIENTOS.html', 'Órdenes de Servicios');
+            currentModule = 'movimientos';
+        }
+
+        function abrirServiciosInternacion() {
+            mostrarContenido('SERVICIOINTERNACION.html', 'Servicios de Internación');
+            currentModule = 'internacion';
+        }
+
+        function abrirHistoriaClinica() {
+            mostrarContenido('HISTORIACLINICA.html', 'Historia Clínica');
+            currentModule = 'historia';
+        }
+
+        function abrirLiquidaciones() {
+            mostrarContenido('LIQUIDACIONES.html', 'Liquidaciones');
+            currentModule = 'liquidaciones';
+        }
+
+        // Funciones de consulta
+        function consultarPacientes() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM PACIENTES', 'Consulta de Pacientes');
+        }
+
+        function consultarLineas() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM LINEAS', 'Consulta de Líneas');
+        }
+
+        function consultarInsumos() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM INSUMOS', 'Consulta de Insumos');
+        }
+
+        function consultarDoctores() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM DOCTOR', 'Consulta de Doctores');
+        }
+
+        function consultarAreas() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM AREA', 'Consulta de Áreas');
+        }
+
+        function consultarEspecialidades() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM ESPECIALIDAD', 'Consulta de Especialidades');
+        }
+
+        function consultarInstitutos() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM INSTITUTO', 'Consulta de Institutos');
+        }
+
+        function consultarUsuarios() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM USUARIOS', 'Consulta de Usuarios');
+        }
+
+        function consultarCiudades() {
+            mostrarContenido('FrmCon.html?query=SELECT * FROM CIUDADES', 'Consulta de Ciudades');
+        }
+
+        // Funciones de toolbar
+        function primerRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('first');
+                updateStatus('Primer registro');
+            }
+        }
+
+        function registroAnterior() {
+            if (currentModule) {
+                enviarComandoAFrame('previous');
+                updateStatus('Registro anterior');
+            }
+        }
+
+        function registroSiguiente() {
+            if (currentModule) {
+                enviarComandoAFrame('next');
+                updateStatus('Registro siguiente');
+            }
+        }
+
+        function ultimoRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('last');
+                updateStatus('Último registro');
+            }
+        }
+
+        function cortarRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('cut');
+                updateStatus('Registro cortado');
+            }
+        }
+
+        function copiarRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('copy');
+                updateStatus('Registro copiado');
+            }
+        }
+
+        function pegarRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('paste');
+                updateStatus('Registro pegado');
+            }
+        }
+
+        function buscarRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('search');
+                updateStatus('Búsqueda activada');
+            }
+        }
+
+        function modificarRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('edit');
+                isRecordMode = true;
+                updateStatus('Modo edición activado');
+            }
+        }
+
+        function actualizarVista() {
+            if (currentModule) {
+                enviarComandoAFrame('refresh');
+                updateStatus('Vista actualizada');
+            }
+        }
+
+        function agregarRegistro() {
+            if (currentModule) {
+                enviarComandoAFrame('add');
+                isRecordMode = true;
+                updateStatus('Agregando nuevo registro');
+            }
+        }
+
+        function grabarRegistro() {
+            if (currentModule && isRecordMode) {
+                enviarComandoAFrame('save');
+                isRecordMode = false;
+                updateStatus('Registro guardado');
+            }
+        }
+
+        function eliminarRegistro() {
+            if (currentModule) {
+                if (confirm('¿Está seguro de que desea eliminar este registro?')) {
+                    enviarComandoAFrame('delete');
+                    updateStatus('Registro eliminado');
+                }
+            }
+        }
+
+        function cancelarOperacion() {
+            if (currentModule && isRecordMode) {
+                enviarComandoAFrame('cancel');
+                isRecordMode = false;
+                updateStatus('Operación cancelada');
+            }
+        }
+
+        function imprimirActual() {
+            if (currentModule) {
+                enviarComandoAFrame('print');
+                updateStatus('Imprimiendo...');
+            }
+        }
+
+        function enviarComandoAFrame(comando) {
+            const frame = document.getElementById('contentFrame');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({
+                    type: 'toolbar_command',
+                    command: comando
+                }, '*');
+            }
+        }
+
+        // Funciones de informes
+        function imprimirPacientes() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de pacientes...');
+        }
+
+        function imprimirHistoriaClinica() {
+            mostrarContenido('../INFORMES/hist_consultas.html', 'Historial de Consultas');
+            updateStatus('Cargando historial de consultas...');
+        }
+
+        function imprimirFichaMedica() {
+            mostrarContenido('../INFORMES/FICHAMEDICA.html', 'Ficha Médica');
+            updateStatus('Cargando ficha médica...');
+        }
+
+        function imprimirOrdenes() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de órdenes...');
+        }
+
+        function imprimirFacturas() {
+            mostrarContenido('../INFORMES/FACTURA.html', 'Informe de Facturas');
+            updateStatus('Cargando informe de facturas...');
+        }
+
+        function imprimirAranceles() {
+            mostrarContenido('../INFORMES/ARANCEL.html', 'Informe de Aranceles');
+            updateStatus('Cargando informe de aranceles...');
+        }
+
+        function imprimirInternaciones() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de internaciones...');
+        }
+
+        function imprimirLineas() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de líneas...');
+        }
+
+        function imprimirInsumos() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de insumos...');
+        }
+
+        function imprimirDoctores() {
+            mostrarContenido('../INFORMES/LISTADOCTOR.html', 'Listado de Doctores');
+            updateStatus('Cargando listado de doctores...');
+        }
+
+        function imprimirPacientes() {
+            mostrarContenido('../INFORMES/LISTAPACIENTE.html', 'Listado de Pacientes');
+            updateStatus('Cargando listado de pacientes...');
+        }
+
+        function imprimirAreas() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de áreas...');
+        }
+
+        function imprimirEspecialidades() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de especialidades...');
+        }
+
+        function imprimirInstitutos() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de institutos...');
+        }
+
+        function imprimirCiudades() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de ciudades...');
+        }
+
+        function imprimirUsuarios() {
+            window.open('about:blank', '_blank');
+            updateStatus('Generando informe de usuarios...');
+        }
+
+        function imprimirRecetas() {
+            mostrarContenido('../INFORMES/INDICACIONES.html', 'Recetas e Indicaciones');
+            updateStatus('Cargando recetas e indicaciones...');
+        }
+
+        function imprimirResultados() {
+            mostrarContenido('../INFORMES/informe de resultados.html', 'Resultados de Análisis');
+            updateStatus('Cargando resultados de análisis...');
+        }
+
+        function imprimirInsumos() {
+            mostrarContenido('../INFORMES/INSUMOS.html', 'Gestión de Insumos');
+            updateStatus('Cargando gestión de insumos...');
+        }
+
+        function imprimirLiquidacionDoctor() {
+            mostrarContenido('../INFORMES/LIQ_DOCTOR.html', 'Liquidación de Doctores');
+            updateStatus('Cargando liquidación de doctores...');
+        }
+
+        function imprimirListadoCompleto() {
+            mostrarContenido('../INFORMES/DataReport1.html', 'Listado Completo de Pacientes');
+            updateStatus('Cargando listado completo de pacientes...');
+        }
+
+        // Funciones de ayuda
+        function mostrarAyuda() {
+            alert('Manual de Usuario\n\nMEG@SYS v1.0\nSistema Integral de Gestión Médica\n\nUse los menús para acceder a las diferentes funcionalidades del sistema.');
+        }
+
+        function mostrarAcercaDe() {
+            alert('MEG@SYS\nSistema Integral de Gestión Médica\n\nVersión 1.0\nDesarrollado en Visual Basic 6.0\nConvertido a HTML5/CSS3/JavaScript\n\n© 2025 - Todos los derechos reservados');
+        }
+
+        function salirSistema() {
+            if (confirm('¿Está seguro de que desea salir del sistema?')) {
+                window.location.href = 'frmODBCLogon.html';
+            }
+        }
+
+        // Manejar mensajes desde iframes
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'status_update') {
+                updateStatus(event.data.message);
+            } else if (event.data.type === 'record_info') {
+                updateRecordInfo(event.data.info);
+            } else if (event.data.type === 'close_window') {
+                volverAlInicio();
+            }
+        });
+
+        // Manejo de teclas globales
+        document.addEventListener('keydown', function(event) {
+            // F1 - Ayuda
+            if (event.key === 'F1') {
+                event.preventDefault();
+                mostrarAyuda();
+            }
+            // F2 - Grabar
+            else if (event.key === 'F2') {
+                event.preventDefault();
+                grabarRegistro();
+            }
+            // F3 - Buscar
+            else if (event.key === 'F3') {
+                event.preventDefault();
+                buscarRegistro();
+            }
+            // F5 - Actualizar
+            else if (event.key === 'F5') {
+                event.preventDefault();
+                actualizarVista();
+            }
+            // Alt + F4 - Salir
+            else if (event.key === 'F4' && event.altKey) {
+                event.preventDefault();
+                salirSistema();
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

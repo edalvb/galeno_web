@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios OLAP por Institutos - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg mb-4 p-4">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-building mr-3 text-blue-600"></i>
+                SERVICIOS OLAP DE GALENO POR INSTITUTOS
+            </h2>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="bg-white rounded-lg shadow-lg mb-4 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Período</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="fechaDesde" class="form-input" value="2024-01-01">
+                        <input type="date" id="fechaHasta" class="form-input" value="2024-12-31">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Instituto</label>
+                    <select id="institutoFiltro" class="form-input">
+                        <option value="">Todos los Institutos</option>
+                        <option value="INST001">Hospital Central</option>
+                        <option value="INST002">Clínica San José</option>
+                        <option value="INST003">Centro Médico Norte</option>
+                        <option value="INST004">Hospital Universitario</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Servicio</label>
+                    <select id="tipoServicioFiltro" class="form-input">
+                        <option value="">Todos los Tipos</option>
+                        <option value="MED">Medicina</option>
+                        <option value="LAB">Laboratorio</option>
+                        <option value="QUI">Quirúrgico</option>
+                        <option value="ENF">Enfermería</option>
+                        <option value="TER">Terapia</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end space-x-2">
+                <button onclick="filtrarDatos()" class="btn-primary">
+                    <i class="fas fa-filter mr-2"></i>
+                    Aplicar Filtros
+                </button>
+                <button onclick="exportarDatos()" class="btn-secondary">
+                    <i class="fas fa-download mr-2"></i>
+                    Exportar
+                </button>
+                <button onclick="actualizarDatos()" class="btn-refresh">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Charts and Data Visualization -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Services by Institute Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    Servicios por Instituto
+                </h3>
+                <canvas id="chartInstitutos" height="300"></canvas>
+            </div>
+
+            <!-- Revenue by Institute Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    Ingresos por Instituto
+                </h3>
+                <canvas id="chartIngresos" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Data Summary Table -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-4 bg-gray-50 rounded-t-lg border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-table mr-2"></i>
+                        Resumen de Servicios por Instituto
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button onclick="toggleChart('bar')" class="btn-chart active" data-type="bar">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                        <button onclick="toggleChart('pie')" class="btn-chart" data-type="pie">
+                            <i class="fas fa-chart-pie"></i>
+                        </button>
+                        <button onclick="toggleChart('line')" class="btn-chart" data-type="line">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="tablaInstitutos">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('instituto')">
+                                Instituto 
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('servicios')">
+                                Total Servicios
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('pacientes')">
+                                Pacientes Atendidos
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('ingresos')">
+                                Ingresos Totales
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('promedio')">
+                                Promedio por Paciente
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="institutosBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="modalTitle" class="text-lg font-semibold">Detalle del Instituto</h3>
+                        <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="modalContent" class="overflow-x-auto">
+                        <!-- Contenido dinámico -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="cerrarModal()" class="btn-secondary">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .btn-refresh {
+            background-color: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-refresh:hover {
+            background-color: #059669;
+        }
+        
+        .btn-chart {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-chart.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .table-header {
+            padding: 12px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table-cell {
+            padding: 12px 6px;
+            font-size: 14px;
+            color: #1f2937;
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let datosInstitutos = [];
+        let chartInstitutos = null;
+        let chartIngresos = null;
+        let ordenActual = { campo: '', direccion: 'asc' };
+
+        // Datos de ejemplo
+        const datosEjemplo = [
+            {
+                codigo: 'INST001',
+                nombre: 'Hospital Central',
+                servicios: 1250,
+                pacientes: 450,
+                ingresos: 45000000,
+                promedio: 100000,
+                direccion: 'Av. Principal 123',
+                telefono: '555-0001'
+            },
+            {
+                codigo: 'INST002',
+                nombre: 'Clínica San José',
+                servicios: 980,
+                pacientes: 320,
+                ingresos: 32000000,
+                promedio: 100000,
+                direccion: 'Calle 45 No. 67',
+                telefono: '555-0002'
+            },
+            {
+                codigo: 'INST003',
+                nombre: 'Centro Médico Norte',
+                servicios: 750,
+                pacientes: 280,
+                ingresos: 28000000,
+                promedio: 100000,
+                direccion: 'Carrera 12 No. 89',
+                telefono: '555-0003'
+            },
+            {
+                codigo: 'INST004',
+                nombre: 'Hospital Universitario',
+                servicios: 1100,
+                pacientes: 380,
+                ingresos: 38000000,
+                promedio: 100000,
+                direccion: 'Zona Universitaria',
+                telefono: '555-0004'
+            }
+        ];
+
+        function inicializar() {
+            datosInstitutos = [...datosEjemplo];
+            cargarTabla();
+            inicializarGraficos();
+            
+            // Manejar mensajes del toolbar
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'toolbar_command') {
+                    manejarComandoToolbar(event.data.command);
+                }
+            });
+        }
+
+        function cargarTabla() {
+            const tbody = document.getElementById('institutosBody');
+            tbody.innerHTML = datosInstitutos.map(instituto => `
+                <tr class="hover:bg-gray-50">
+                    <td class="table-cell">
+                        <div class="font-medium text-gray-900">${instituto.nombre}</div>
+                        <div class="text-sm text-gray-500">${instituto.codigo}</div>
+                    </td>
+                    <td class="table-cell text-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            ${instituto.servicios.toLocaleString()}
+                        </span>
+                    </td>
+                    <td class="table-cell text-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ${instituto.pacientes.toLocaleString()}
+                        </span>
+                    </td>
+                    <td class="table-cell text-right">
+                        <span class="font-medium text-gray-900">$${instituto.ingresos.toLocaleString()}</span>
+                    </td>
+                    <td class="table-cell text-right">
+                        <span class="font-medium text-gray-900">$${instituto.promedio.toLocaleString()}</span>
+                    </td>
+                    <td class="table-cell">
+                        <div class="flex space-x-2">
+                            <button onclick="verDetalle('${instituto.codigo}')" class="text-blue-600 hover:text-blue-900" title="Ver Detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="verGrafico('${instituto.codigo}')" class="text-green-600 hover:text-green-900" title="Ver Gráfico">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                            <button onclick="exportarInstituto('${instituto.codigo}')" class="text-purple-600 hover:text-purple-900" title="Exportar">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function inicializarGraficos() {
+            // Gráfico de servicios por instituto
+            const ctxInstitutos = document.getElementById('chartInstitutos').getContext('2d');
+            chartInstitutos = new Chart(ctxInstitutos, {
+                type: 'bar',
+                data: {
+                    labels: datosInstitutos.map(i => i.nombre),
+                    datasets: [{
+                        label: 'Servicios',
+                        data: datosInstitutos.map(i => i.servicios),
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#1d4ed8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de ingresos por instituto
+            const ctxIngresos = document.getElementById('chartIngresos').getContext('2d');
+            chartIngresos = new Chart(ctxIngresos, {
+                type: 'pie',
+                data: {
+                    labels: datosInstitutos.map(i => i.nombre),
+                    datasets: [{
+                        data: datosInstitutos.map(i => i.ingresos),
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function filtrarDatos() {
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+            const instituto = document.getElementById('institutoFiltro').value;
+            const tipoServicio = document.getElementById('tipoServicioFiltro').value;
+
+            // Simular filtrado (en una aplicación real, se haría una consulta al servidor)
+            let datosFiltrados = [...datosEjemplo];
+            
+            if (instituto) {
+                datosFiltrados = datosFiltrados.filter(d => d.codigo === instituto);
+            }
+
+            datosInstitutos = datosFiltrados;
+            cargarTabla();
+            actualizarGraficos();
+            
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: `Filtros aplicados - ${datosInstitutos.length} registros`
+                }, '*');
+            }
+        }
+
+        function actualizarGraficos() {
+            chartInstitutos.data.labels = datosInstitutos.map(i => i.nombre);
+            chartInstitutos.data.datasets[0].data = datosInstitutos.map(i => i.servicios);
+            chartInstitutos.update();
+
+            chartIngresos.data.labels = datosInstitutos.map(i => i.nombre);
+            chartIngresos.data.datasets[0].data = datosInstitutos.map(i => i.ingresos);
+            chartIngresos.update();
+        }
+
+        function ordenarTabla(campo) {
+            if (ordenActual.campo === campo) {
+                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                ordenActual.campo = campo;
+                ordenActual.direccion = 'asc';
+            }
+
+            datosInstitutos.sort((a, b) => {
+                let valorA = a[campo];
+                let valorB = b[campo];
+                
+                if (campo === 'instituto') {
+                    valorA = a.nombre;
+                    valorB = b.nombre;
+                }
+                
+                if (typeof valorA === 'string') {
+                    valorA = valorA.toLowerCase();
+                    valorB = valorB.toLowerCase();
+                }
+                
+                if (ordenActual.direccion === 'asc') {
+                    return valorA > valorB ? 1 : -1;
+                } else {
+                    return valorA < valorB ? 1 : -1;
+                }
+            });
+            
+            cargarTabla();
+        }
+
+        function toggleChart(tipo) {
+            document.querySelectorAll('.btn-chart').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-type="${tipo}"]`).classList.add('active');
+            
+            chartInstitutos.config.type = tipo;
+            chartInstitutos.update();
+        }
+
+        function verDetalle(codigo) {
+            const instituto = datosInstitutos.find(i => i.codigo === codigo);
+            if (!instituto) return;
+
+            document.getElementById('modalTitle').textContent = `Detalle de ${instituto.nombre}`;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800">Información General</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p><strong>Código:</strong> ${instituto.codigo}</p>
+                            <p><strong>Nombre:</strong> ${instituto.nombre}</p>
+                            <p><strong>Dirección:</strong> ${instituto.direccion}</p>
+                            <p><strong>Teléfono:</strong> ${instituto.telefono}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800">Estadísticas</h4>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p><strong>Total Servicios:</strong> ${instituto.servicios.toLocaleString()}</p>
+                            <p><strong>Pacientes Atendidos:</strong> ${instituto.pacientes.toLocaleString()}</p>
+                            <p><strong>Ingresos Totales:</strong> $${instituto.ingresos.toLocaleString()}</p>
+                            <p><strong>Promedio por Paciente:</strong> $${instituto.promedio.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Últimos Servicios</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="table-header">Fecha</th>
+                                    <th class="table-header">Paciente</th>
+                                    <th class="table-header">Servicio</th>
+                                    <th class="table-header">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr><td class="table-cell">2024-12-20</td><td class="table-cell">García, María</td><td class="table-cell">Consulta Médica</td><td class="table-cell">$50,000</td></tr>
+                                <tr><td class="table-cell">2024-12-19</td><td class="table-cell">López, Juan</td><td class="table-cell">Examen de Laboratorio</td><td class="table-cell">$25,000</td></tr>
+                                <tr><td class="table-cell">2024-12-18</td><td class="table-cell">Martínez, Ana</td><td class="table-cell">Radiografía</td><td class="table-cell">$40,000</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function verGrafico(codigo) {
+            // Funcionalidad para mostrar gráfico específico del instituto
+            alert(`Mostrar gráfico detallado del instituto ${codigo}`);
+        }
+
+        function exportarInstituto(codigo) {
+            const instituto = datosInstitutos.find(i => i.codigo === codigo);
+            if (!instituto) return;
+            
+            // Simular exportación
+            alert(`Exportando datos del instituto ${instituto.nombre}`);
+        }
+
+        function exportarDatos() {
+            // Simular exportación de todos los datos
+            alert('Exportando todos los datos de institutos');
+        }
+
+        function actualizarDatos() {
+            // Simular actualización de datos
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: 'Datos actualizados'
+                }, '*');
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function manejarComandoToolbar(comando) {
+            switch(comando) {
+                case 'refresh':
+                    actualizarDatos();
+                    break;
+                case 'export':
+                    exportarDatos();
+                    break;
+                case 'print':
+                    window.print();
+                    break;
+            }
+        }
+
+        // Manejar teclas
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (!document.getElementById('detailModal').classList.contains('hidden')) {
+                    cerrarModal();
+                } else if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'close_window'
+                    }, '*');
+                }
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

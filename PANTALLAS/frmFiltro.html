@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtro Avanzado - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-filter mr-2 text-blue-600"></i>
+                    Filtro
+                </h3>
+                <button onclick="cerrarFiltro()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Filter Form -->
+            <div class="space-y-4">
+                <!-- Campo Display -->
+                <div>
+                    <label class="block text-sm font-bold text-blue-600 mb-1">Campo</label>
+                    <div id="lblCampo" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 font-medium">
+                        Campo de la consulta
+                    </div>
+                </div>
+
+                <!-- Operador -->
+                <div>
+                    <label class="block text-sm font-bold text-red-600 mb-1">Operador</label>
+                    <select id="cmbOperador" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="cambiarOperador()">
+                        <option value="0">Igual</option>
+                        <option value="1">Mayor que</option>
+                        <option value="2">Menor que</option>
+                        <option value="3">Mayor o Igual</option>
+                        <option value="4">Menor o Igual</option>
+                        <option value="5">Distinto</option>
+                        <option value="6">Entre</option>
+                        <option value="7">Que suene a</option>
+                    </select>
+                </div>
+
+                <!-- Primer Valor -->
+                <div id="primerValorContainer">
+                    <label class="block text-sm font-bold text-red-600 mb-1">Primer Valor</label>
+                    <input type="text" id="txtPrimerValor" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Ingrese el valor..." onkeypress="validarTecla(event, 0)" onkeydown="manejarEnter(event)">
+                </div>
+
+                <!-- Segundo Valor (visible solo para "Entre") -->
+                <div id="segundoValorContainer" class="hidden">
+                    <label class="block text-sm font-bold text-red-600 mb-1">Segundo Valor</label>
+                    <input type="text" id="txtSegundoValor" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Ingrese el segundo valor..." onkeypress="validarTecla(event, 1)" onkeydown="manejarEnter(event)">
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex justify-end space-x-2 mt-6">
+                <button onclick="cerrarFiltro()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-times mr-1"></i>
+                    Cancelar
+                </button>
+                <button onclick="aceptarFiltro()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    <i class="fas fa-check mr-1"></i>
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay para modal -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40" onclick="cerrarFiltro()"></div>
+
+    <script>
+        // Variables globales
+        let tipoDato = 0; // 0: Cadena, 1: Numero, 2: Fecha
+        let campo = '';
+        
+        // Constantes para tipos de datos
+        const TIPO_CADENA = 0;
+        const TIPO_NUMERO = 1;
+        const TIPO_FECHA = 2;
+
+        // Inicialización
+        function inicializar() {
+            // Obtener parámetros de la URL
+            const params = new URLSearchParams(window.location.search);
+            const campoParam = params.get('campo');
+            const tipoParam = params.get('tipo');
+            
+            if (campoParam) {
+                setCampo(campoParam);
+            }
+            
+            if (tipoParam) {
+                setTipoDato(parseInt(tipoParam));
+            }
+            
+            // Configurar operador por defecto
+            document.getElementById('cmbOperador').selectedIndex = 0;
+            
+            // Focus en el primer valor
+            document.getElementById('txtPrimerValor').focus();
+        }
+
+        function setCampo(nuevoCampo) {
+            campo = nuevoCampo;
+            document.getElementById('lblCampo').textContent = campo;
+        }
+
+        function setTipoDato(nuevoTipo) {
+            tipoDato = nuevoTipo;
+            
+            // Configurar placeholders según el tipo
+            const txtPrimero = document.getElementById('txtPrimerValor');
+            const txtSegundo = document.getElementById('txtSegundoValor');
+            
+            switch (tipoDato) {
+                case TIPO_CADENA:
+                    txtPrimero.placeholder = 'Ingrese texto...';
+                    txtSegundo.placeholder = 'Ingrese segundo texto...';
+                    txtPrimero.type = 'text';
+                    txtSegundo.type = 'text';
+                    break;
+                case TIPO_NUMERO:
+                    txtPrimero.placeholder = 'Ingrese número...';
+                    txtSegundo.placeholder = 'Ingrese segundo número...';
+                    txtPrimero.type = 'number';
+                    txtSegundo.type = 'number';
+                    break;
+                case TIPO_FECHA:
+                    txtPrimero.placeholder = 'dd/mm/aaaa';
+                    txtSegundo.placeholder = 'dd/mm/aaaa';
+                    txtPrimero.type = 'date';
+                    txtSegundo.type = 'date';
+                    break;
+            }
+        }
+
+        function cambiarOperador() {
+            const operador = document.getElementById('cmbOperador').value;
+            const segundoContainer = document.getElementById('segundoValorContainer');
+            const primerContainer = document.getElementById('primerValorContainer');
+            
+            if (operador === '6') { // Entre
+                segundoContainer.classList.remove('hidden');
+                // Ajustar layout para mostrar ambos valores lado a lado
+                primerContainer.classList.add('w-full');
+            } else {
+                segundoContainer.classList.add('hidden');
+                primerContainer.classList.remove('w-full');
+            }
+        }
+
+        function validarTecla(event, indice) {
+            const keyCode = event.keyCode || event.which;
+            
+            // Permitir teclas especiales (backspace, delete, tab, etc.)
+            if (keyCode === 8 || keyCode === 9 || keyCode === 46 || keyCode === 37 || keyCode === 39) {
+                return true;
+            }
+            
+            switch (tipoDato) {
+                case TIPO_NUMERO:
+                    // Solo números, punto decimal y signo menos
+                    const char = String.fromCharCode(keyCode);
+                    if (!/[0-9\.\-]/.test(char)) {
+                        event.preventDefault();
+                        return false;
+                    }
+                    break;
+                case TIPO_FECHA:
+                    // Para fechas, permitir números y separadores
+                    const charFecha = String.fromCharCode(keyCode);
+                    if (!/[0-9\/\-]/.test(charFecha)) {
+                        event.preventDefault();
+                        return false;
+                    }
+                    break;
+                // Para TIPO_CADENA no hay restricciones
+            }
+            
+            return true;
+        }
+
+        function manejarEnter(event) {
+            if (event.key === 'Enter') {
+                // Mover al siguiente campo o aceptar
+                const operador = document.getElementById('cmbOperador').value;
+                const primerValor = document.getElementById('txtPrimerValor');
+                const segundoValor = document.getElementById('txtSegundoValor');
+                
+                if (event.target === primerValor && operador === '6') {
+                    // Si estamos en el primer valor y el operador es "Entre", ir al segundo
+                    segundoValor.focus();
+                } else {
+                    // Sino, aceptar el filtro
+                    aceptarFiltro();
+                }
+            }
+        }
+
+        function validarFecha(valor) {
+            if (!valor) return false;
+            
+            // Validar formato dd/mm/yyyy o yyyy-mm-dd
+            const fechaRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$|^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+            
+            if (!fechaRegex.test(valor)) {
+                return false;
+            }
+            
+            const fecha = new Date(valor);
+            return fecha instanceof Date && !isNaN(fecha);
+        }
+
+        function aceptarFiltro() {
+            const operador = parseInt(document.getElementById('cmbOperador').value);
+            const primerValor = document.getElementById('txtPrimerValor').value.trim();
+            const segundoValor = document.getElementById('txtSegundoValor').value.trim();
+            
+            // Validaciones
+            if (!primerValor) {
+                mostrarError('Debe ingresar el primer valor');
+                document.getElementById('txtPrimerValor').focus();
+                return;
+            }
+            
+            if (operador === 6 && !segundoValor) { // Entre
+                mostrarError('Debe ingresar el segundo valor para el rango');
+                document.getElementById('txtSegundoValor').focus();
+                return;
+            }
+            
+            // Validaciones específicas por tipo de dato
+            let hayError = false;
+            
+            switch (tipoDato) {
+                case TIPO_NUMERO:
+                    if (isNaN(primerValor)) {
+                        mostrarError('El primer valor debe ser un número válido');
+                        hayError = true;
+                    } else if (operador === 6 && isNaN(segundoValor)) {
+                        mostrarError('El segundo valor debe ser un número válido');
+                        hayError = true;
+                    } else if (operador === 6 && parseFloat(primerValor) > parseFloat(segundoValor)) {
+                        mostrarError('El primer valor debe ser menor que el segundo valor');
+                        hayError = true;
+                    }
+                    break;
+                    
+                case TIPO_FECHA:
+                    if (!validarFecha(primerValor)) {
+                        mostrarError('El primer valor debe ser una fecha válida');
+                        hayError = true;
+                    } else if (operador === 6 && !validarFecha(segundoValor)) {
+                        mostrarError('El segundo valor debe ser una fecha válida');
+                        hayError = true;
+                    } else if (operador === 6 && new Date(primerValor) > new Date(segundoValor)) {
+                        mostrarError('La primera fecha debe ser anterior a la segunda fecha');
+                        hayError = true;
+                    }
+                    break;
+                    
+                case TIPO_CADENA:
+                    if (operador === 6 && primerValor > segundoValor) {
+                        mostrarError('El primer valor debe ser menor que el segundo valor');
+                        hayError = true;
+                    }
+                    break;
+            }
+            
+            if (hayError) {
+                document.getElementById('txtPrimerValor').focus();
+                document.getElementById('txtPrimerValor').select();
+                return;
+            }
+            
+            // Generar la cadena SQL del filtro
+            const filtroSQL = generarFiltroSQL(operador, primerValor, segundoValor);
+            
+            // Enviar el resultado
+            enviarResultado(filtroSQL);
+        }
+
+        function generarFiltroSQL(operador, valor1, valor2) {
+            let sql = '';
+            
+            switch (tipoDato) {
+                case TIPO_CADENA:
+                    sql = armarString(operador, valor1, valor2);
+                    break;
+                case TIPO_NUMERO:
+                    sql = armarNumero(operador, valor1, valor2);
+                    break;
+                case TIPO_FECHA:
+                    sql = armarFecha(operador, valor1, valor2);
+                    break;
+            }
+            
+            return sql;
+        }
+
+        function armarString(operador, valor1, valor2) {
+            switch (operador) {
+                case 0: // igual
+                    return `${campo} = '${valor1}'`;
+                case 1: // mayor
+                    return `${campo} > '${valor1}'`;
+                case 2: // menor
+                    return `${campo} < '${valor1}'`;
+                case 3: // mayor igual
+                    return `${campo} >= '${valor1}'`;
+                case 4: // menor igual
+                    return `${campo} <= '${valor1}'`;
+                case 5: // distinto
+                    return `${campo} <> '${valor1}'`;
+                case 6: // entre
+                    return `${campo} >= '${valor1}' AND ${campo} <= '${valor2}'`;
+                case 7: // like
+                    return `${campo} LIKE '%${valor1}%'`;
+                default:
+                    return `${campo} = '${valor1}'`;
+            }
+        }
+
+        function armarNumero(operador, valor1, valor2) {
+            switch (operador) {
+                case 0: // igual
+                    return `${campo} = ${valor1}`;
+                case 1: // mayor
+                    return `${campo} > ${valor1}`;
+                case 2: // menor
+                    return `${campo} < ${valor1}`;
+                case 3: // mayor igual
+                    return `${campo} >= ${valor1}`;
+                case 4: // menor igual
+                    return `${campo} <= ${valor1}`;
+                case 5: // distinto
+                    return `${campo} <> ${valor1}`;
+                case 6: // entre
+                    return `${campo} >= ${valor1} AND ${campo} <= ${valor2}`;
+                case 7: // like
+                    return `${campo} LIKE ${valor1}`;
+                default:
+                    return `${campo} = ${valor1}`;
+            }
+        }
+
+        function armarFecha(operador, valor1, valor2) {
+            // Convertir fechas al formato apropiado
+            const fecha1 = formatearFecha(valor1);
+            const fecha2 = valor2 ? formatearFecha(valor2) : '';
+            
+            switch (operador) {
+                case 0: // igual
+                    return `${campo} = #${fecha1}#`;
+                case 1: // mayor
+                    return `${campo} > #${fecha1}#`;
+                case 2: // menor
+                    return `${campo} < #${fecha1}#`;
+                case 3: // mayor igual
+                    return `${campo} >= #${fecha1}#`;
+                case 4: // menor igual
+                    return `${campo} <= #${fecha1}#`;
+                case 5: // distinto
+                    return `${campo} <> #${fecha1}#`;
+                case 6: // entre
+                    return `${campo} >= #${fecha1}# AND ${campo} <= #${fecha2}#`;
+                case 7: // like
+                    return `${campo} LIKE #${fecha1}#`;
+                default:
+                    return `${campo} = #${fecha1}#`;
+            }
+        }
+
+        function formatearFecha(fecha) {
+            // Si es una fecha en formato yyyy-mm-dd, convertir a mm/dd/yyyy para Access
+            if (fecha.includes('-')) {
+                const partes = fecha.split('-');
+                return `${partes[1]}/${partes[2]}/${partes[0]}`;
+            }
+            return fecha;
+        }
+
+        function mostrarError(mensaje) {
+            alert(mensaje); // En una aplicación real, usar un toast o modal más elegante
+        }
+
+        function enviarResultado(filtroSQL) {
+            // Simular animación de cierre
+            const container = document.querySelector('.bg-white');
+            container.style.animation = 'slideOut 0.2s ease-in-out';
+            
+            setTimeout(() => {
+                // Si se abrió como ventana modal desde otra página
+                if (window.opener && window.opener.recibirFiltro) {
+                    window.opener.recibirFiltro(filtroSQL);
+                    window.close();
+                } else if (window.parent && window.parent !== window) {
+                    // Si está en un iframe
+                    window.parent.postMessage({
+                        type: 'filtro_aplicado',
+                        filtro: filtroSQL
+                    }, '*');
+                } else {
+                    // Si está como página independiente, usar localStorage
+                    localStorage.setItem('filtro_aplicado', filtroSQL);
+                    window.history.back();
+                }
+            }, 200);
+        }
+
+        function cerrarFiltro() {
+            // Simular animación de cierre
+            const container = document.querySelector('.bg-white');
+            container.style.animation = 'slideOut 0.2s ease-in-out';
+            
+            setTimeout(() => {
+                if (window.opener) {
+                    window.close();
+                } else if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'filtro_cancelado'
+                    }, '*');
+                } else {
+                    window.history.back();
+                }
+            }, 200);
+        }
+
+        // Manejo de teclas globales
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                cerrarFiltro();
+            } else if (event.key === 'Enter' && event.ctrlKey) {
+                aceptarFiltro();
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+
+    <style>
+        @keyframes slideOut {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(0.95); opacity: 0; }
+        }
+        
+        .bg-white {
+            animation: slideIn 0.2s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</body>
+</html>

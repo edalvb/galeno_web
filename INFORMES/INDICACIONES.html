@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RECETAS E INDICACIONES - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-break { page-break-after: always; }
+            body { font-size: 12px; }
+            .container { max-width: none; margin: 0; padding: 10px; }
+            .receta-card { border: 2px solid #000; margin-bottom: 30px; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .receta-card:hover { 
+            transform: translateY(-2px); 
+            transition: all 0.3s ease; 
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .texto-indicaciones {
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            min-height: 200px;
+        }
+        .prescription-header {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        .firma-section {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 20px;
+            text-align: right;
+        }
+        .rx-symbol {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #059669;
+            font-family: serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-green-600 no-print">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-prescription-bottle-alt text-3xl text-green-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">RECETAS E INDICACIONES</h1>
+                        <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="fechaHora" class="text-sm text-gray-600"></span>
+                    <button onclick="window.print()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters Panel -->
+    <div class="container mx-auto px-6 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-green-600"></i>
+                Filtros de Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ficha Clínica:</label>
+                    <input type="text" id="filtroFicha" placeholder="Número de ficha..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Paciente:</label>
+                    <input type="text" id="filtroPaciente" placeholder="Nombre del paciente..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nº Documento:</label>
+                    <input type="text" id="filtroDocumento" placeholder="Número de documento..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Documento:</label>
+                    <select id="filtroTipoDoc" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">Todos</option>
+                        <option value="DNI">DNI</option>
+                        <option value="CE">Carnet de Extranjería</option>
+                        <option value="PAS">Pasaporte</option>
+                        <option value="OTROS">Otros</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-4">
+                <button onclick="limpiarFiltros()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-eraser"></i>
+                    <span>Limpiar Filtros</span>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <button onclick="nuevaReceta()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-plus"></i>
+                        <span>Nueva Receta</span>
+                    </button>
+                    <button onclick="exportarRecetas()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-file-export"></i>
+                        <span>Exportar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Recetas</p>
+                        <p id="totalRecetas" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <i class="fas fa-prescription-bottle text-2xl text-green-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Pacientes Atendidos</p>
+                        <p id="pacientesAtendidos" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <i class="fas fa-users text-2xl text-blue-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Hoy</p>
+                        <p id="recetasHoy" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                    <i class="fas fa-calendar-day text-2xl text-purple-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Recetas Filtradas</p>
+                        <p id="recetasFiltradas" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <i class="fas fa-filter text-2xl text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recetas Container -->
+    <div class="container mx-auto px-6 pb-6">
+        <div id="recetasContainer" class="space-y-6">
+            <!-- Las recetas se cargarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Print Header (only visible when printing) -->
+    <div class="hidden print:block">
+        <div class="text-center mb-8">
+            <h1 class="text-xl font-bold mb-2">RECETAS E INDICACIONES</h1>
+            <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+            <p class="text-sm text-gray-600">Fecha de impresión: <span id="fechaImpresion"></span> - Página: <span id="paginaImpresion">%p</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de recetas e indicaciones
+        let recetasData = [
+            {
+                fichaclinica: "FC-001",
+                tipdoc: "DNI",
+                nrodoc: "12345678",
+                nompaciente: "MARÍA ELENA GONZÁLEZ TORRES",
+                texto: `Rx
+
+TRATAMIENTO PARA GASTRITIS AGUDA
+
+1. OMEPRAZOL 20mg
+   Sig: Tomar 1 cápsula cada 12 horas, antes de las comidas
+   Cantidad: 14 cápsulas
+   
+2. SUCRALFATO 1g
+   Sig: Tomar 1 tableta 4 veces al día, 1 hora antes de las comidas y al acostarse
+   Cantidad: 28 tabletas
+   
+3. DIMENTICONA 40mg
+   Sig: Tomar 1 tableta después de cada comida
+   Cantidad: 21 tabletas
+
+INDICACIONES GENERALES:
+- Dieta blanda por 15 días
+- Evitar alimentos irritantes (picantes, ácidos, grasosos)
+- No fumar ni consumir alcohol
+- Tomar abundante agua
+- Control médico en 7 días
+
+En caso de vómitos persistentes o dolor intenso, acudir inmediatamente a emergencia.`,
+                fecha: "2025-01-15"
+            },
+            {
+                fichaclinica: "FC-002",
+                tipdoc: "DNI",
+                nrodoc: "87654321",
+                nompaciente: "JUAN CARLOS MARTÍNEZ SILVA",
+                texto: `Rx
+
+CONTROL DE HIPERTENSIÓN ARTERIAL
+
+1. ENALAPRIL 10mg
+   Sig: Tomar 1 tableta cada 12 horas
+   Cantidad: 60 tabletas
+   
+2. HIDROCLOROTIAZIDA 25mg
+   Sig: Tomar 1 tableta cada 24 horas por la mañana
+   Cantidad: 30 tabletas
+   
+3. ÁCIDO ACETILSALICÍLICO 100mg
+   Sig: Tomar 1 tableta cada 24 horas después del desayuno
+   Cantidad: 30 tabletas
+
+INDICACIONES:
+- Dieta hiposódica (baja en sal)
+- Ejercicio regular: caminar 30 minutos diarios
+- Control de peso
+- Monitoreo de presión arterial en casa
+- Control médico mensual
+- Exámenes de laboratorio en 3 meses
+
+Suspender medicación si presenta mareos intensos o tos persistente.`,
+                fecha: "2025-01-14"
+            },
+            {
+                fichaclinica: "FC-003",
+                tipdoc: "DNI",
+                nrodoc: "11223344",
+                nompaciente: "ANA LUCÍA FERNÁNDEZ CASTRO",
+                texto: `Rx
+
+TRATAMIENTO INFECCIÓN URINARIA
+
+1. CIPROFLOXACINO 500mg
+   Sig: Tomar 1 tableta cada 12 horas por 7 días
+   Cantidad: 14 tabletas
+   
+2. FENAZOPIRIDINA 200mg
+   Sig: Tomar 1 tableta cada 8 horas por 3 días (para alivio del dolor)
+   Cantidad: 9 tabletas
+
+INDICACIONES:
+- Tomar abundante agua (mínimo 2 litros al día)
+- Completar todo el tratamiento antibiótico aunque se sienta mejor
+- Evitar relaciones sexuales durante el tratamiento
+- Orinar después de las relaciones sexuales
+- Higiene íntima adecuada
+- Control con urocultivo en 7 días
+
+La orina puede tornarse anaranjada por el medicamento para el dolor, esto es normal.
+Si presenta fiebre alta o dolor lumbar intenso, acudir inmediatamente.`,
+                fecha: "2025-01-12"
+            },
+            {
+                fichaclinica: "FC-004",
+                tipdoc: "DNI",
+                nrodoc: "55667788",
+                nompaciente: "ROBERTO DANIEL HERRERA MENDOZA",
+                texto: `Rx
+
+TRATAMIENTO POST-INFARTO DEL MIOCARDIO
+
+1. CLOPIDOGREL 75mg
+   Sig: Tomar 1 tableta cada 24 horas
+   Cantidad: 30 tabletas
+   
+2. ATORVASTATINA 40mg
+   Sig: Tomar 1 tableta cada 24 horas por la noche
+   Cantidad: 30 tabletas
+   
+3. METOPROLOL 50mg
+   Sig: Tomar 1 tableta cada 12 horas
+   Cantidad: 60 tabletas
+   
+4. ENALAPRIL 10mg
+   Sig: Tomar 1 tableta cada 12 horas
+   Cantidad: 60 tabletas
+
+INDICACIONES IMPORTANTES:
+- Dieta cardiosaludable (baja en grasa saturada y colesterol)
+- NO fumar absolutamente
+- Ejercicio gradual según tolerancia
+- Control de peso
+- Tomar medicación a la misma hora diariamente
+- Control cardiológico en 2 semanas
+- Ecocardiograma de control en 1 mes
+
+SIGNOS DE ALARMA: Dolor torácico, falta de aire, mareos intensos - ACUDIR INMEDIATAMENTE`,
+                fecha: "2025-01-10"
+            },
+            {
+                fichaclinica: "FC-005",
+                tipdoc: "DNI",
+                nrodoc: "99887766",
+                nompaciente: "PATRICIA ISABEL RAMOS JIMÉNEZ",
+                texto: `Rx
+
+TRATAMIENTO PARA DIABETES MELLITUS TIPO 2
+
+1. METFORMINA 850mg
+   Sig: Tomar 1 tableta cada 12 horas con las comidas
+   Cantidad: 60 tabletas
+   
+2. GLIBENCLAMIDA 5mg
+   Sig: Tomar 1 tableta cada 24 horas antes del desayuno
+   Cantidad: 30 tabletas
+
+INDICACIONES NUTRICIONALES:
+- Dieta para diabéticos (evitar azúcar refinada)
+- Horarios regulares de comida
+- Incluir fibra en la dieta
+- Control de carbohidratos
+- Ejercicio regular 30 minutos diarios
+
+AUTOMONITOREO:
+- Control de glucosa capilar según indicación
+- Registro de valores en libreta
+- Control médico mensual
+- Exámenes de laboratorio cada 3 meses
+- Control oftalmológico anual
+
+En caso de hipoglucemia (sudoración, temblor, mareos): tomar azúcar o miel inmediatamente.`,
+                fecha: "2025-01-08"
+            }
+        ];
+
+        let recetasFiltradas = [...recetasData];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializar();
+            cargarRecetas();
+            configurarFiltros();
+        });
+
+        function inicializar() {
+            actualizarFechaHora();
+            setInterval(actualizarFechaHora, 1000);
+            document.getElementById('fechaImpresion').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function actualizarFechaHora() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES');
+            document.getElementById('fechaHora').textContent = `${fecha} ${hora}`;
+        }
+
+        function cargarRecetas() {
+            const container = document.getElementById('recetasContainer');
+            container.innerHTML = '';
+
+            recetasFiltradas.forEach((receta, index) => {
+                const recetaCard = document.createElement('div');
+                recetaCard.className = 'receta-card bg-white rounded-lg shadow-md overflow-hidden fade-in';
+                
+                recetaCard.innerHTML = `
+                    <div class="prescription-header text-white p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="rx-symbol">℞</div>
+                                <div>
+                                    <h2 class="text-xl font-bold">RECETA MÉDICA</h2>
+                                    <p class="text-sm text-green-100">Sistema Integral de Gestión Médica - MEG@SYS</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-green-100">Fecha: ${new Date(receta.fecha).toLocaleDateString('es-ES')}</p>
+                                <p class="text-sm text-green-100">Página: <span class="no-print">1</span><span class="hidden print:inline">%p</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Información del Paciente -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600">FICHA CLÍNICA:</label>
+                                    <p class="text-lg font-bold text-gray-800">${receta.fichaclinica}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600">PACIENTE:</label>
+                                    <p class="text-lg font-bold text-gray-800">${receta.nompaciente}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600">${receta.tipdoc}:</label>
+                                    <p class="text-lg font-bold text-gray-800">${receta.nrodoc}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Separador -->
+                        <hr class="border-gray-300 mb-6">
+                        
+                        <!-- Texto de la Receta -->
+                        <div class="texto-indicaciones bg-white border rounded-lg p-6">
+                            ${receta.texto.replace(/\n/g, '<br>')}
+                        </div>
+                        
+                        <!-- Firma del Médico -->
+                        <div class="firma-section">
+                            <div class="inline-block">
+                                <div class="text-center">
+                                    <div class="h-16 border-b-2 border-gray-800 w-64 mb-2"></div>
+                                    <p class="text-sm font-bold text-gray-800">FIRMA Y SELLO DEL MÉDICO</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Acciones -->
+                    <div class="bg-gray-50 p-4 flex justify-between items-center no-print">
+                        <div class="flex space-x-2">
+                            <button onclick="editarReceta('${receta.fichaclinica}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-edit"></i>
+                                <span>Editar</span>
+                            </button>
+                            <button onclick="duplicarReceta('${receta.fichaclinica}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-copy"></i>
+                                <span>Duplicar</span>
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="imprimirReceta('${receta.fichaclinica}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-print"></i>
+                                <span>Imprimir</span>
+                            </button>
+                            <button onclick="enviarReceta('${receta.fichaclinica}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Enviar</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(recetaCard);
+            });
+
+            actualizarEstadisticas();
+        }
+
+        function configurarFiltros() {
+            ['filtroFicha', 'filtroPaciente', 'filtroDocumento', 'filtroTipoDoc'].forEach(id => {
+                document.getElementById(id).addEventListener('input', aplicarFiltros);
+                document.getElementById(id).addEventListener('change', aplicarFiltros);
+            });
+        }
+
+        function aplicarFiltros() {
+            const filtroFicha = document.getElementById('filtroFicha').value.toLowerCase();
+            const filtroPaciente = document.getElementById('filtroPaciente').value.toLowerCase();
+            const filtroDocumento = document.getElementById('filtroDocumento').value.toLowerCase();
+            const filtroTipoDoc = document.getElementById('filtroTipoDoc').value;
+
+            recetasFiltradas = recetasData.filter(receta => {
+                const cumpleFicha = receta.fichaclinica.toLowerCase().includes(filtroFicha);
+                const cumplePaciente = receta.nompaciente.toLowerCase().includes(filtroPaciente);
+                const cumpleDocumento = receta.nrodoc.toLowerCase().includes(filtroDocumento);
+                const cumpleTipoDoc = !filtroTipoDoc || receta.tipdoc === filtroTipoDoc;
+
+                return cumpleFicha && cumplePaciente && cumpleDocumento && cumpleTipoDoc;
+            });
+
+            cargarRecetas();
+        }
+
+        function limpiarFiltros() {
+            ['filtroFicha', 'filtroPaciente', 'filtroDocumento', 'filtroTipoDoc'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            recetasFiltradas = [...recetasData];
+            cargarRecetas();
+        }
+
+        function actualizarEstadisticas() {
+            document.getElementById('totalRecetas').textContent = recetasData.length;
+            document.getElementById('recetasFiltradas').textContent = recetasFiltradas.length;
+            
+            // Calcular pacientes únicos
+            const pacientesUnicos = new Set(recetasData.map(r => r.nrodoc)).size;
+            document.getElementById('pacientesAtendidos').textContent = pacientesUnicos;
+            
+            // Calcular recetas de hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            const recetasHoy = recetasData.filter(r => r.fecha === hoy).length;
+            document.getElementById('recetasHoy').textContent = recetasHoy;
+        }
+
+        // Funciones de acciones
+        function editarReceta(fichaclinica) {
+            alert(`Editando receta de la ficha clínica: ${fichaclinica}`);
+        }
+
+        function duplicarReceta(fichaclinica) {
+            const receta = recetasData.find(r => r.fichaclinica === fichaclinica);
+            if (receta && confirm(`¿Desea duplicar la receta de ${receta.nompaciente}?`)) {
+                alert('Funcionalidad de duplicar receta en desarrollo');
+            }
+        }
+
+        function imprimirReceta(fichaclinica) {
+            const receta = recetasData.find(r => r.fichaclinica === fichaclinica);
+            if (receta) {
+                // Crear ventana de impresión personalizada
+                const ventanaImpresion = window.open('', '_blank');
+                ventanaImpresion.document.write(`
+                    <html>
+                        <head>
+                            <title>Receta ${fichaclinica}</title>
+                            <style>
+                                body { 
+                                    font-family: Arial, sans-serif; 
+                                    margin: 20px; 
+                                    line-height: 1.6;
+                                }
+                                .header { 
+                                    text-align: center; 
+                                    border-bottom: 3px solid #059669; 
+                                    padding-bottom: 20px; 
+                                    margin-bottom: 30px; 
+                                }
+                                .rx-symbol { 
+                                    font-size: 3rem; 
+                                    color: #059669; 
+                                    font-weight: bold; 
+                                    font-family: serif; 
+                                }
+                                .patient-info { 
+                                    background: #f9f9f9; 
+                                    padding: 15px; 
+                                    border-radius: 5px; 
+                                    margin-bottom: 30px; 
+                                }
+                                .prescription-text { 
+                                    white-space: pre-wrap; 
+                                    font-size: 14px; 
+                                    line-height: 1.8; 
+                                    margin-bottom: 50px;
+                                }
+                                .signature-area { 
+                                    text-align: right; 
+                                    margin-top: 80px; 
+                                    border-top: 1px solid #000; 
+                                    padding-top: 20px; 
+                                }
+                                .signature-line { 
+                                    border-bottom: 2px solid #000; 
+                                    width: 300px; 
+                                    height: 60px; 
+                                    display: inline-block; 
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <div class="rx-symbol">℞</div>
+                                <h1>RECETAS E INDICACIONES</h1>
+                                <h2>Sistema Integral de Gestión Médica - MEG@SYS</h2>
+                                <p>Fecha: ${new Date(receta.fecha).toLocaleDateString('es-ES')}</p>
+                            </div>
+                            
+                            <div class="patient-info">
+                                <p><strong>FICHA CLÍNICA:</strong> ${receta.fichaclinica}</p>
+                                <p><strong>PACIENTE:</strong> ${receta.nompaciente}</p>
+                                <p><strong>${receta.tipdoc}:</strong> ${receta.nrodoc}</p>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="prescription-text">${receta.texto}</div>
+                            
+                            <div class="signature-area">
+                                <div class="signature-line"></div>
+                                <p><strong>FIRMA Y SELLO DEL MÉDICO</strong></p>
+                            </div>
+                        </body>
+                    </html>
+                `);
+                ventanaImpresion.document.close();
+                ventanaImpresion.print();
+            }
+        }
+
+        function enviarReceta(fichaclinica) {
+            const receta = recetasData.find(r => r.fichaclinica === fichaclinica);
+            if (receta) {
+                alert(`Enviando receta de ${receta.nompaciente} por email...`);
+            }
+        }
+
+        function nuevaReceta() {
+            alert('Abriendo formulario para nueva receta...');
+        }
+
+        function exportarRecetas() {
+            // Crear contenido para exportar
+            let contenido = 'Ficha Clínica,Tipo Doc,Nº Documento,Paciente,Fecha,Receta\n';
+            
+            recetasFiltradas.forEach(receta => {
+                const textoLimpio = receta.texto.replace(/"/g, '""').replace(/\n/g, ' ');
+                contenido += `"${receta.fichaclinica}","${receta.tipdoc}","${receta.nrodoc}","${receta.nompaciente}","${receta.fecha}","${textoLimpio}"\n`;
+            });
+
+            // Descargar archivo
+            const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `recetas_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Manejo de mensajes del sistema padre
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'refresh':
+                        location.reload();
+                        break;
+                    case 'search':
+                        document.getElementById('filtroPaciente').focus();
+                        break;
+                    case 'add':
+                        nuevaReceta();
+                        break;
+                }
+            }
+        });
+
+        // Notificar al sistema padre sobre el estado
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'status_update',
+                message: 'Recetas e indicaciones cargadas correctamente'
+            }, '*');
+            
+            window.parent.postMessage({
+                type: 'record_info',
+                info: `Total: ${recetasData.length} recetas registradas`
+            }, '*');
+        }
+    </script>
+</body>
+</html>

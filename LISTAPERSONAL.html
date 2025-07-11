@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Gestión de Personal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-table { font-size: 12px !important; }
+            body { background: white !important; }
+        }
+        .card-personal {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .card-personal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+        }
+        .medico { border-left-color: #3b82f6; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+        .enfermero { border-left-color: #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+        .administrativo { border-left-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+        .tecnico { border-left-color: #8b5cf6; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); }
+        .auxiliar { border-left-color: #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); }
+        .directivo { border-left-color: #6366f1; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+        .status-activo { 
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            animation: pulse-green 2s infinite;
+        }
+        .status-inactivo { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .status-vacaciones { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .status-licencia { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .departamento-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-3 rounded-xl shadow-lg">
+                        <i class="fas fa-users text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                            Gestión de Personal
+                        </h1>
+                        <p class="text-gray-600 mt-1">Sistema integral de recursos humanos médicos</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 no-print">
+                    <button onclick="nuevoPersonal()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-user-plus mr-2"></i>Nuevo Personal
+                    </button>
+                    <button onclick="imprimirListado()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Personal</label>
+                    <input type="text" id="buscarPersonal" placeholder="Nombre, apellido, documento..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Persona</label>
+                    <select id="filtroTipo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los tipos</option>
+                        <option value="Médico">Médico</option>
+                        <option value="Enfermero(a)">Enfermero(a)</option>
+                        <option value="Auxiliar">Auxiliar</option>
+                        <option value="Administrativo">Administrativo</option>
+                        <option value="Laboratorista">Laboratorista</option>
+                        <option value="Directivo">Directivo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
+                    <select id="filtroCargo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los cargos</option>
+                        <option value="Director">Director</option>
+                        <option value="Jefe">Jefe</option>
+                        <option value="Especialista">Especialista</option>
+                        <option value="General">General</option>
+                        <option value="Auxiliar">Auxiliar</option>
+                        <option value="Interno">Interno</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('tarjetas')" id="btnTarjetas" 
+                                class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-th-large mr-1"></i>Tarjetas
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalMedicos">0</div>
+                    <div class="text-xs text-blue-800">Médicos</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="totalEnfermeria">0</div>
+                    <div class="text-xs text-green-800">Enfermería</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="totalLaboratorio">0</div>
+                    <div class="text-xs text-purple-800">Laboratorio</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="totalAdministrativo">0</div>
+                    <div class="text-xs text-yellow-800">Administrativo</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-600" id="totalApoyo">0</div>
+                    <div class="text-xs text-gray-800">Apoyo</div>
+                </div>
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600" id="totalDirectivo">0</div>
+                    <div class="text-xs text-red-800">Directivos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Tarjetas -->
+    <div id="vistaTarjetas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="contenedorTarjetas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Las tarjetas se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 print-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombres</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfonos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contenedorTabla" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalle/Edición -->
+    <div id="modalPersonal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex items-center mb-6">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-user-md text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Información del Personal</h3>
+                            <p class="text-sm text-gray-500">Detalles completos del miembro del personal médico</p>
+                        </div>
+                    </div>
+                    
+                    <form id="formPersonal" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tipo de Persona</label>
+                                <select id="modalTipoPersona" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Médico">Médico</option>
+                                    <option value="Enfermero(a)">Enfermero(a)</option>
+                                    <option value="Auxiliar">Auxiliar</option>
+                                    <option value="Administrativo">Administrativo</option>
+                                    <option value="Laboratorista">Laboratorista</option>
+                                    <option value="Directivo">Directivo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Cargo</label>
+                                <select id="modalCargo" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Director">Director</option>
+                                    <option value="Jefe">Jefe</option>
+                                    <option value="Especialista">Especialista</option>
+                                    <option value="General">General</option>
+                                    <option value="Auxiliar">Auxiliar</option>
+                                    <option value="Interno">Interno</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nombres</label>
+                                <input type="text" id="modalNombres" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Apellidos</label>
+                                <input type="text" id="modalApellidos" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">N° Documento</label>
+                                <input type="text" id="modalNroDoc" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Teléfonos</label>
+                                <input type="text" id="modalTelefonos" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="guardarPersonal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo del personal médico
+        let personalData = [
+            {
+                id: 1,
+                tipoPersona: "Médico",
+                nombres: "Carlos Eduardo",
+                apellidos: "González Martínez",
+                nroDoc: "12345678",
+                cargo: "Especialista",
+                telefonos: "321-456-7890, 601-234-5678",
+                especialidad: "Cardiología"
+            },
+            {
+                id: 2,
+                tipoPersona: "Enfermero(a)",
+                nombres: "María José",
+                apellidos: "Rodríguez López",
+                nroDoc: "87654321",
+                cargo: "Jefe",
+                telefonos: "310-987-6543",
+                especialidad: "Enfermería Quirúrgica"
+            },
+            {
+                id: 3,
+                tipoPersona: "Médico",
+                nombres: "Ana Lucía",
+                apellidos: "Hernández Silva",
+                nroDoc: "11223344",
+                cargo: "Director",
+                telefonos: "315-555-1234",
+                especialidad: "Medicina Interna"
+            },
+            {
+                id: 4,
+                tipoPersona: "Laboratorista",
+                nombres: "Pedro Antonio",
+                apellidos: "Morales Castro",
+                nroDoc: "44332211",
+                cargo: "Especialista",
+                telefonos: "318-111-2222",
+                especialidad: "Microbiología"
+            },
+            {
+                id: 5,
+                tipoPersona: "Administrativo",
+                nombres: "Laura Patricia",
+                apellidos: "Vargas Pineda",
+                nroDoc: "55667788",
+                cargo: "General",
+                telefonos: "320-333-4444",
+                especialidad: "Gestión Hospitalaria"
+            },
+            {
+                id: 6,
+                tipoPersona: "Auxiliar",
+                nombres: "Roberto",
+                apellidos: "Jiménez Torres",
+                nroDoc: "99887766",
+                cargo: "Auxiliar",
+                telefonos: "312-777-8888",
+                especialidad: "Cuidados Básicos"
+            },
+            {
+                id: 7,
+                tipoPersona: "Directivo",
+                nombres: "Isabel Cristina",
+                apellidos: "Mendoza Ruiz",
+                nroDoc: "22334455",
+                cargo: "Director",
+                telefonos: "316-999-0000",
+                especialidad: "Administración Médica"
+            },
+            {
+                id: 8,
+                tipoPersona: "Médico",
+                nombres: "Fernando José",
+                apellidos: "Ramírez Cortés",
+                nroDoc: "66778899",
+                cargo: "Especialista",
+                telefonos: "319-123-4567",
+                especialidad: "Pediatría"
+            }
+        ];
+
+        let vistaActual = 'tarjetas';
+        let personalFiltrado = [...personalData];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVista();
+            configurarFiltros();
+            actualizarEstadisticas();
+        });
+
+        function configurarFiltros() {
+            const buscar = document.getElementById('buscarPersonal');
+            const filtroTipo = document.getElementById('filtroTipo');
+            const filtroCargo = document.getElementById('filtroCargo');
+
+            [buscar, filtroTipo, filtroCargo].forEach(elemento => {
+                elemento.addEventListener('input', aplicarFiltros);
+            });
+        }
+
+        function aplicarFiltros() {
+            const textoBusqueda = document.getElementById('buscarPersonal').value.toLowerCase();
+            const tipoSeleccionado = document.getElementById('filtroTipo').value;
+            const cargoSeleccionado = document.getElementById('filtroCargo').value;
+
+            personalFiltrado = personalData.filter(personal => {
+                const coincideTexto = 
+                    personal.nombres.toLowerCase().includes(textoBusqueda) ||
+                    personal.apellidos.toLowerCase().includes(textoBusqueda) ||
+                    personal.nroDoc.includes(textoBusqueda) ||
+                    personal.tipoPersona.toLowerCase().includes(textoBusqueda);
+
+                const coincideTipo = !tipoSeleccionado || personal.tipoPersona === tipoSeleccionado;
+                const coincideCargo = !cargoSeleccionado || personal.cargo === cargoSeleccionado;
+
+                return coincideTexto && coincideTipo && coincideCargo;
+            });
+
+            actualizarVista();
+            actualizarEstadisticas();
+        }
+
+        function cambiarVista(nuevaVista) {
+            vistaActual = nuevaVista;
+            
+            const btnTarjetas = document.getElementById('btnTarjetas');
+            const btnTabla = document.getElementById('btnTabla');
+            const vistaTarjetas = document.getElementById('vistaTarjetas');
+            const vistaTabla = document.getElementById('vistaTabla');
+
+            if (nuevaVista === 'tarjetas') {
+                btnTarjetas.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTabla.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTarjetas.classList.remove('hidden');
+                vistaTabla.classList.add('hidden');
+            } else {
+                btnTabla.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTarjetas.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTabla.classList.remove('hidden');
+                vistaTarjetas.classList.add('hidden');
+            }
+
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'tarjetas') {
+                mostrarTarjetas();
+            } else {
+                mostrarTabla();
+            }
+        }
+
+        function obtenerClaseCategoria(tipoPersona) {
+            const categorias = {
+                'Médico': 'categoria-medico',
+                'Enfermero(a)': 'categoria-enfermeria',
+                'Laboratorista': 'categoria-laboratorio',
+                'Administrativo': 'categoria-administrativo',
+                'Auxiliar': 'categoria-apoyo',
+                'Directivo': 'categoria-directivo'
+            };
+            return categorias[tipoPersona] || 'categoria-apoyo';
+        }
+
+        function obtenerIconoTipo(tipoPersona) {
+            const iconos = {
+                'Médico': 'fas fa-user-md',
+                'Enfermero(a)': 'fas fa-user-nurse',
+                'Laboratorista': 'fas fa-flask',
+                'Administrativo': 'fas fa-user-tie',
+                'Auxiliar': 'fas fa-hands-helping',
+                'Directivo': 'fas fa-crown'
+            };
+            return iconos[tipoPersona] || 'fas fa-user';
+        }
+
+        function mostrarTarjetas() {
+            const contenedor = document.getElementById('contenedorTarjetas');
+            
+            if (personalFiltrado.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontró personal</h3>
+                        <p class="text-gray-500">No hay personal que coincida con los filtros seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = personalFiltrado.map(personal => `
+                <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                    <div class="p-1">
+                        <div class="h-2 ${obtenerClaseCategoria(personal.tipoPersona)} rounded-t-lg"></div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 ${obtenerClaseCategoria(personal.tipoPersona)} rounded-full flex items-center justify-center text-white">
+                                    <i class="${obtenerIconoTipo(personal.tipoPersona)} text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">${personal.nombres} ${personal.apellidos}</h3>
+                                    <p class="text-sm text-gray-600">${personal.tipoPersona}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium">
+                                ${personal.cargo}
+                            </span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-id-card w-4 mr-3 text-gray-400"></i>
+                                <span class="font-medium">Doc:</span>
+                                <span class="ml-1">${personal.nroDoc}</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-phone w-4 mr-3 text-gray-400"></i>
+                                <span class="font-medium">Tel:</span>
+                                <span class="ml-1">${personal.telefonos}</span>
+                            </div>
+                            ${personal.especialidad ? `
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-stethoscope w-4 mr-3 text-gray-400"></i>
+                                    <span class="font-medium">Especialidad:</span>
+                                    <span class="ml-1">${personal.especialidad}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="mt-6 flex space-x-2">
+                            <button onclick="verDetalle(${personal.id})" 
+                                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm">
+                                <i class="fas fa-eye mr-1"></i>Ver Detalle
+                            </button>
+                            <button onclick="editarPersonal(${personal.id})" 
+                                    class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarTabla() {
+            const contenedor = document.getElementById('contenedorTabla');
+            
+            if (personalFiltrado.length === 0) {
+                contenedor.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center">
+                            <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                            <div class="text-lg font-medium text-gray-900 mb-2">No se encontró personal</div>
+                            <div class="text-gray-500">No hay personal que coincida con los filtros seleccionados.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = personalFiltrado.map(personal => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 ${obtenerClaseCategoria(personal.tipoPersona)} rounded-full flex items-center justify-center text-white mr-3">
+                                <i class="${obtenerIconoTipo(personal.tipoPersona)} text-sm"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">${personal.tipoPersona}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${personal.nombres}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${personal.apellidos}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${personal.nroDoc}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium">
+                            ${personal.cargo}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${personal.telefonos}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="verDetalle(${personal.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editarPersonal(${personal.id})" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarEstadisticas() {
+            const estadisticas = personalFiltrado.reduce((acc, personal) => {
+                const tipo = personal.tipoPersona;
+                if (tipo === 'Médico') acc.medicos++;
+                else if (tipo === 'Enfermero(a)') acc.enfermeria++;
+                else if (tipo === 'Laboratorista') acc.laboratorio++;
+                else if (tipo === 'Administrativo') acc.administrativo++;
+                else if (tipo === 'Auxiliar') acc.apoyo++;
+                else if (tipo === 'Directivo') acc.directivo++;
+                return acc;
+            }, {
+                medicos: 0,
+                enfermeria: 0,
+                laboratorio: 0,
+                administrativo: 0,
+                apoyo: 0,
+                directivo: 0
+            });
+
+            document.getElementById('totalMedicos').textContent = estadisticas.medicos;
+            document.getElementById('totalEnfermeria').textContent = estadisticas.enfermeria;
+            document.getElementById('totalLaboratorio').textContent = estadisticas.laboratorio;
+            document.getElementById('totalAdministrativo').textContent = estadisticas.administrativo;
+            document.getElementById('totalApoyo').textContent = estadisticas.apoyo;
+            document.getElementById('totalDirectivo').textContent = estadisticas.directivo;
+        }
+
+        function verDetalle(id) {
+            const personal = personalData.find(p => p.id === id);
+            if (personal) {
+                document.getElementById('modal-title').textContent = `${personal.nombres} ${personal.apellidos}`;
+                llenarFormulario(personal);
+                document.getElementById('modalPersonal').classList.remove('hidden');
+            }
+        }
+
+        function editarPersonal(id) {
+            const personal = personalData.find(p => p.id === id);
+            if (personal) {
+                document.getElementById('modal-title').textContent = `Editar: ${personal.nombres} ${personal.apellidos}`;
+                llenarFormulario(personal);
+                document.getElementById('modalPersonal').classList.remove('hidden');
+            }
+        }
+
+        function llenarFormulario(personal) {
+            document.getElementById('modalTipoPersona').value = personal.tipoPersona;
+            document.getElementById('modalCargo').value = personal.cargo;
+            document.getElementById('modalNombres').value = personal.nombres;
+            document.getElementById('modalApellidos').value = personal.apellidos;
+            document.getElementById('modalNroDoc').value = personal.nroDoc;
+            document.getElementById('modalTelefonos').value = personal.telefonos;
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalPersonal').classList.add('hidden');
+        }
+
+        function guardarPersonal() {
+            // Aquí iría la lógica para guardar los cambios
+            cerrarModal();
+            // Simular actualización
+            setTimeout(() => {
+                actualizarVista();
+                actualizarEstadisticas();
+            }, 100);
+        }
+
+        function imprimirLista() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const datos = personalFiltrado.map(personal => ({
+                'Tipo de Persona': personal.tipoPersona,
+                'Nombres': personal.nombres,
+                'Apellidos': personal.apellidos,
+                'N° Documento': personal.nroDoc,
+                'Cargo': personal.cargo,
+                'Teléfonos': personal.telefonos,
+                'Especialidad': personal.especialidad || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Personal Médico');
+            XLSX.writeFile(workbook, 'listado_personal_medico.xlsx');
+        }
+
+        // Funciones adicionales para gestión de personal
+        function agregarPersonal() {
+            document.getElementById('modal-title').textContent = 'Nuevo Personal';
+            document.getElementById('formPersonal').reset();
+            document.getElementById('modalPersonal').classList.remove('hidden');
+        }
+    </script>
+
+    <!-- Incluir XLSX para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

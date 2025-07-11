@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE PACIENTES - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-break { page-break-after: always; }
+            body { font-size: 12px; }
+            .container { max-width: none; margin: 0; padding: 10px; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .search-highlight { background-color: #fef3c7; }
+        .patient-card:hover { transform: translateY(-2px); transition: all 0.3s ease; }
+        .age-badge { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-blue-600 no-print">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-users text-3xl text-blue-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">LISTADO DE PACIENTES</h1>
+                        <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="fechaHora" class="text-sm text-gray-600"></span>
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters Panel -->
+    <div class="container mx-auto px-6 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-blue-600"></i>
+                Filtros y Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por Nº Documento:</label>
+                    <input type="text" id="filtroDoc" placeholder="Ingrese número de documento..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por Nombres:</label>
+                    <input type="text" id="filtroNombres" placeholder="Ingrese nombres..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por Apellidos:</label>
+                    <input type="text" id="filtroApellidos" placeholder="Ingrese apellidos..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Rango de Edad:</label>
+                    <select id="filtroEdad" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las edades</option>
+                        <option value="0-17">Menores (0-17 años)</option>
+                        <option value="18-35">Jóvenes (18-35 años)</option>
+                        <option value="36-60">Adultos (36-60 años)</option>
+                        <option value="61-120">Mayores (61+ años)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-4">
+                <button onclick="limpiarFiltros()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-eraser"></i>
+                    <span>Limpiar Filtros</span>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleVista()" id="btnVista" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-th-large"></i>
+                        <span>Vista Tarjetas</span>
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Exportar Excel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Pacientes</p>
+                        <p id="totalPacientes" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <i class="fas fa-users text-2xl text-blue-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Pacientes Activos</p>
+                        <p id="pacientesActivos" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <i class="fas fa-user-check text-2xl text-green-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Edad Promedio</p>
+                        <p id="edadPromedio" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                    <i class="fas fa-calendar-alt text-2xl text-purple-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Registros Filtrados</p>
+                        <p id="pacientesFiltrados" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <i class="fas fa-filter text-2xl text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="container mx-auto px-6 pb-6">
+        <div id="vistaTabla" class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="ordenarTabla('documento')">
+                                <div class="flex items-center space-x-1">
+                                    <span>Nº DOC</span>
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="ordenarTabla('nombres')">
+                                <div class="flex items-center space-x-1">
+                                    <span>NOMBRES</span>
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="ordenarTabla('apellidos')">
+                                <div class="flex items-center space-x-1">
+                                    <span>APELLIDOS</span>
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">APELLIDO DE CASADA</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="ordenarTabla('fecnac')">
+                                <div class="flex items-center space-x-1">
+                                    <span>FECHA NAC.</span>
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EDAD</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TELÉFONOS</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaPacientes" class="bg-white divide-y divide-gray-200">
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Card View -->
+        <div id="vistaTarjetas" class="hidden">
+            <div id="tarjetasPacientes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Las tarjetas se cargarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header (only visible when printing) -->
+    <div class="hidden print:block">
+        <div class="text-center mb-8">
+            <h1 class="text-xl font-bold mb-2">LISTADO DE PACIENTES</h1>
+            <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+            <p class="text-sm text-gray-600">Fecha de impresión: <span id="fechaImpresion"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de pacientes
+        let pacientesData = [
+            {
+                nrodoc: "12345678",
+                nombres: "MARÍA ELENA",
+                apellidos: "GONZÁLEZ TORRES",
+                apecasada: "DE LÓPEZ",
+                fecnac: "1985-03-15",
+                telefonos: "011-4567-8901"
+            },
+            {
+                nrodoc: "87654321",
+                nombres: "JUAN CARLOS",
+                apellidos: "MARTÍNEZ SILVA",
+                apecasada: "",
+                fecnac: "1978-07-22",
+                telefonos: "011-2345-6789"
+            },
+            {
+                nrodoc: "11223344",
+                nombres: "ANA LUCÍA",
+                apellidos: "FERNÁNDEZ CASTRO",
+                apecasada: "VEGA",
+                fecnac: "1992-11-08",
+                telefonos: "011-9876-5432"
+            },
+            {
+                nrodoc: "55667788",
+                nombres: "ROBERTO DANIEL",
+                apellidos: "HERRERA MENDOZA",
+                apecasada: "",
+                fecnac: "1965-12-03",
+                telefonos: "011-1122-3344"
+            },
+            {
+                nrodoc: "99887766",
+                nombres: "PATRICIA ISABEL",
+                apellidos: "RAMOS JIMÉNEZ",
+                apecasada: "MORALES",
+                fecnac: "1990-04-17",
+                telefonos: "011-5566-7788"
+            },
+            {
+                nrodoc: "33445566",
+                nombres: "CARLOS EDUARDO",
+                apellidos: "VARGAS PEÑA",
+                apecasada: "",
+                fecnac: "1972-09-28",
+                telefonos: "011-3344-5566"
+            },
+            {
+                nrodoc: "77889900",
+                nombres: "LUCÍA BEATRIZ",
+                apellidos: "MORENO DELGADO",
+                apecasada: "RUIZ",
+                fecnac: "1988-01-14",
+                telefonos: "011-7788-9900"
+            },
+            {
+                nrodoc: "22334455",
+                nombres: "MIGUEL ÁNGEL",
+                apellidos: "SANTOS CRUZ",
+                apecasada: "",
+                fecnac: "1995-06-30",
+                telefonos: "011-2233-4455"
+            },
+            {
+                nrodoc: "66778899",
+                nombres: "CAROLINA",
+                apellidos: "AGUIRRE VÁSQUEZ",
+                apecasada: "TORRES",
+                fecnac: "1983-10-12",
+                telefonos: "011-6677-8899"
+            },
+            {
+                nrodoc: "44556677",
+                nombres: "ANDRÉS FELIPE",
+                apellidos: "ROJAS NAVARRO",
+                apecasada: "",
+                fecnac: "1976-02-25",
+                telefonos: "011-4455-6677"
+            }
+        ];
+
+        let pacientesFiltrados = [...pacientesData];
+        let ordenActual = { campo: '', direccion: 'asc' };
+        let vistaActual = 'tabla';
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializar();
+            cargarPacientes();
+            configurarFiltros();
+        });
+
+        function inicializar() {
+            actualizarFechaHora();
+            setInterval(actualizarFechaHora, 1000);
+            document.getElementById('fechaImpresion').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function actualizarFechaHora() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES');
+            document.getElementById('fechaHora').textContent = `${fecha} ${hora}`;
+        }
+
+        function calcularEdad(fechaNacimiento) {
+            const hoy = new Date();
+            const nacimiento = new Date(fechaNacimiento);
+            let edad = hoy.getFullYear() - nacimiento.getFullYear();
+            const mesActual = hoy.getMonth();
+            const mesNacimiento = nacimiento.getMonth();
+            
+            if (mesActual < mesNacimiento || (mesActual === mesNacimiento && hoy.getDate() < nacimiento.getDate())) {
+                edad--;
+            }
+            return edad;
+        }
+
+        function cargarPacientes() {
+            if (vistaActual === 'tabla') {
+                cargarTabla();
+            } else {
+                cargarTarjetas();
+            }
+            actualizarEstadisticas();
+        }
+
+        function cargarTabla() {
+            const tbody = document.getElementById('tablaPacientes');
+            tbody.innerHTML = '';
+
+            pacientesFiltrados.forEach(paciente => {
+                const edad = calcularEdad(paciente.fecnac);
+                const fechaFormateada = new Date(paciente.fecnac).toLocaleDateString('es-ES');
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors fade-in';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${paciente.nrodoc}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${paciente.nombres}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${paciente.apellidos}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${paciente.apecasada || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${fechaFormateada}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="age-badge">${edad} años</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${paciente.telefonos}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <div class="flex space-x-2">
+                            <button onclick="verDetallePaciente('${paciente.nrodoc}')" class="text-blue-600 hover:text-blue-900" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="editarPaciente('${paciente.nrodoc}')" class="text-green-600 hover:text-green-900" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="imprimirFichaPaciente('${paciente.nrodoc}')" class="text-purple-600 hover:text-purple-900" title="Imprimir ficha">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function cargarTarjetas() {
+            const container = document.getElementById('tarjetasPacientes');
+            container.innerHTML = '';
+
+            pacientesFiltrados.forEach(paciente => {
+                const edad = calcularEdad(paciente.fecnac);
+                const fechaFormateada = new Date(paciente.fecnac).toLocaleDateString('es-ES');
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md hover:shadow-lg transition-all patient-card fade-in';
+                card.innerHTML = `
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">${paciente.nombres}</h3>
+                                    <p class="text-sm text-gray-600">${paciente.apellidos} ${paciente.apecasada ? 'de ' + paciente.apecasada : ''}</p>
+                                </div>
+                            </div>
+                            <span class="age-badge">${edad} años</span>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-id-card w-4 mr-3 text-gray-400"></i>
+                                <span>Documento: <strong>${paciente.nrodoc}</strong></span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-calendar w-4 mr-3 text-gray-400"></i>
+                                <span>Nacimiento: <strong>${fechaFormateada}</strong></span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-phone w-4 mr-3 text-gray-400"></i>
+                                <span>Teléfono: <strong>${paciente.telefonos}</strong></span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-100 no-print">
+                            <button onclick="verDetallePaciente('${paciente.nrodoc}')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="editarPaciente('${paciente.nrodoc}')" class="text-green-600 hover:text-green-800 p-2" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="imprimirFichaPaciente('${paciente.nrodoc}')" class="text-purple-600 hover:text-purple-800 p-2" title="Imprimir ficha">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function configurarFiltros() {
+            ['filtroDoc', 'filtroNombres', 'filtroApellidos', 'filtroEdad'].forEach(id => {
+                document.getElementById(id).addEventListener('input', aplicarFiltros);
+                document.getElementById(id).addEventListener('change', aplicarFiltros);
+            });
+        }
+
+        function aplicarFiltros() {
+            const filtroDoc = document.getElementById('filtroDoc').value.toLowerCase();
+            const filtroNombres = document.getElementById('filtroNombres').value.toLowerCase();
+            const filtroApellidos = document.getElementById('filtroApellidos').value.toLowerCase();
+            const filtroEdad = document.getElementById('filtroEdad').value;
+
+            pacientesFiltrados = pacientesData.filter(paciente => {
+                const cumpleDoc = paciente.nrodoc.toLowerCase().includes(filtroDoc);
+                const cumpleNombres = paciente.nombres.toLowerCase().includes(filtroNombres);
+                const cumpleApellidos = paciente.apellidos.toLowerCase().includes(filtroApellidos);
+                
+                let cumpleEdad = true;
+                if (filtroEdad) {
+                    const edad = calcularEdad(paciente.fecnac);
+                    const [min, max] = filtroEdad.split('-').map(Number);
+                    cumpleEdad = edad >= min && edad <= max;
+                }
+
+                return cumpleDoc && cumpleNombres && cumpleApellidos && cumpleEdad;
+            });
+
+            cargarPacientes();
+        }
+
+        function limpiarFiltros() {
+            ['filtroDoc', 'filtroNombres', 'filtroApellidos', 'filtroEdad'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            pacientesFiltrados = [...pacientesData];
+            cargarPacientes();
+        }
+
+        function ordenarTabla(campo) {
+            if (ordenActual.campo === campo) {
+                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                ordenActual.campo = campo;
+                ordenActual.direccion = 'asc';
+            }
+
+            pacientesFiltrados.sort((a, b) => {
+                let valorA, valorB;
+                
+                switch(campo) {
+                    case 'documento':
+                        valorA = a.nrodoc;
+                        valorB = b.nrodoc;
+                        break;
+                    case 'nombres':
+                        valorA = a.nombres;
+                        valorB = b.nombres;
+                        break;
+                    case 'apellidos':
+                        valorA = a.apellidos;
+                        valorB = b.apellidos;
+                        break;
+                    case 'fecnac':
+                        valorA = new Date(a.fecnac);
+                        valorB = new Date(b.fecnac);
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (valorA < valorB) return ordenActual.direccion === 'asc' ? -1 : 1;
+                if (valorA > valorB) return ordenActual.direccion === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            cargarPacientes();
+        }
+
+        function toggleVista() {
+            const btnVista = document.getElementById('btnVista');
+            const vistaTabla = document.getElementById('vistaTabla');
+            const vistaTarjetas = document.getElementById('vistaTarjetas');
+
+            if (vistaActual === 'tabla') {
+                vistaActual = 'tarjetas';
+                vistaTabla.classList.add('hidden');
+                vistaTarjetas.classList.remove('hidden');
+                btnVista.innerHTML = '<i class="fas fa-table"></i><span>Vista Tabla</span>';
+            } else {
+                vistaActual = 'tabla';
+                vistaTarjetas.classList.add('hidden');
+                vistaTabla.classList.remove('hidden');
+                btnVista.innerHTML = '<i class="fas fa-th-large"></i><span>Vista Tarjetas</span>';
+            }
+            
+            cargarPacientes();
+        }
+
+        function actualizarEstadisticas() {
+            document.getElementById('totalPacientes').textContent = pacientesData.length;
+            document.getElementById('pacientesActivos').textContent = pacientesData.length;
+            document.getElementById('pacientesFiltrados').textContent = pacientesFiltrados.length;
+            
+            if (pacientesData.length > 0) {
+                const edadPromedio = pacientesData.reduce((sum, paciente) => {
+                    return sum + calcularEdad(paciente.fecnac);
+                }, 0) / pacientesData.length;
+                document.getElementById('edadPromedio').textContent = Math.round(edadPromedio) + ' años';
+            }
+        }
+
+        // Funciones de acciones
+        function verDetallePaciente(nrodoc) {
+            alert(`Ver detalles del paciente con documento: ${nrodoc}`);
+        }
+
+        function editarPaciente(nrodoc) {
+            alert(`Editar paciente con documento: ${nrodoc}`);
+        }
+
+        function imprimirFichaPaciente(nrodoc) {
+            const paciente = pacientesData.find(p => p.nrodoc === nrodoc);
+            if (paciente) {
+                alert(`Imprimir ficha médica de: ${paciente.nombres} ${paciente.apellidos}`);
+            }
+        }
+
+        function exportarExcel() {
+            // Crear CSV para exportar
+            let csv = 'Nº Documento,Nombres,Apellidos,Apellido de Casada,Fecha Nacimiento,Edad,Teléfonos\n';
+            
+            pacientesFiltrados.forEach(paciente => {
+                const edad = calcularEdad(paciente.fecnac);
+                const fechaFormateada = new Date(paciente.fecnac).toLocaleDateString('es-ES');
+                csv += `"${paciente.nrodoc}","${paciente.nombres}","${paciente.apellidos}","${paciente.apecasada || ''}","${fechaFormateada}","${edad}","${paciente.telefonos}"\n`;
+            });
+
+            // Descargar archivo
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `listado_pacientes_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Manejo de mensajes del sistema padre
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'refresh':
+                        location.reload();
+                        break;
+                    case 'search':
+                        document.getElementById('filtroNombres').focus();
+                        break;
+                }
+            }
+        });
+
+        // Notificar al sistema padre sobre el estado
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'status_update',
+                message: 'Listado de pacientes cargado correctamente'
+            }, '*');
+            
+            window.parent.postMessage({
+                type: 'record_info',
+                info: `Total: ${pacientesData.length} pacientes`
+            }, '*');
+        }
+    </script>
+</body>
+</html>

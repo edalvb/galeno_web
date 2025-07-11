@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Gestión de Insumos Médicos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-visible { display: block !important; }
+            body { -webkit-print-color-adjust: exact; }
+            .page-break { page-break-after: always; }
+        }
+        
+        .inventory-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .inventory-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .cost-high { background-color: #fee2e2; color: #991b1b; }
+        .cost-medium { background-color: #fef3c7; color: #92400e; }
+        .cost-low { background-color: #dcfce7; color: #166534; }
+        
+        .provider-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        
+        .type-badge {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-4">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="inventory-card p-3 rounded-full">
+                    <i class="fas fa-boxes text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Gestión de Insumos Médicos</h1>
+                    <p class="text-gray-600">Control de inventario y proveedores</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="toggleView()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-th-list mr-2"></i>
+                    <span id="viewToggleText">Vista Tarjetas</span>
+                </button>
+                <button onclick="exportData()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Exportar
+                </button>
+                <button onclick="window.print()" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Estadísticas -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Filtros -->
+        <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 no-print">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                <i class="fas fa-filter mr-2 text-blue-500"></i>
+                Filtros de Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                    <input type="text" id="filtrocodigo" placeholder="Buscar por código..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Insumo</label>
+                    <input type="text" id="filtronombre" placeholder="Buscar por nombre..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                    <select id="filtroproveedor" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todos los proveedores</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Insumo</label>
+                    <select id="filtrotipo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todos los tipos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Línea de Producto</label>
+                    <select id="filtrolinea" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todas las líneas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rango de Costo</label>
+                    <select id="filtrocosto" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todos los costos</option>
+                        <option value="bajo">Costo Bajo (< $50.000)</option>
+                        <option value="medio">Costo Medio ($50.000 - $200.000)</option>
+                        <option value="alto">Costo Alto (> $200.000)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button onclick="aplicarFiltros()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Aplicar Filtros
+                </button>
+                <button onclick="limpiarFiltros()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                <i class="fas fa-chart-bar mr-2 text-green-500"></i>
+                Estadísticas
+            </h3>
+            <div class="space-y-3">
+                <div class="stat-card p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="totalInsumos">0</div>
+                    <div class="text-sm opacity-90">Total Insumos</div>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-blue-800" id="totalProveedores">0</div>
+                    <div class="text-sm text-blue-600">Proveedores</div>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-green-800" id="valorInventario">$0</div>
+                    <div class="text-sm text-green-600">Valor Total</div>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-yellow-800" id="costoPromedio">$0</div>
+                    <div class="text-sm text-yellow-600">Costo Promedio</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header (Solo visible en impresión) -->
+    <div class="hidden print-visible mb-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">LISTADO DE INSUMOS</h1>
+            <p class="text-gray-600 mb-4">MEG@SYS - Sistema de Gestión Médica</p>
+            <div class="border-b-2 border-gray-300 mb-4"></div>
+            <div class="flex justify-between text-sm text-gray-600">
+                <span id="fechaImpresion"></span>
+                <span>Página 1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('codigo')">
+                            <i class="fas fa-barcode mr-2"></i>Código
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('tipo')">
+                            <i class="fas fa-tags mr-2"></i>Tipo
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('nombre')">
+                            <i class="fas fa-box mr-2"></i>Nombre
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('proveedor')">
+                            <i class="fas fa-truck mr-2"></i>Proveedor
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('linea')">
+                            <i class="fas fa-sitemap mr-2"></i>Línea
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('costo')">
+                            <i class="fas fa-dollar-sign mr-2"></i>Costo
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-600" onclick="ordenarTabla('arancel')">
+                            <i class="fas fa-receipt mr-2"></i>Arancel
+                            <i class="fas fa-sort ml-1"></i>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tablaInsumos" class="divide-y divide-gray-200">
+                    <!-- Los datos se cargarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Vista de Tarjetas -->
+    <div id="vistaTarjetas" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Las tarjetas se cargarán aquí dinámicamente -->
+    </div>
+
+    <!-- Modal de Detalles -->
+    <div id="modalDetalles" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-90vh overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">Detalles del Insumo</h3>
+                        <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="contenidoModal">
+                        <!-- Contenido del modal se carga dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo para demostración
+        let datosInsumos = [
+            {
+                codigo: 'INS001',
+                tipo: 'Material Quirúrgico',
+                nombre: 'Guantes de Látex',
+                proveedor: 'Proveedor Médico A',
+                linea: 'Protección Personal',
+                costo: 25000,
+                arancel: 35000
+            },
+            {
+                codigo: 'INS002',
+                tipo: 'Instrumental',
+                nombre: 'Bisturí Desechable',
+                proveedor: 'Instrumental Médico S.A.',
+                linea: 'Cirugía General',
+                costo: 15000,
+                arancel: 25000
+            },
+            {
+                codigo: 'INS003',
+                tipo: 'Farmacéutico',
+                nombre: 'Suero Fisiológico 500ml',
+                proveedor: 'Farmacéuticos Unidos',
+                linea: 'Soluciones',
+                costo: 8000,
+                arancel: 12000
+            },
+            {
+                codigo: 'INS004',
+                tipo: 'Equipo Médico',
+                nombre: 'Termómetro Digital',
+                proveedor: 'TecnoMed',
+                linea: 'Diagnóstico',
+                costo: 75000,
+                arancel: 95000
+            },
+            {
+                codigo: 'INS005',
+                tipo: 'Material de Curación',
+                nombre: 'Gasas Estériles 10x10',
+                proveedor: 'Proveedor Médico A',
+                linea: 'Cuidado de Heridas',
+                costo: 12000,
+                arancel: 18000
+            },
+            {
+                codigo: 'INS006',
+                tipo: 'Laboratorio',
+                nombre: 'Jeringas 5ml',
+                proveedor: 'LabMed',
+                linea: 'Extracción',
+                costo: 3500,
+                arancel: 5000
+            },
+            {
+                codigo: 'INS007',
+                tipo: 'Equipo Médico',
+                nombre: 'Tensiómetro Digital',
+                proveedor: 'TecnoMed',
+                linea: 'Diagnóstico',
+                costo: 250000,
+                arancel: 320000
+            },
+            {
+                codigo: 'INS008',
+                tipo: 'Material Quirúrgico',
+                nombre: 'Mascarillas N95',
+                proveedor: 'Protección Total',
+                linea: 'Protección Personal',
+                costo: 45000,
+                arancel: 65000
+            }
+        ];
+
+        let datosOriginales = [...datosInsumos];
+        let vistaActual = 'tabla'; // 'tabla' o 'tarjetas'
+        let ordenActual = { campo: '', direccion: 'asc' };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarFiltros();
+            mostrarDatos();
+            actualizarEstadisticas();
+            document.getElementById('fechaImpresion').textContent = 
+                'Fecha de impresión: ' + new Date().toLocaleDateString('es-ES');
+        });
+
+        function cargarFiltros() {
+            // Cargar proveedores únicos
+            const proveedores = [...new Set(datosOriginales.map(item => item.proveedor))];
+            const selectProveedor = document.getElementById('filtroproveedor');
+            proveedores.forEach(proveedor => {
+                const option = document.createElement('option');
+                option.value = proveedor;
+                option.textContent = proveedor;
+                selectProveedor.appendChild(option);
+            });
+
+            // Cargar tipos únicos
+            const tipos = [...new Set(datosOriginales.map(item => item.tipo))];
+            const selectTipo = document.getElementById('filtrotipo');
+            tipos.forEach(tipo => {
+                const option = document.createElement('option');
+                option.value = tipo;
+                option.textContent = tipo;
+                selectTipo.appendChild(option);
+            });
+
+            // Cargar líneas únicas
+            const lineas = [...new Set(datosOriginales.map(item => item.linea))];
+            const selectLinea = document.getElementById('filtrolinea');
+            lineas.forEach(linea => {
+                const option = document.createElement('option');
+                option.value = linea;
+                option.textContent = linea;
+                selectLinea.appendChild(option);
+            });
+        }
+
+        function mostrarDatos() {
+            if (vistaActual === 'tabla') {
+                mostrarTabla();
+            } else {
+                mostrarTarjetas();
+            }
+        }
+
+        function mostrarTabla() {
+            const tbody = document.getElementById('tablaInsumos');
+            tbody.innerHTML = '';
+
+            datosInsumos.forEach(insumo => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors cursor-pointer';
+                row.onclick = () => mostrarDetalles(insumo);
+
+                const claseCosto = obtenerClaseCosto(insumo.costo);
+
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-mono text-sm font-semibold text-blue-600">${insumo.codigo}</td>
+                    <td class="px-4 py-3">
+                        <span class="type-badge">${insumo.tipo}</span>
+                    </td>
+                    <td class="px-4 py-3 font-medium">${insumo.nombre}</td>
+                    <td class="px-4 py-3">
+                        <span class="provider-tag">${insumo.proveedor}</span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">${insumo.linea}</td>
+                    <td class="px-4 py-3">
+                        <span class="${claseCosto} px-2 py-1 rounded-full text-sm font-semibold">
+                            ${formatearMoneda(insumo.costo)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-green-600 font-semibold">${formatearMoneda(insumo.arancel)}</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function mostrarTarjetas() {
+            const container = document.getElementById('vistaTarjetas');
+            container.innerHTML = '';
+
+            datosInsumos.forEach(insumo => {
+                const card = document.createElement('div');
+                card.className = 'inventory-card p-6 rounded-lg cursor-pointer transform transition-all duration-200 hover:scale-105';
+                card.onclick = () => mostrarDetalles(insumo);
+
+                const claseCosto = obtenerClaseCosto(insumo.costo);
+                const rentabilidad = ((insumo.arancel - insumo.costo) / insumo.costo * 100).toFixed(1);
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                <i class="fas fa-box text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">${insumo.nombre}</h3>
+                                <p class="text-sm opacity-80">${insumo.codigo}</p>
+                            </div>
+                        </div>
+                        <span class="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs">
+                            ${insumo.tipo}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm opacity-80">Proveedor:</span>
+                            <span class="font-medium">${insumo.proveedor}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm opacity-80">Línea:</span>
+                            <span class="font-medium">${insumo.linea}</span>
+                        </div>
+                        <div class="border-t border-white border-opacity-20 pt-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm opacity-80">Costo:</span>
+                                <span class="font-bold text-lg">${formatearMoneda(insumo.costo)}</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm opacity-80">Arancel:</span>
+                                <span class="font-bold text-lg text-green-300">${formatearMoneda(insumo.arancel)}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm opacity-80">Rentabilidad:</span>
+                                <span class="font-bold text-yellow-300">+${rentabilidad}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function obtenerClaseCosto(costo) {
+            if (costo < 50000) return 'cost-low';
+            if (costo <= 200000) return 'cost-medium';
+            return 'cost-high';
+        }
+
+        function formatearMoneda(valor) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            }).format(valor);
+        }
+
+        function toggleView() {
+            const vistaTabla = document.getElementById('vistaTabla');
+            const vistaTarjetas = document.getElementById('vistaTarjetas');
+            const toggleText = document.getElementById('viewToggleText');
+
+            if (vistaActual === 'tabla') {
+                vistaTabla.classList.add('hidden');
+                vistaTarjetas.classList.remove('hidden');
+                vistaTarjetas.classList.add('grid');
+                vistaActual = 'tarjetas';
+                toggleText.textContent = 'Vista Tabla';
+            } else {
+                vistaTarjetas.classList.add('hidden');
+                vistaTarjetas.classList.remove('grid');
+                vistaTabla.classList.remove('hidden');
+                vistaActual = 'tabla';
+                toggleText.textContent = 'Vista Tarjetas';
+            }
+
+            mostrarDatos();
+        }
+
+        function aplicarFiltros() {
+            const filtros = {
+                codigo: document.getElementById('filtrocodigo').value.toLowerCase(),
+                nombre: document.getElementById('filtronombre').value.toLowerCase(),
+                proveedor: document.getElementById('filtroproveedor').value,
+                tipo: document.getElementById('filtrotipo').value,
+                linea: document.getElementById('filtrolinea').value,
+                costo: document.getElementById('filtrocosto').value
+            };
+
+            datosInsumos = datosOriginales.filter(insumo => {
+                const cumpleCodigo = !filtros.codigo || insumo.codigo.toLowerCase().includes(filtros.codigo);
+                const cumpleNombre = !filtros.nombre || insumo.nombre.toLowerCase().includes(filtros.nombre);
+                const cumpleProveedor = !filtros.proveedor || insumo.proveedor === filtros.proveedor;
+                const cumpleTipo = !filtros.tipo || insumo.tipo === filtros.tipo;
+                const cumpleLinea = !filtros.linea || insumo.linea === filtros.linea;
+                
+                let cumpleCosto = true;
+                if (filtros.costo) {
+                    switch(filtros.costo) {
+                        case 'bajo':
+                            cumpleCosto = insumo.costo < 50000;
+                            break;
+                        case 'medio':
+                            cumpleCosto = insumo.costo >= 50000 && insumo.costo <= 200000;
+                            break;
+                        case 'alto':
+                            cumpleCosto = insumo.costo > 200000;
+                            break;
+                    }
+                }
+
+                return cumpleCodigo && cumpleNombre && cumpleProveedor && cumpleTipo && cumpleLinea && cumpleCosto;
+            });
+
+            mostrarDatos();
+            actualizarEstadisticas();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtrocodigo').value = '';
+            document.getElementById('filtronombre').value = '';
+            document.getElementById('filtroproveedor').value = '';
+            document.getElementById('filtrotipo').value = '';
+            document.getElementById('filtrolinea').value = '';
+            document.getElementById('filtrocosto').value = '';
+            
+            datosInsumos = [...datosOriginales];
+            mostrarDatos();
+            actualizarEstadisticas();
+        }
+
+        function ordenarTabla(campo) {
+            if (ordenActual.campo === campo) {
+                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                ordenActual.campo = campo;
+                ordenActual.direccion = 'asc';
+            }
+
+            datosInsumos.sort((a, b) => {
+                let valorA = a[campo];
+                let valorB = b[campo];
+
+                if (typeof valorA === 'string') {
+                    valorA = valorA.toLowerCase();
+                    valorB = valorB.toLowerCase();
+                }
+
+                if (ordenActual.direccion === 'asc') {
+                    return valorA < valorB ? -1 : valorA > valorB ? 1 : 0;
+                } else {
+                    return valorA > valorB ? -1 : valorA < valorB ? 1 : 0;
+                }
+            });
+
+            mostrarDatos();
+        }
+
+        function actualizarEstadisticas() {
+            const totalInsumos = datosInsumos.length;
+            const totalProveedores = new Set(datosInsumos.map(i => i.proveedor)).size;
+            const valorInventario = datosInsumos.reduce((sum, i) => sum + i.costo, 0);
+            const costoPromedio = totalInsumos > 0 ? valorInventario / totalInsumos : 0;
+
+            document.getElementById('totalInsumos').textContent = totalInsumos;
+            document.getElementById('totalProveedores').textContent = totalProveedores;
+            document.getElementById('valorInventario').textContent = formatearMoneda(valorInventario);
+            document.getElementById('costoPromedio').textContent = formatearMoneda(costoPromedio);
+        }
+
+        function mostrarDetalles(insumo) {
+            const rentabilidad = ((insumo.arancel - insumo.costo) / insumo.costo * 100).toFixed(1);
+            const margenGanancia = insumo.arancel - insumo.costo;
+
+            const contenido = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="inventory-card p-4 rounded-lg text-white">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <i class="fas fa-box text-2xl"></i>
+                                <div>
+                                    <h4 class="font-bold text-lg">${insumo.nombre}</h4>
+                                    <p class="opacity-80">${insumo.codigo}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-gray-600">Tipo de Insumo</label>
+                                <p class="font-semibold">${insumo.tipo}</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-gray-600">Proveedor</label>
+                                <p class="font-semibold">${insumo.proveedor}</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-gray-600">Línea de Producto</label>
+                                <p class="font-semibold">${insumo.linea}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="stat-card p-4 rounded-lg text-white text-center">
+                            <i class="fas fa-chart-line text-2xl mb-2"></i>
+                            <h4 class="font-bold">Análisis Financiero</h4>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="bg-red-50 border border-red-200 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-red-600">Costo Unitario</label>
+                                <p class="font-bold text-lg text-red-700">${formatearMoneda(insumo.costo)}</p>
+                            </div>
+                            <div class="bg-green-50 border border-green-200 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-green-600">Precio Arancel</label>
+                                <p class="font-bold text-lg text-green-700">${formatearMoneda(insumo.arancel)}</p>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-blue-600">Margen de Ganancia</label>
+                                <p class="font-bold text-lg text-blue-700">${formatearMoneda(margenGanancia)}</p>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                                <label class="text-sm font-medium text-yellow-600">Rentabilidad</label>
+                                <p class="font-bold text-lg text-yellow-700">+${rentabilidad}%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('contenidoModal').innerHTML = contenido;
+            document.getElementById('modalDetalles').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalDetalles').classList.add('hidden');
+        }
+
+        function exportData() {
+            let csv = 'Código,Tipo,Nombre,Proveedor,Línea,Costo,Arancel,Rentabilidad\n';
+            
+            datosInsumos.forEach(insumo => {
+                const rentabilidad = ((insumo.arancel - insumo.costo) / insumo.costo * 100).toFixed(1);
+                csv += `"${insumo.codigo}","${insumo.tipo}","${insumo.nombre}","${insumo.proveedor}","${insumo.linea}",${insumo.costo},${insumo.arancel},"${rentabilidad}%"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'insumos_medicos.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalDetalles').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
+
+        // Event listeners para filtros en tiempo real
+        document.getElementById('filtrocodigo').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtronombre').addEventListener('input', aplicarFiltros);
+    </script>
+</body>
+</html>

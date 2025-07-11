@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE LÍNEAS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .codigo-column {
+            text-align: center;
+            width: 150px;
+        }
+        .nombre-column {
+            width: 200px;
+        }
+        .descripcion-column {
+            width: auto;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE LÍNEAS</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PAGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="codigo-column">CODIGO LINEA:</th>
+                    <th class="nombre-column">NOMBRE LINEA:</th>
+                    <th class="descripcion-column">DESCRIPCION:</th>
+                </tr>
+            </thead>
+            <tbody id="lineas-data">
+                <tr>
+                    <td colspan="3" class="no-data">
+                        Cargando datos de líneas...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>PAGINA: <span id="footer-page">1</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de líneas de productos/servicios médicos
+        const lineas = [
+            {
+                codigo: "001",
+                nombre: "CARDIOLOGÍA",
+                descripcion: "Línea de productos y servicios cardiovasculares"
+            },
+            {
+                codigo: "002", 
+                nombre: "ONCOLOGÍA",
+                descripcion: "Línea de productos para tratamiento del cáncer"
+            },
+            {
+                codigo: "003",
+                nombre: "NEUROLOGÍA",
+                descripcion: "Línea de productos neurológicos y cerebrales"
+            },
+            {
+                codigo: "004",
+                nombre: "PEDIATRÍA",
+                descripcion: "Línea de productos especializados en niños"
+            },
+            {
+                codigo: "005",
+                nombre: "GINECOLOGÍA",
+                descripcion: "Línea de productos para salud femenina"
+            },
+            {
+                codigo: "006",
+                nombre: "ORTOPEDIA",
+                descripcion: "Línea de productos ortopédicos y traumatológicos"
+            },
+            {
+                codigo: "007",
+                nombre: "DERMATOLOGÍA",
+                descripcion: "Línea de productos para cuidado de la piel"
+            },
+            {
+                codigo: "008",
+                nombre: "OFTALMOLOGÍA",
+                descripcion: "Línea de productos para cuidado de los ojos"
+            },
+            {
+                codigo: "009",
+                nombre: "ENDOCRINOLOGÍA",
+                descripcion: "Línea de productos para trastornos hormonales"
+            },
+            {
+                codigo: "010",
+                nombre: "GASTROENTEROLOGÍA",
+                descripcion: "Línea de productos para el sistema digestivo"
+            },
+            {
+                codigo: "011",
+                nombre: "UROLOGÍA",
+                descripcion: "Línea de productos urológicos"
+            },
+            {
+                codigo: "012",
+                nombre: "PSIQUIATRÍA",
+                descripcion: "Línea de productos para salud mental"
+            },
+            {
+                codigo: "013",
+                nombre: "RADIOLOGÍA",
+                descripcion: "Línea de equipos y materiales de diagnóstico por imagen"
+            },
+            {
+                codigo: "014",
+                nombre: "ANESTESIOLOGÍA",
+                descripcion: "Línea de productos anestésicos y de sedación"
+            },
+            {
+                codigo: "015",
+                nombre: "MEDICINA GENERAL",
+                descripcion: "Línea de productos de medicina general y familiar"
+            }
+        ];
+
+        // Cargar datos de líneas
+        function loadLineas() {
+            const tbody = document.getElementById('lineas-data');
+            
+            if (lineas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="no-data">No hay datos de líneas disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = lineas.map(linea => `
+                <tr>
+                    <td class="codigo-column">${linea.codigo}</td>
+                    <td class="nombre-column">${linea.nombre}</td>
+                    <td class="descripcion-column">${linea.descripcion}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadLineas();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

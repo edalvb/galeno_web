@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Antecedentes - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+        <div class="flex items-center mb-6">
+            <i class="fas fa-edit text-blue-600 text-2xl mr-3"></i>
+            <h1 class="text-2xl font-bold text-gray-800">Editor de Antecedentes</h1>
+        </div>
+
+        <div class="mb-6">
+            <label for="memo" class="block text-sm font-medium text-gray-700 mb-2">
+                Contenido del Texto
+            </label>
+            <textarea 
+                id="memo" 
+                class="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Escriba aquí los antecedentes médicos, observaciones o cualquier información relevante..."
+            ></textarea>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <div class="text-sm text-gray-500">
+                <span id="charCount">0</span> caracteres
+            </div>
+            
+            <div class="flex space-x-3">
+                <button 
+                    onclick="acceptChanges()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200">
+                    <i class="fas fa-check mr-2"></i>
+                    Aceptar
+                </button>
+                
+                <button 
+                    onclick="cancelChanges()" 
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+
+        <!-- Formatting Toolbar -->
+        <div class="mt-4 pt-4 border-t border-gray-200">
+            <div class="flex flex-wrap gap-2">
+                <button onclick="insertText('• ')" class="toolbar-btn" title="Viñeta">
+                    <i class="fas fa-list-ul"></i>
+                </button>
+                <button onclick="insertText('1. ')" class="toolbar-btn" title="Lista numerada">
+                    <i class="fas fa-list-ol"></i>
+                </button>
+                <button onclick="insertText('\n---\n')" class="toolbar-btn" title="Separador">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button onclick="insertText('\nFecha: ' + getCurrentDate() + '\n')" class="toolbar-btn" title="Insertar fecha">
+                    <i class="fas fa-calendar"></i>
+                </button>
+                <button onclick="toUpperCase()" class="toolbar-btn" title="Mayúsculas">
+                    <i class="fas fa-font"></i>
+                </button>
+                <button onclick="clearText()" class="toolbar-btn text-red-600" title="Limpiar">
+                    <i class="fas fa-eraser"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .toolbar-btn {
+            @apply px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded text-sm transition-colors duration-200;
+        }
+    </style>
+
+    <script>
+        const memoTextarea = document.getElementById('memo');
+        const charCount = document.getElementById('charCount');
+
+        // Update character count
+        memoTextarea.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+
+        function acceptChanges() {
+            const content = memoTextarea.value.trim();
+            
+            if (content === '') {
+                if (!confirm('El contenido está vacío. ¿Desea continuar?')) {
+                    return;
+                }
+            }
+
+            // Store the content (in a real application, this would be sent to a parent window or saved)
+            localStorage.setItem('memo_content', content);
+            
+            alert('Cambios guardados exitosamente');
+            
+            // Check if opened as popup/modal
+            if (window.opener) {
+                // Send data back to parent window
+                window.opener.postMessage({
+                    type: 'memo_saved',
+                    content: content
+                }, '*');
+                window.close();
+            } else {
+                // Redirect to previous page or close
+                history.back();
+            }
+        }
+
+        function cancelChanges() {
+            if (memoTextarea.value.trim() !== '' && 
+                !confirm('¿Está seguro de cancelar? Se perderán todos los cambios.')) {
+                return;
+            }
+
+            memoTextarea.value = '';
+            
+            if (window.opener) {
+                window.close();
+            } else {
+                history.back();
+            }
+        }
+
+        function insertText(text) {
+            const start = memoTextarea.selectionStart;
+            const end = memoTextarea.selectionEnd;
+            const value = memoTextarea.value;
+            
+            memoTextarea.value = value.substring(0, start) + text + value.substring(end);
+            memoTextarea.selectionStart = memoTextarea.selectionEnd = start + text.length;
+            memoTextarea.focus();
+            
+            // Update character count
+            charCount.textContent = memoTextarea.value.length;
+        }
+
+        function getCurrentDate() {
+            return new Date().toLocaleDateString('es-ES');
+        }
+
+        function toUpperCase() {
+            const start = memoTextarea.selectionStart;
+            const end = memoTextarea.selectionEnd;
+            
+            if (start === end) {
+                alert('Por favor seleccione el texto que desea convertir a mayúsculas');
+                return;
+            }
+            
+            const value = memoTextarea.value;
+            const selectedText = value.substring(start, end);
+            const upperText = selectedText.toUpperCase();
+            
+            memoTextarea.value = value.substring(0, start) + upperText + value.substring(end);
+            memoTextarea.selectionStart = start;
+            memoTextarea.selectionEnd = start + upperText.length;
+            memoTextarea.focus();
+            
+            charCount.textContent = memoTextarea.value.length;
+        }
+
+        function clearText() {
+            if (memoTextarea.value.trim() !== '' && 
+                !confirm('¿Está seguro de limpiar todo el contenido?')) {
+                return;
+            }
+            
+            memoTextarea.value = '';
+            memoTextarea.focus();
+            charCount.textContent = '0';
+        }
+
+        // Handle keyboard shortcuts
+        memoTextarea.addEventListener('keydown', function(e) {
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                acceptChanges();
+                return;
+            }
+            
+            // Escape to cancel
+            if (e.key === 'Escape') {
+                cancelChanges();
+                return;
+            }
+            
+            // Ctrl+A to select all
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                this.select();
+                return;
+            }
+        });
+
+        // Load previous content if available
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedContent = localStorage.getItem('memo_content');
+            if (savedContent) {
+                memoTextarea.value = savedContent;
+                charCount.textContent = savedContent.length;
+            }
+            
+            // Focus on textarea
+            memoTextarea.focus();
+        });
+
+        // Handle window close
+        window.addEventListener('beforeunload', function(e) {
+            if (memoTextarea.value.trim() !== '') {
+                e.preventDefault();
+                e.returnValue = '¿Está seguro de salir? Los cambios no guardados se perderán.';
+            }
+        });
+    </script>
+</body>
+</html>

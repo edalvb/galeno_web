@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orden de Servicio Simple - Sistema Galeno</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .report-container {
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 29.7cm;
+            position: relative;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .order-form {
+            background: #fff;
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #ff0000;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            padding: 10px 0;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .form-field input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+        }
+
+        .form-field input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .services-section {
+            background: #fff;
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11px;
+        }
+
+        .services-table th {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #555;
+        }
+
+        .services-table td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .services-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .services-table tr:hover {
+            background: #e8f4f8;
+        }
+
+        .add-service-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .add-service-btn:hover {
+            background: #229954;
+        }
+
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 50px;
+            padding: 30px 0;
+        }
+
+        .signature-box {
+            text-align: center;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+        }
+
+        .signature-box strong {
+            display: block;
+            margin-top: 10px;
+            color: #2c3e50;
+        }
+
+        .footer-info {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .navigation h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .navigation button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .navigation button:hover {
+            background: #2980b9;
+        }
+
+        .print-button {
+            background: #27ae60 !important;
+        }
+
+        .print-button:hover {
+            background: #229954 !important;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .navigation {
+                display: none;
+            }
+            
+            .report-container {
+                border: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+            }
+
+            .add-service-btn {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .signature-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .services-table {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <h3>📋 Navegación</h3>
+        <button onclick="clearForm()">🗃️ Nuevo</button>
+        <button onclick="loadSample()">📝 Muestra</button>
+        <button onclick="addService()">➕ Servicio</button>
+        <button class="print-button" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+
+    <div class="report-container">
+        <div class="header">
+            <h1>🏥 Orden de Servicio</h1>
+            <p>Sistema de Gestión Médica Galeno</p>
+        </div>
+
+        <div class="order-form">
+            <div class="form-section">
+                <div class="section-title">📋 Información General</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Número de Orden:</label>
+                        <input type="text" id="ordenNumero" placeholder="OS-2024-001">
+                    </div>
+                    <div class="form-field">
+                        <label>Fecha:</label>
+                        <input type="date" id="fecha">
+                    </div>
+                    <div class="form-field">
+                        <label>Hora:</label>
+                        <input type="time" id="hora">
+                    </div>
+                    <div class="form-field">
+                        <label>Ficha Clínica:</label>
+                        <input type="text" id="fichaClinica" placeholder="FC-12345">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">👤 Datos del Paciente</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Tipo de Documento:</label>
+                        <input type="text" id="tipoDoc" placeholder="CC, TI, CE">
+                    </div>
+                    <div class="form-field">
+                        <label>Número de Documento:</label>
+                        <input type="text" id="numeroDoc" placeholder="12345678">
+                    </div>
+                    <div class="form-field">
+                        <label>Nombres:</label>
+                        <input type="text" id="nombres" placeholder="Juan Carlos">
+                    </div>
+                    <div class="form-field">
+                        <label>Apellidos:</label>
+                        <input type="text" id="apellidos" placeholder="García López">
+                    </div>
+                    <div class="form-field">
+                        <label>Fecha de Nacimiento:</label>
+                        <input type="date" id="fechaNacimiento">
+                    </div>
+                    <div class="form-field">
+                        <label>Teléfono:</label>
+                        <input type="text" id="telefono" placeholder="300-123-4567">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">👨‍⚕️ Médico Solicitante</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Código Médico:</label>
+                        <input type="text" id="codigoMedico" placeholder="MED001">
+                    </div>
+                    <div class="form-field">
+                        <label>Nombre del Médico:</label>
+                        <input type="text" id="nombreMedico" placeholder="Dr. Carlos Rodríguez">
+                    </div>
+                    <div class="form-field">
+                        <label>Especialidad:</label>
+                        <input type="text" id="especialidad" placeholder="Cardiología">
+                    </div>
+                    <div class="form-field">
+                        <label>Registro Médico:</label>
+                        <input type="text" id="registroMedico" placeholder="RM12345">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-title">🏥 Información Institucional</div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Instituto/Clínica:</label>
+                        <input type="text" id="instituto" placeholder="Hospital Central">
+                    </div>
+                    <div class="form-field">
+                        <label>Servicio/Departamento:</label>
+                        <input type="text" id="departamento" placeholder="Cardiología">
+                    </div>
+                    <div class="form-field">
+                        <label>Ubicación:</label>
+                        <input type="text" id="ubicacion" placeholder="Piso 3, Consultorio 301">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="services-section">
+            <div class="section-title">🔬 Servicios/Procedimientos Solicitados</div>
+            <button class="add-service-btn" onclick="addService()">➕ Agregar Servicio</button>
+            
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción del Servicio</th>
+                        <th>Tipo</th>
+                        <th>Urgente</th>
+                        <th>Cantidad</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody id="services-tbody">
+                    <tr>
+                        <td>LAB001</td>
+                        <td>Hemograma Completo</td>
+                        <td>Laboratorio</td>
+                        <td>No</td>
+                        <td>1</td>
+                        <td>En ayunas</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-section">
+            <div class="section-title">📝 Observaciones Generales</div>
+            <textarea id="observaciones" style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;" placeholder="Indicaciones especiales, diagnóstico presuntivo, etc."></textarea>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <div style="height: 60px; border: 1px dashed #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
+                    Firma del Médico
+                </div>
+                <strong>Dr. <span id="firmanteNombre">Carlos Rodríguez</span></strong>
+                <div>Reg. Médico: <span id="firmanteRegistro">RM12345</span></div>
+            </div>
+            <div class="signature-box">
+                <div style="height: 60px; border: 1px dashed #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: #999;">
+                    Sello Institucional
+                </div>
+                <strong>Hospital Central</strong>
+                <div>Fecha: <span id="fechaFirma">25/01/2024</span></div>
+            </div>
+        </div>
+
+        <div class="footer-info">
+            <p>📋 ORDEN DE SERVICIO MÉDICO</p>
+            <p>🏥 Sistema de Gestión Hospitalaria Galeno</p>
+            <p>📞 Para consultas: (601) 555-0123 | 📧 info@galeno.com</p>
+        </div>
+    </div>
+
+    <script>
+        function loadSample() {
+            // Cargar datos de muestra
+            document.getElementById('ordenNumero').value = 'OS-2024-001';
+            document.getElementById('fecha').value = '2024-01-25';
+            document.getElementById('hora').value = '14:30';
+            document.getElementById('fichaClinica').value = 'FC-12345';
+            document.getElementById('tipoDoc').value = 'CC';
+            document.getElementById('numeroDoc').value = '12345678';
+            document.getElementById('nombres').value = 'Juan Carlos';
+            document.getElementById('apellidos').value = 'García López';
+            document.getElementById('fechaNacimiento').value = '1985-05-15';
+            document.getElementById('telefono').value = '300-123-4567';
+            document.getElementById('codigoMedico').value = 'MED001';
+            document.getElementById('nombreMedico').value = 'Dr. Carlos Rodríguez';
+            document.getElementById('especialidad').value = 'Cardiología';
+            document.getElementById('registroMedico').value = 'RM12345';
+            document.getElementById('instituto').value = 'Hospital Central';
+            document.getElementById('departamento').value = 'Cardiología';
+            document.getElementById('ubicacion').value = 'Piso 3, Consultorio 301';
+            document.getElementById('observaciones').value = 'Paciente con antecedentes de hipertensión. Requiere evaluación cardiovascular completa.';
+            
+            updateSignature();
+        }
+
+        function clearForm() {
+            // Limpiar todos los campos
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => input.value = '');
+            
+            // Limpiar tabla de servicios excepto la primera fila
+            const tbody = document.getElementById('services-tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>LAB001</td>
+                    <td>Hemograma Completo</td>
+                    <td>Laboratorio</td>
+                    <td>No</td>
+                    <td>1</td>
+                    <td>En ayunas</td>
+                </tr>
+            `;
+        }
+
+        function addService() {
+            const tbody = document.getElementById('services-tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td contenteditable="true">SERV${tbody.children.length + 1}</td>
+                <td contenteditable="true">Nuevo Servicio</td>
+                <td contenteditable="true">Tipo</td>
+                <td contenteditable="true">No</td>
+                <td contenteditable="true">1</td>
+                <td contenteditable="true">Observaciones</td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        function updateSignature() {
+            const nombreMedico = document.getElementById('nombreMedico').value || 'Carlos Rodríguez';
+            const registroMedico = document.getElementById('registroMedico').value || 'RM12345';
+            const fecha = document.getElementById('fecha').value || new Date().toLocaleDateString('es-CO');
+            
+            document.getElementById('firmanteNombre').textContent = nombreMedico.replace('Dr. ', '');
+            document.getElementById('firmanteRegistro').textContent = registroMedico;
+            document.getElementById('fechaFirma').textContent = fecha;
+        }
+
+        // Actualizar firma cuando cambien los campos relevantes
+        document.getElementById('nombreMedico').addEventListener('input', updateSignature);
+        document.getElementById('registroMedico').addEventListener('input', updateSignature);
+        document.getElementById('fecha').addEventListener('input', updateSignature);
+
+        // Configurar fecha y hora actuales al cargar
+        window.onload = function() {
+            const now = new Date();
+            document.getElementById('fecha').value = now.toISOString().split('T')[0];
+            document.getElementById('hora').value = now.toTimeString().slice(0, 5);
+            updateSignature();
+        };
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        clearForm();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        loadSample();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        addService();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        window.print();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

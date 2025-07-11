@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Listado de Áreas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-visible { display: block !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page-break { page-break-after: always; }
+        }
+        
+        .area-card {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .area-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .area-administrativa {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+        }
+        
+        .area-medica {
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+        }
+        
+        .area-quirurgica {
+            background: linear-gradient(45deg, #7c3aed, #8b5cf6);
+        }
+        
+        .area-laboratorio {
+            background: linear-gradient(45deg, #059669, #10b981);
+        }
+        
+        .area-radiologia {
+            background: linear-gradient(45deg, #ea580c, #f97316);
+        }
+        
+        .area-farmacia {
+            background: linear-gradient(45deg, #0891b2, #06b6d4);
+        }
+        
+        .area-enfermeria {
+            background: linear-gradient(45deg, #db2777, #ec4899);
+        }
+        
+        .codigo-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .search-highlight {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-4">
+    <!-- Header institucional para impresión -->
+    <div class="hidden print-visible mb-8">
+        <div class="text-center mb-6">
+            <div class="w-full h-20 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg flex items-center justify-center mb-4">
+                <h1 class="text-3xl font-bold text-white">LISTADO DE ÁREAS</h1>
+            </div>
+            <div class="border-b-2 border-red-500 mb-4"></div>
+            <div class="flex justify-between text-sm text-gray-600">
+                <span id="fechaImpresion"></span>
+                <span>PÁGINA: 1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header interactivo -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="area-card p-3 rounded-full">
+                    <i class="fas fa-map-marked-alt text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Listado de Áreas</h1>
+                    <p class="text-gray-600">Gestión de áreas hospitalarias y departamentos</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="toggleView()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-th-large mr-2"></i>
+                    <span id="viewToggleText">Vista Tabla</span>
+                </button>
+                <button onclick="nuevaArea()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nueva Área
+                </button>
+                <button onclick="exportData()" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Exportar
+                </button>
+                <button onclick="window.print()" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Estadísticas -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Filtros -->
+        <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 no-print">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                <i class="fas fa-filter mr-2 text-blue-500"></i>
+                Filtros de Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Código Área</label>
+                    <input type="text" id="filtrocodigo" placeholder="Buscar por código..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <input type="text" id="filtrodescripcion" placeholder="Buscar por descripción..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Área</label>
+                    <select id="filtrotipo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todos los tipos</option>
+                        <option value="Administrativa">Administrativa</option>
+                        <option value="Médica">Médica</option>
+                        <option value="Quirúrgica">Quirúrgica</option>
+                        <option value="Laboratorio">Laboratorio</option>
+                        <option value="Radiología">Radiología</option>
+                        <option value="Farmacia">Farmacia</option>
+                        <option value="Enfermería">Enfermería</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Búsqueda General</label>
+                    <input type="text" id="filtrogeneral" placeholder="Buscar en todos los campos..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button onclick="aplicarFiltros()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Buscar
+                </button>
+                <button onclick="limpiarFiltros()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    Limpiar
+                </button>
+                <button onclick="ordenarPor('codigo')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    <i class="fas fa-sort-alpha-down mr-2"></i>
+                    Por Código
+                </button>
+                <button onclick="ordenarPor('descripcion')" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                    <i class="fas fa-sort-alpha-down mr-2"></i>
+                    Por Descripción
+                </button>
+                <button onclick="ordenarPor('tipo')" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors">
+                    <i class="fas fa-sort mr-2"></i>
+                    Por Tipo
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                <i class="fas fa-chart-pie mr-2 text-green-500"></i>
+                Estadísticas
+            </h3>
+            <div class="space-y-3">
+                <div class="area-card p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="totalAreas">0</div>
+                    <div class="text-sm opacity-90">Total Áreas</div>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-blue-800" id="areasAdministrativas">0</div>
+                    <div class="text-sm text-blue-600">Administrativas</div>
+                </div>
+                <div class="bg-red-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-red-800" id="areasMedicas">0</div>
+                    <div class="text-sm text-red-600">Médicas</div>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-purple-800" id="areasQuirurgicas">0</div>
+                    <div class="text-sm text-purple-600">Quirúrgicas</div>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-orange-800" id="areasFiltradas">0</div>
+                    <div class="text-sm text-orange-600">Mostradas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Tarjetas -->
+    <div id="vistaTarjetas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+        <!-- Se llena dinámicamente -->
+    </div>
+
+    <!-- Vista Tabla -->
+    <div id="vistaTabla" class="hidden bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gradient-to-r from-green-500 to-blue-600 text-white">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-white hover:bg-opacity-10" onclick="ordenarTabla('codigo')">
+                            <i class="fas fa-sort mr-1"></i>
+                            CÓDIGO ÁREA
+                        </th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-white hover:bg-opacity-10" onclick="ordenarTabla('descripcion')">
+                            <i class="fas fa-sort mr-1"></i>
+                            DESCRIPCIÓN
+                        </th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-white hover:bg-opacity-10" onclick="ordenarTabla('tipo')">
+                            <i class="fas fa-sort mr-1"></i>
+                            TIPO
+                        </th>
+                        <th class="px-6 py-3 text-center text-sm font-semibold">ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody" class="divide-y divide-gray-200">
+                    <!-- Los datos se cargarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal de Detalle/Edición -->
+    <div id="modalArea" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-lg w-full">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Detalle de Área</h3>
+                        <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="contenidoArea">
+                        <!-- Contenido del modal se carga dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo para demostración
+        let datosAreas = [
+            { codarea: 'ADM001', descripcion: 'Administración General', tipo: 'Administrativa' },
+            { codarea: 'ADM002', descripcion: 'Recursos Humanos', tipo: 'Administrativa' },
+            { codarea: 'ADM003', descripcion: 'Contabilidad y Finanzas', tipo: 'Administrativa' },
+            { codarea: 'MED001', descripcion: 'Consulta Externa', tipo: 'Médica' },
+            { codarea: 'MED002', descripcion: 'Medicina Interna', tipo: 'Médica' },
+            { codarea: 'MED003', descripcion: 'Pediatría', tipo: 'Médica' },
+            { codarea: 'MED004', descripcion: 'Cardiología', tipo: 'Médica' },
+            { codarea: 'MED005', descripcion: 'Ginecología y Obstetricia', tipo: 'Médica' },
+            { codarea: 'QUI001', descripcion: 'Cirugía General', tipo: 'Quirúrgica' },
+            { codarea: 'QUI002', descripcion: 'Sala de Operaciones', tipo: 'Quirúrgica' },
+            { codarea: 'QUI003', descripcion: 'Neurocirugía', tipo: 'Quirúrgica' },
+            { codarea: 'LAB001', descripcion: 'Laboratorio de Análisis Clínicos', tipo: 'Laboratorio' },
+            { codarea: 'LAB002', descripcion: 'Microbiología', tipo: 'Laboratorio' },
+            { codarea: 'LAB003', descripcion: 'Hematología', tipo: 'Laboratorio' },
+            { codarea: 'RAD001', descripcion: 'Radiología General', tipo: 'Radiología' },
+            { codarea: 'RAD002', descripcion: 'Tomografía', tipo: 'Radiología' },
+            { codarea: 'RAD003', descripcion: 'Ecografía', tipo: 'Radiología' },
+            { codarea: 'FAR001', descripcion: 'Farmacia Central', tipo: 'Farmacia' },
+            { codarea: 'FAR002', descripcion: 'Farmacia de Emergencias', tipo: 'Farmacia' },
+            { codarea: 'ENF001', descripcion: 'Enfermería General', tipo: 'Enfermería' },
+            { codarea: 'ENF002', descripcion: 'Cuidados Intensivos', tipo: 'Enfermería' },
+            { codarea: 'ENF003', descripcion: 'Enfermería Pediátrica', tipo: 'Enfermería' },
+            { codarea: 'EME001', descripcion: 'Urgencias y Emergencias', tipo: 'Médica' },
+            { codarea: 'INT001', descripcion: 'Internación General', tipo: 'Enfermería' },
+            { codarea: 'MAN001', descripcion: 'Mantenimiento', tipo: 'Administrativa' },
+            { codarea: 'SEG001', descripcion: 'Seguridad', tipo: 'Administrativa' },
+            { codarea: 'LIM001', descripcion: 'Limpieza y Saneamiento', tipo: 'Administrativa' },
+            { codarea: 'NUT001', descripcion: 'Nutrición y Dietética', tipo: 'Médica' },
+            { codarea: 'PSI001', descripcion: 'Psicología', tipo: 'Médica' },
+            { codarea: 'REH001', descripcion: 'Rehabilitación', tipo: 'Médica' }
+        ];
+
+        let datosOriginales = JSON.parse(JSON.stringify(datosAreas));
+        let vistaActual = 'tarjetas'; // 'tarjetas' o 'tabla'
+        let ordenActual = { campo: 'codigo', direccion: 'asc' };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            mostrarDatos();
+            actualizarEstadisticas();
+            document.getElementById('fechaImpresion').textContent = 
+                new Date().toLocaleDateString('es-ES');
+        });
+
+        function obtenerClaseTipo(tipo) {
+            switch(tipo.toLowerCase()) {
+                case 'administrativa': return 'area-administrativa';
+                case 'médica': return 'area-medica';
+                case 'quirúrgica': return 'area-quirurgica';
+                case 'laboratorio': return 'area-laboratorio';
+                case 'radiología': return 'area-radiologia';
+                case 'farmacia': return 'area-farmacia';
+                case 'enfermería': return 'area-enfermeria';
+                default: return 'area-card';
+            }
+        }
+
+        function obtenerIconoTipo(tipo) {
+            switch(tipo.toLowerCase()) {
+                case 'administrativa': return 'fas fa-briefcase';
+                case 'médica': return 'fas fa-stethoscope';
+                case 'quirúrgica': return 'fas fa-scalpel';
+                case 'laboratorio': return 'fas fa-flask';
+                case 'radiología': return 'fas fa-x-ray';
+                case 'farmacia': return 'fas fa-pills';
+                case 'enfermería': return 'fas fa-user-nurse';
+                default: return 'fas fa-map-marker-alt';
+            }
+        }
+
+        function mostrarDatos() {
+            if (vistaActual === 'tarjetas') {
+                mostrarVistaTarjetas();
+            } else {
+                mostrarVistaTabla();
+            }
+        }
+
+        function mostrarVistaTarjetas() {
+            const container = document.getElementById('vistaTarjetas');
+            container.innerHTML = '';
+
+            datosAreas.forEach((area, index) => {
+                const areaCard = document.createElement('div');
+                areaCard.className = `${obtenerClaseTipo(area.tipo)} rounded-lg shadow-lg p-6 cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl text-white`;
+                areaCard.onclick = () => verDetalleArea(area.codarea);
+
+                areaCard.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="codigo-badge">${area.codarea}</div>
+                        <i class="${obtenerIconoTipo(area.tipo)} text-2xl opacity-70"></i>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold mb-2">${resaltarTexto(area.descripcion)}</h3>
+                        <div class="text-sm opacity-90">${area.tipo}</div>
+                    </div>
+                    <div class="text-xs opacity-75 mb-4">Área #${index + 1}</div>
+                    <div class="flex space-x-2">
+                        <button onclick="event.stopPropagation(); editarArea('${area.codarea}')" class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 py-2 rounded transition-colors">
+                            <i class="fas fa-edit text-sm"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); verDetalleArea('${area.codarea}')" class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 py-2 rounded transition-colors">
+                            <i class="fas fa-eye text-sm"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); eliminarArea('${area.codarea}')" class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 py-2 rounded transition-colors">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(areaCard);
+            });
+        }
+
+        function mostrarVistaTabla() {
+            const tbody = document.getElementById('tablaBody');
+            tbody.innerHTML = '';
+
+            datosAreas.forEach((area, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="codigo-badge bg-blue-100 text-blue-800">${area.codarea}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-900">${resaltarTexto(area.descripcion)}</div>
+                        <div class="text-sm text-gray-500">Área #${index + 1}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="${obtenerClaseTipo(area.tipo)} px-3 py-1 rounded-full text-sm font-semibold text-white">
+                            <i class="${obtenerIconoTipo(area.tipo)} mr-1"></i>
+                            ${area.tipo}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center space-x-1">
+                            <button onclick="editarArea('${area.codarea}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="verDetalleArea('${area.codarea}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="eliminarArea('${area.codarea}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function resaltarTexto(texto) {
+            const filtros = [
+                document.getElementById('filtrocodigo').value,
+                document.getElementById('filtrodescripcion').value,
+                document.getElementById('filtrogeneral').value
+            ].filter(f => f.trim() !== '');
+
+            let resultado = texto;
+            filtros.forEach(filtro => {
+                if (filtro.length > 0) {
+                    const regex = new RegExp(`(${filtro})`, 'gi');
+                    resultado = resultado.replace(regex, '<span class="search-highlight">$1</span>');
+                }
+            });
+            return resultado;
+        }
+
+        function toggleView() {
+            const vistaTarjetas = document.getElementById('vistaTarjetas');
+            const vistaTabla = document.getElementById('vistaTabla');
+            const toggleText = document.getElementById('viewToggleText');
+
+            if (vistaActual === 'tarjetas') {
+                vistaTarjetas.classList.add('hidden');
+                vistaTabla.classList.remove('hidden');
+                vistaActual = 'tabla';
+                toggleText.textContent = 'Vista Tarjetas';
+            } else {
+                vistaTabla.classList.add('hidden');
+                vistaTarjetas.classList.remove('hidden');
+                vistaActual = 'tarjetas';
+                toggleText.textContent = 'Vista Tabla';
+            }
+
+            mostrarDatos();
+        }
+
+        function aplicarFiltros() {
+            const filtros = {
+                codigo: document.getElementById('filtrocodigo').value.toLowerCase(),
+                descripcion: document.getElementById('filtrodescripcion').value.toLowerCase(),
+                tipo: document.getElementById('filtrotipo').value,
+                general: document.getElementById('filtrogeneral').value.toLowerCase()
+            };
+
+            datosAreas = datosOriginales.filter(area => {
+                const cumpleCodigo = !filtros.codigo || area.codarea.toLowerCase().includes(filtros.codigo);
+                const cumpleDescripcion = !filtros.descripcion || area.descripcion.toLowerCase().includes(filtros.descripcion);
+                const cumpleTipo = !filtros.tipo || area.tipo === filtros.tipo;
+                const cumpleGeneral = !filtros.general || 
+                    area.codarea.toLowerCase().includes(filtros.general) ||
+                    area.descripcion.toLowerCase().includes(filtros.general) || 
+                    area.tipo.toLowerCase().includes(filtros.general);
+
+                return cumpleCodigo && cumpleDescripcion && cumpleTipo && cumpleGeneral;
+            });
+
+            aplicarOrden();
+            mostrarDatos();
+            actualizarEstadisticas();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtrocodigo').value = '';
+            document.getElementById('filtrodescripcion').value = '';
+            document.getElementById('filtrotipo').value = '';
+            document.getElementById('filtrogeneral').value = '';
+            
+            datosAreas = JSON.parse(JSON.stringify(datosOriginales));
+            aplicarOrden();
+            mostrarDatos();
+            actualizarEstadisticas();
+        }
+
+        function ordenarPor(campo) {
+            ordenActual = { 
+                campo: campo, 
+                direccion: ordenActual.campo === campo && ordenActual.direccion === 'asc' ? 'desc' : 'asc' 
+            };
+            aplicarOrden();
+            mostrarDatos();
+        }
+
+        function ordenarTabla(campo) {
+            ordenarPor(campo);
+        }
+
+        function aplicarOrden() {
+            datosAreas.sort((a, b) => {
+                let valorA, valorB;
+                
+                if (ordenActual.campo === 'codigo') {
+                    valorA = a.codarea;
+                    valorB = b.codarea;
+                } else if (ordenActual.campo === 'descripcion') {
+                    valorA = a.descripcion;
+                    valorB = b.descripcion;
+                } else {
+                    valorA = a.tipo;
+                    valorB = b.tipo;
+                }
+
+                if (ordenActual.direccion === 'asc') {
+                    return valorA.localeCompare(valorB, 'es');
+                } else {
+                    return valorB.localeCompare(valorA, 'es');
+                }
+            });
+        }
+
+        function actualizarEstadisticas() {
+            const totalAreas = datosOriginales.length;
+            const areasFiltradas = datosAreas.length;
+            const areasAdministrativas = datosOriginales.filter(a => a.tipo === 'Administrativa').length;
+            const areasMedicas = datosOriginales.filter(a => a.tipo === 'Médica').length;
+            const areasQuirurgicas = datosOriginales.filter(a => a.tipo === 'Quirúrgica').length;
+
+            document.getElementById('totalAreas').textContent = totalAreas;
+            document.getElementById('areasFiltradas').textContent = areasFiltradas;
+            document.getElementById('areasAdministrativas').textContent = areasAdministrativas;
+            document.getElementById('areasMedicas').textContent = areasMedicas;
+            document.getElementById('areasQuirurgicas').textContent = areasQuirurgicas;
+        }
+
+        function verDetalleArea(codarea) {
+            const area = datosAreas.find(a => a.codarea === codarea);
+            if (!area) return;
+
+            const posicion = datosOriginales.findIndex(a => a.codarea === codarea) + 1;
+            const totalEnTipo = datosOriginales.filter(a => a.tipo === area.tipo).length;
+
+            const contenido = `
+                <div class="space-y-4">
+                    <div class="${obtenerClaseTipo(area.tipo)} p-6 rounded-lg text-white text-center">
+                        <div class="text-2xl font-bold mb-2">${area.descripcion}</div>
+                        <div class="text-lg opacity-90">${area.codarea}</div>
+                        <div class="text-sm opacity-75 mt-2">
+                            <i class="${obtenerIconoTipo(area.tipo)} mr-1"></i>
+                            ${area.tipo}
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-3">Información Detallada:</h5>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Código:</strong> ${area.codarea}</div>
+                            <div><strong>Tipo:</strong> ${area.tipo}</div>
+                            <div><strong>Descripción:</strong> ${area.descripcion}</div>
+                            <div><strong>Posición:</strong> #${posicion}</div>
+                            <div class="col-span-2"><strong>Total en categoría:</strong> ${totalEnTipo} áreas de tipo ${area.tipo}</div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button onclick="editarArea('${area.codarea}')" class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar
+                        </button>
+                        <button onclick="eliminarArea('${area.codarea}')" class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalTitle').textContent = 'Detalle de Área';
+            document.getElementById('contenidoArea').innerHTML = contenido;
+            document.getElementById('modalArea').classList.remove('hidden');
+        }
+
+        function editarArea(codarea) {
+            const area = datosAreas.find(a => a.codarea === codarea);
+            if (!area) return;
+
+            const contenido = `
+                <form onsubmit="guardarArea(event, '${codarea}')">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Código Área</label>
+                            <input type="text" id="editCodigo" value="${area.codarea}" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <input type="text" id="editDescripcion" value="${area.descripcion}" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                            <select id="editTipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="Administrativa" ${area.tipo === 'Administrativa' ? 'selected' : ''}>Administrativa</option>
+                                <option value="Médica" ${area.tipo === 'Médica' ? 'selected' : ''}>Médica</option>
+                                <option value="Quirúrgica" ${area.tipo === 'Quirúrgica' ? 'selected' : ''}>Quirúrgica</option>
+                                <option value="Laboratorio" ${area.tipo === 'Laboratorio' ? 'selected' : ''}>Laboratorio</option>
+                                <option value="Radiología" ${area.tipo === 'Radiología' ? 'selected' : ''}>Radiología</option>
+                                <option value="Farmacia" ${area.tipo === 'Farmacia' ? 'selected' : ''}>Farmacia</option>
+                                <option value="Enfermería" ${area.tipo === 'Enfermería' ? 'selected' : ''}>Enfermería</option>
+                            </select>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="submit" class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-save mr-2"></i>
+                                Guardar
+                            </button>
+                            <button type="button" onclick="cerrarModal()" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                                <i class="fas fa-times mr-2"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('modalTitle').textContent = 'Editar Área';
+            document.getElementById('contenidoArea').innerHTML = contenido;
+            document.getElementById('modalArea').classList.remove('hidden');
+        }
+
+        function guardarArea(event, codigoOriginal) {
+            event.preventDefault();
+            
+            const nuevoCodigo = document.getElementById('editCodigo').value.trim();
+            const nuevaDescripcion = document.getElementById('editDescripcion').value.trim();
+            const nuevoTipo = document.getElementById('editTipo').value;
+
+            if (!nuevoCodigo || !nuevaDescripcion || !nuevoTipo) {
+                alert('Todos los campos son obligatorios');
+                return;
+            }
+
+            // Buscar en datos originales y actuales
+            const indiceOriginal = datosOriginales.findIndex(a => a.codarea === codigoOriginal);
+            const indiceActual = datosAreas.findIndex(a => a.codarea === codigoOriginal);
+
+            const areaActualizada = { codarea: nuevoCodigo, descripcion: nuevaDescripcion, tipo: nuevoTipo };
+
+            if (indiceOriginal !== -1) {
+                datosOriginales[indiceOriginal] = areaActualizada;
+            }
+            if (indiceActual !== -1) {
+                datosAreas[indiceActual] = areaActualizada;
+            }
+
+            mostrarDatos();
+            actualizarEstadisticas();
+            cerrarModal();
+            alert('Área actualizada correctamente');
+        }
+
+        function nuevaArea() {
+            const contenido = `
+                <form onsubmit="crearArea(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Código Área</label>
+                            <input type="text" id="nuevoCodigo" required placeholder="Ej: ADM001"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <input type="text" id="nuevaDescripcion" required placeholder="Ej: Administración General"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                            <select id="nuevoTipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="Administrativa">Administrativa</option>
+                                <option value="Médica">Médica</option>
+                                <option value="Quirúrgica">Quirúrgica</option>
+                                <option value="Laboratorio">Laboratorio</option>
+                                <option value="Radiología">Radiología</option>
+                                <option value="Farmacia">Farmacia</option>
+                                <option value="Enfermería">Enfermería</option>
+                            </select>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="submit" class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                Crear
+                            </button>
+                            <button type="button" onclick="cerrarModal()" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                                <i class="fas fa-times mr-2"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('modalTitle').textContent = 'Nueva Área';
+            document.getElementById('contenidoArea').innerHTML = contenido;
+            document.getElementById('modalArea').classList.remove('hidden');
+        }
+
+        function crearArea(event) {
+            event.preventDefault();
+            
+            const codigo = document.getElementById('nuevoCodigo').value.trim().toUpperCase();
+            const descripcion = document.getElementById('nuevaDescripcion').value.trim();
+            const tipo = document.getElementById('nuevoTipo').value;
+
+            if (!codigo || !descripcion || !tipo) {
+                alert('Todos los campos son obligatorios');
+                return;
+            }
+
+            // Verificar que no exista el código
+            if (datosOriginales.some(a => a.codarea === codigo)) {
+                alert('Ya existe un área con ese código');
+                return;
+            }
+
+            const nuevaArea = { codarea: codigo, descripcion: descripcion, tipo: tipo };
+            datosOriginales.push(nuevaArea);
+            datosAreas.push(nuevaArea);
+
+            aplicarOrden();
+            mostrarDatos();
+            actualizarEstadisticas();
+            cerrarModal();
+            alert('Área creada correctamente');
+        }
+
+        function eliminarArea(codarea) {
+            if (!confirm('¿Está seguro de que desea eliminar esta área?')) {
+                return;
+            }
+
+            // Eliminar de ambos arrays
+            const indiceOriginal = datosOriginales.findIndex(a => a.codarea === codarea);
+            const indiceActual = datosAreas.findIndex(a => a.codarea === codarea);
+
+            if (indiceOriginal !== -1) {
+                datosOriginales.splice(indiceOriginal, 1);
+            }
+            if (indiceActual !== -1) {
+                datosAreas.splice(indiceActual, 1);
+            }
+
+            mostrarDatos();
+            actualizarEstadisticas();
+            cerrarModal();
+            alert('Área eliminada correctamente');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalArea').classList.add('hidden');
+        }
+
+        function exportData() {
+            let csv = 'Código,Descripción,Tipo\n';
+            datosAreas.forEach(area => {
+                csv += `"${area.codarea}","${area.descripcion}","${area.tipo}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'listado_areas.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalArea').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
+
+        // Event listeners para filtros en tiempo real
+        document.getElementById('filtrocodigo').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtrodescripcion').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtrotipo').addEventListener('change', aplicarFiltros);
+        document.getElementById('filtrogeneral').addEventListener('input', aplicarFiltros);
+    </script>
+</body>
+</html>

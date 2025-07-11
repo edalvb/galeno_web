@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Gestión de Pedidos de Materiales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-blue': '#2563eb',
+                        'medical-green': '#059669',
+                        'medical-red': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { print-color-adjust: exact; }
+            .print-header { display: block !important; }
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .pedido-pendiente {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        .pedido-aprobado {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        .pedido-enviado {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .pedido-recibido {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .pedido-cancelado {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+        .material-row {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin: 4px 0;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg no-print">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-clipboard-list text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Sistema MEG@SYS</h1>
+                        <p class="text-blue-100">Gestión de Pedidos de Materiales Médicos</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="window.history.back()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Print Header -->
+    <div class="print-header hidden">
+        <div class="text-center border-b-2 border-blue-600 pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-blue-800">LISTADO DE PEDIDOS DE MATERIALES</h1>
+            <p class="text-gray-600">Sistema MEG@SYS - Reporte Generado el <span id="print-date"></span></p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por N° pedido, área o proveedor..." 
+                               class="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <select id="estadoFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los Estados</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="APROBADO">Aprobado</option>
+                        <option value="ENVIADO">Enviado</option>
+                        <option value="RECIBIDO">Recibido</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+                    <select id="areaFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las Áreas</option>
+                        <option value="FARMACIA">Farmacia</option>
+                        <option value="LABORATORIO">Laboratorio</option>
+                        <option value="QUIROFANO">Quirófano</option>
+                        <option value="URGENCIAS">Urgencias</option>
+                        <option value="INTERNACION">Internación</option>
+                    </select>
+                    <input type="date" id="fechaFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">Vista:</span>
+                    <button id="viewCards" onclick="toggleView('cards')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-th-large mr-1"></i>Tarjetas
+                    </button>
+                    <button id="viewTable" onclick="toggleView('table')" class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors">
+                        <i class="fas fa-table mr-1"></i>Tabla
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+            <div class="stats-card text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm uppercase tracking-wide">Total Pedidos</p>
+                        <p class="text-3xl font-bold" id="totalPedidos">0</p>
+                    </div>
+                    <i class="fas fa-clipboard-list text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm uppercase tracking-wide">Pendientes</p>
+                        <p class="text-3xl font-bold" id="totalPendientes">0</p>
+                    </div>
+                    <i class="fas fa-clock text-4xl text-orange-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-blue-400 to-blue-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm uppercase tracking-wide">Enviados</p>
+                        <p class="text-3xl font-bold" id="totalEnviados">0</p>
+                    </div>
+                    <i class="fas fa-shipping-fast text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm uppercase tracking-wide">Recibidos</p>
+                        <p class="text-3xl font-bold" id="totalRecibidos">0</p>
+                    </div>
+                    <i class="fas fa-check-circle text-4xl text-green-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-red-400 to-red-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-100 text-sm uppercase tracking-wide">Cancelados</p>
+                        <p class="text-3xl font-bold" id="totalCancelados">0</p>
+                    </div>
+                    <i class="fas fa-times-circle text-4xl text-red-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Button -->
+        <div class="mb-6 no-print">
+            <button onclick="agregarPedido()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors shadow-lg">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Pedido
+            </button>
+        </div>
+
+        <!-- Cards View -->
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Table View -->
+        <div id="tableContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">N° Pedido</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Área</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Proveedor</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Items</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit/View -->
+    <div id="modalPedido" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold" id="modalTitle">Crear Nuevo Pedido</h3>
+                </div>
+                <form id="formPedido" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">N° de Pedido</label>
+                            <input type="text" id="modalIdPedido" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha del Pedido</label>
+                            <input type="date" id="modalFechaPedido" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Área Solicitante</label>
+                            <select id="modalArea" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Seleccionar área</option>
+                                <option value="FARMACIA">Farmacia</option>
+                                <option value="LABORATORIO">Laboratorio</option>
+                                <option value="QUIROFANO">Quirófano</option>
+                                <option value="URGENCIAS">Urgencias</option>
+                                <option value="INTERNACION">Internación</option>
+                                <option value="RADIOLOGIA">Radiología</option>
+                                <option value="ENFERMERIA">Enfermería</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                            <select id="modalEstado" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="APROBADO">Aprobado</option>
+                                <option value="ENVIADO">Enviado</option>
+                                <option value="RECIBIDO">Recibido</option>
+                                <option value="CANCELADO">Cancelado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código Proveedor</label>
+                            <input type="text" id="modalIdProveedor" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Proveedor</label>
+                            <input type="text" id="modalNombreProveedor" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                    </div>
+
+                    <!-- Detalle de Materiales -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Materiales Solicitados</h4>
+                            <button type="button" onclick="agregarMaterial()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Agregar Material
+                            </button>
+                        </div>
+                        <div id="materialesList" class="space-y-3">
+                            <!-- Material items will be added here -->
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar Pedido
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let pedidos = [
+            {
+                idPedido: 'PED001',
+                fechaPedido: '2025-01-10',
+                area: 'FARMACIA',
+                idProveedor: 'PROV001',
+                nombreProveedor: 'FARMACEUTICOS UNIDOS S.A.',
+                estado: 'PENDIENTE',
+                materiales: [
+                    { idMaterial: 'MAT001', nombreMaterial: 'PARACETAMOL 500MG', cantidad: 100 },
+                    { idMaterial: 'MAT002', nombreMaterial: 'IBUPROFENO 400MG', cantidad: 50 }
+                ]
+            },
+            {
+                idPedido: 'PED002',
+                fechaPedido: '2025-01-09',
+                area: 'LABORATORIO',
+                idProveedor: 'PROV002',
+                nombreProveedor: 'SUMINISTROS MEDICOS LAB',
+                estado: 'ENVIADO',
+                materiales: [
+                    { idMaterial: 'LAB001', nombreMaterial: 'TUBOS DE ENSAYO', cantidad: 200 },
+                    { idMaterial: 'LAB002', nombreMaterial: 'JERINGAS 5ML', cantidad: 150 }
+                ]
+            },
+            {
+                idPedido: 'PED003',
+                fechaPedido: '2025-01-08',
+                area: 'QUIROFANO',
+                idProveedor: 'PROV003',
+                nombreProveedor: 'EQUIPOS QUIRURGICOS LTDA',
+                estado: 'RECIBIDO',
+                materiales: [
+                    { idMaterial: 'QUI001', nombreMaterial: 'GUANTES QUIRURGICOS', cantidad: 500 },
+                    { idMaterial: 'QUI002', nombreMaterial: 'MASCARILLAS ESTERILES', cantidad: 300 }
+                ]
+            },
+            {
+                idPedido: 'PED004',
+                fechaPedido: '2025-01-07',
+                area: 'URGENCIAS',
+                idProveedor: 'PROV001',
+                nombreProveedor: 'FARMACEUTICOS UNIDOS S.A.',
+                estado: 'APROBADO',
+                materiales: [
+                    { idMaterial: 'URG001', nombreMaterial: 'SUERO FISIOLOGICO 500ML', cantidad: 80 },
+                    { idMaterial: 'URG002', nombreMaterial: 'VENDAS ELASTICAS', cantidad: 40 }
+                ]
+            },
+            {
+                idPedido: 'PED005',
+                fechaPedido: '2025-01-06',
+                area: 'INTERNACION',
+                idProveedor: 'PROV004',
+                nombreProveedor: 'INSUMOS HOSPITALARIOS',
+                estado: 'CANCELADO',
+                materiales: [
+                    { idMaterial: 'INT001', nombreMaterial: 'SABANAS HOSPITALARIAS', cantidad: 25 }
+                ]
+            }
+        ];
+
+        let currentView = 'cards';
+        let editingIndex = null;
+        let materialCounter = 0;
+
+        function initializeApp() {
+            renderPedidos();
+            updateStatistics();
+            setupEventListeners();
+            updatePrintDate();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterPedidos);
+            document.getElementById('estadoFiltro').addEventListener('change', filterPedidos);
+            document.getElementById('areaFiltro').addEventListener('change', filterPedidos);
+            document.getElementById('fechaFiltro').addEventListener('change', filterPedidos);
+            document.getElementById('formPedido').addEventListener('submit', guardarPedido);
+        }
+
+        function updatePrintDate() {
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function renderPedidos() {
+            if (currentView === 'cards') {
+                renderCards();
+            } else {
+                renderTable();
+            }
+        }
+
+        function getCardClass(estado) {
+            switch(estado) {
+                case 'PENDIENTE': return 'pedido-pendiente';
+                case 'APROBADO': return 'pedido-aprobado';
+                case 'ENVIADO': return 'pedido-enviado';
+                case 'RECIBIDO': return 'pedido-recibido';
+                case 'CANCELADO': return 'pedido-cancelado';
+                default: return 'pedido-pendiente';
+            }
+        }
+
+        function getIconClass(area) {
+            switch(area) {
+                case 'FARMACIA': return 'fas fa-pills';
+                case 'LABORATORIO': return 'fas fa-flask';
+                case 'QUIROFANO': return 'fas fa-scalpel';
+                case 'URGENCIAS': return 'fas fa-ambulance';
+                case 'INTERNACION': return 'fas fa-bed';
+                case 'RADIOLOGIA': return 'fas fa-x-ray';
+                case 'ENFERMERIA': return 'fas fa-user-nurse';
+                default: return 'fas fa-hospital';
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const filteredData = getFilteredPedidos();
+            
+            container.innerHTML = filteredData.map(pedido => {
+                const totalItems = pedido.materiales.reduce((sum, mat) => sum + mat.cantidad, 0);
+                
+                return `
+                <div class="${getCardClass(pedido.estado)} text-white rounded-lg shadow-lg card-hover transition-all duration-300">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                    <i class="${getIconClass(pedido.area)} text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold">Pedido ${pedido.idPedido}</h3>
+                                    <p class="text-blue-100">${formatDate(pedido.fechaPedido)}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-bold">${pedido.estado}</span>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Área:</span>
+                                <span class="font-semibold">${pedido.area}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Proveedor:</span>
+                                <span class="text-xs">${pedido.nombreProveedor}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Items:</span>
+                                <span class="font-bold">${pedido.materiales.length} tipos (${totalItems} unidades)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <p class="text-sm mb-2">Materiales:</p>
+                            <div class="space-y-1">
+                                ${pedido.materiales.slice(0, 3).map(mat => `
+                                    <div class="material-row">
+                                        <div class="flex justify-between text-xs">
+                                            <span>${mat.nombreMaterial}</span>
+                                            <span>${mat.cantidad} unid.</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                ${pedido.materiales.length > 3 ? `<div class="text-xs text-center">...y ${pedido.materiales.length - 3} más</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2 no-print">
+                            <button onclick="verPedido(${getOriginalIndex(pedido)})" 
+                                    class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-eye mr-2"></i>Ver
+                            </button>
+                            <button onclick="editarPedido(${getOriginalIndex(pedido)})" 
+                                    class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Editar
+                            </button>
+                            <button onclick="eliminarPedido(${getOriginalIndex(pedido)})" 
+                                    class="flex-1 bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filteredData = getFilteredPedidos();
+            
+            tbody.innerHTML = filteredData.map(pedido => {
+                const totalItems = pedido.materiales.reduce((sum, mat) => sum + mat.cantidad, 0);
+                const estadoBadge = getEstadoBadge(pedido.estado);
+                
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${pedido.idPedido}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(pedido.fechaPedido)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <i class="${getIconClass(pedido.area)} mr-1"></i>
+                            ${pedido.area}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${pedido.nombreProveedor}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pedido.materiales.length} tipos (${totalItems} unid.)</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${estadoBadge}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="verPedido(${getOriginalIndex(pedido)})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editarPedido(${getOriginalIndex(pedido)})" class="text-green-600 hover:text-green-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarPedido(${getOriginalIndex(pedido)})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function getEstadoBadge(estado) {
+            const badgeClasses = {
+                'PENDIENTE': 'bg-orange-100 text-orange-800',
+                'APROBADO': 'bg-blue-100 text-blue-800',
+                'ENVIADO': 'bg-purple-100 text-purple-800',
+                'RECIBIDO': 'bg-green-100 text-green-800',
+                'CANCELADO': 'bg-red-100 text-red-800'
+            };
+            
+            const icons = {
+                'PENDIENTE': 'fas fa-clock',
+                'APROBADO': 'fas fa-check',
+                'ENVIADO': 'fas fa-shipping-fast',
+                'RECIBIDO': 'fas fa-check-circle',
+                'CANCELADO': 'fas fa-times-circle'
+            };
+            
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClasses[estado]}">
+                        <i class="${icons[estado]} mr-1"></i>${estado}
+                    </span>`;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('es-ES');
+        }
+
+        function getOriginalIndex(pedido) {
+            return pedidos.findIndex(p => p.idPedido === pedido.idPedido);
+        }
+
+        function getFilteredPedidos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const estadoFiltro = document.getElementById('estadoFiltro').value;
+            const areaFiltro = document.getElementById('areaFiltro').value;
+            const fechaFiltro = document.getElementById('fechaFiltro').value;
+            
+            return pedidos.filter(pedido => {
+                const matchesSearch = !searchTerm || 
+                    pedido.idPedido.toLowerCase().includes(searchTerm) ||
+                    pedido.area.toLowerCase().includes(searchTerm) ||
+                    pedido.nombreProveedor.toLowerCase().includes(searchTerm);
+                
+                const matchesEstado = !estadoFiltro || pedido.estado === estadoFiltro;
+                const matchesArea = !areaFiltro || pedido.area === areaFiltro;
+                const matchesFecha = !fechaFiltro || pedido.fechaPedido === fechaFiltro;
+                
+                return matchesSearch && matchesEstado && matchesArea && matchesFecha;
+            });
+        }
+
+        function filterPedidos() {
+            renderPedidos();
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const viewCards = document.getElementById('viewCards');
+            const viewTable = document.getElementById('viewTable');
+            
+            if (view === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                viewCards.classList.remove('bg-gray-300', 'text-gray-700');
+                viewCards.classList.add('bg-blue-500', 'text-white');
+                viewTable.classList.remove('bg-blue-500', 'text-white');
+                viewTable.classList.add('bg-gray-300', 'text-gray-700');
+            } else {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                viewTable.classList.remove('bg-gray-300', 'text-gray-700');
+                viewTable.classList.add('bg-blue-500', 'text-white');
+                viewCards.classList.remove('bg-blue-500', 'text-white');
+                viewCards.classList.add('bg-gray-300', 'text-gray-700');
+            }
+            
+            renderPedidos();
+        }
+
+        function updateStatistics() {
+            const total = pedidos.length;
+            const pendientes = pedidos.filter(p => p.estado === 'PENDIENTE').length;
+            const enviados = pedidos.filter(p => p.estado === 'ENVIADO').length;
+            const recibidos = pedidos.filter(p => p.estado === 'RECIBIDO').length;
+            const cancelados = pedidos.filter(p => p.estado === 'CANCELADO').length;
+            
+            document.getElementById('totalPedidos').textContent = total;
+            document.getElementById('totalPendientes').textContent = pendientes;
+            document.getElementById('totalEnviados').textContent = enviados;
+            document.getElementById('totalRecibidos').textContent = recibidos;
+            document.getElementById('totalCancelados').textContent = cancelados;
+        }
+
+        function agregarPedido() {
+            editingIndex = null;
+            materialCounter = 0;
+            document.getElementById('modalTitle').textContent = 'Crear Nuevo Pedido';
+            document.getElementById('formPedido').reset();
+            document.getElementById('modalFechaPedido').value = new Date().toISOString().split('T')[0];
+            document.getElementById('materialesList').innerHTML = '';
+            agregarMaterial(); // Add one material row by default
+            document.getElementById('modalPedido').classList.remove('hidden');
+        }
+
+        function editarPedido(index) {
+            editingIndex = index;
+            const pedido = pedidos[index];
+            
+            document.getElementById('modalTitle').textContent = 'Editar Pedido';
+            document.getElementById('modalIdPedido').value = pedido.idPedido;
+            document.getElementById('modalFechaPedido').value = pedido.fechaPedido;
+            document.getElementById('modalArea').value = pedido.area;
+            document.getElementById('modalEstado').value = pedido.estado;
+            document.getElementById('modalIdProveedor').value = pedido.idProveedor;
+            document.getElementById('modalNombreProveedor').value = pedido.nombreProveedor;
+            
+            // Load materials
+            const materialesList = document.getElementById('materialesList');
+            materialesList.innerHTML = '';
+            materialCounter = 0;
+            
+            pedido.materiales.forEach(material => {
+                agregarMaterial(material);
+            });
+            
+            document.getElementById('modalPedido').classList.remove('hidden');
+        }
+
+        function verPedido(index) {
+            editarPedido(index);
+            document.getElementById('modalTitle').textContent = 'Ver Pedido';
+            // Make all fields readonly
+            document.querySelectorAll('#formPedido input, #formPedido select, #formPedido textarea').forEach(el => {
+                el.setAttribute('readonly', true);
+                el.setAttribute('disabled', true);
+            });
+        }
+
+        function agregarMaterial(materialData = null) {
+            const materialDiv = document.createElement('div');
+            materialDiv.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg';
+            materialDiv.setAttribute('data-material-id', materialCounter);
+            
+            materialDiv.innerHTML = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Código Material</label>
+                    <input type="text" name="idMaterial" value="${materialData?.idMaterial || ''}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Material</label>
+                    <input type="text" name="nombreMaterial" value="${materialData?.nombreMaterial || ''}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                    <div class="flex">
+                        <input type="number" name="cantidad" value="${materialData?.cantidad || ''}" min="1" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500" required>
+                        <button type="button" onclick="eliminarMaterial(${materialCounter})" 
+                                class="px-3 py-2 bg-red-500 text-white rounded-r-lg hover:bg-red-600 transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('materialesList').appendChild(materialDiv);
+            materialCounter++;
+        }
+
+        function eliminarMaterial(materialId) {
+            const materialDiv = document.querySelector(`[data-material-id="${materialId}"]`);
+            if (materialDiv) {
+                materialDiv.remove();
+            }
+        }
+
+        function guardarPedido(event) {
+            event.preventDefault();
+            
+            // Gather material data
+            const materialesElements = document.getElementById('materialesList').children;
+            const materiales = [];
+            
+            for (let el of materialesElements) {
+                const idMaterial = el.querySelector('[name="idMaterial"]').value;
+                const nombreMaterial = el.querySelector('[name="nombreMaterial"]').value;
+                const cantidad = parseInt(el.querySelector('[name="cantidad"]').value);
+                
+                if (idMaterial && nombreMaterial && cantidad) {
+                    materiales.push({ idMaterial, nombreMaterial, cantidad });
+                }
+            }
+            
+            if (materiales.length === 0) {
+                alert('Debe agregar al menos un material');
+                return;
+            }
+            
+            const formData = {
+                idPedido: document.getElementById('modalIdPedido').value.trim(),
+                fechaPedido: document.getElementById('modalFechaPedido').value,
+                area: document.getElementById('modalArea').value,
+                estado: document.getElementById('modalEstado').value,
+                idProveedor: document.getElementById('modalIdProveedor').value.trim(),
+                nombreProveedor: document.getElementById('modalNombreProveedor').value.trim(),
+                materiales: materiales
+            };
+            
+            if (editingIndex !== null) {
+                // Edit existing
+                pedidos[editingIndex] = formData;
+            } else {
+                // Add new
+                if (pedidos.find(p => p.idPedido === formData.idPedido)) {
+                    alert('Ya existe un pedido con ese número');
+                    return;
+                }
+                pedidos.push(formData);
+            }
+            
+            renderPedidos();
+            updateStatistics();
+            cerrarModal();
+        }
+
+        function eliminarPedido(index) {
+            if (confirm('¿Está seguro de que desea eliminar este pedido?')) {
+                pedidos.splice(index, 1);
+                renderPedidos();
+                updateStatistics();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalPedido').classList.add('hidden');
+            editingIndex = null;
+            // Remove readonly attributes
+            document.querySelectorAll('#formPedido input, #formPedido select, #formPedido textarea').forEach(el => {
+                el.removeAttribute('readonly');
+                el.removeAttribute('disabled');
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Tabla de Valores del Sistema</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-table { font-size: 12px !important; }
+            body { background: white !important; }
+        }
+        .tabla-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .tabla-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+        }
+        .categoria-sistema { border-left-color: #3b82f6; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+        .categoria-medica { border-left-color: #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+        .categoria-administrativa { border-left-color: #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+        .categoria-laboratorio { border-left-color: #8b5cf6; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); }
+        .categoria-inventario { border-left-color: #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); }
+        .categoria-facturacion { border-left-color: #06b6d4; background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); }
+        .item-activo { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .item-inactivo { background: linear-gradient(135deg, #9ca3af, #6b7280); }
+        .item-revision { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .tree-structure {
+            border-left: 2px solid #e5e7eb;
+            padding-left: 16px;
+            margin-left: 8px;
+        }
+        .tree-item {
+            position: relative;
+        }
+        .tree-item:before {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 12px;
+            width: 12px;
+            height: 2px;
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-3 rounded-xl shadow-lg">
+                        <i class="fas fa-table text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-800 bg-clip-text text-transparent">
+                            Tabla de Valores del Sistema
+                        </h1>
+                        <p class="text-gray-600 mt-1">Gestión de catálogos y tablas paramétricas</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 no-print">
+                    <button onclick="nuevaTabla()" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Nueva Tabla
+                    </button>
+                    <button onclick="nuevoItem()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-plus-circle mr-2"></i>Nuevo Ítem
+                    </button>
+                    <button onclick="imprimirTablas()" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Tabla/Ítem</label>
+                    <input type="text" id="buscarTabla" placeholder="Código, nombre, descripción..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                    <select id="filtroCategoria" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las categorías</option>
+                        <option value="Hematología">Hematología</option>
+                        <option value="Química Clínica">Química Clínica</option>
+                        <option value="Microbiología">Microbiología</option>
+                        <option value="Inmunología">Inmunología</option>
+                        <option value="Hormonas">Hormonas</option>
+                        <option value="Cardiaco">Marcadores Cardíacos</option>
+                        <option value="Hepático">Perfil Hepático</option>
+                        <option value="Renal">Perfil Renal</option>
+                        <option value="Lipídico">Perfil Lipídico</option>
+                        <option value="Tiroideo">Perfil Tiroideo</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Valor</label>
+                    <select id="filtroTipo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los tipos</option>
+                        <option value="Numérico">Numérico</option>
+                        <option value="Cualitativo">Cualitativo</option>
+                        <option value="Semicuantitativo">Semicuantitativo</option>
+                        <option value="Texto">Texto</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('categorias')" id="btnCategorias" 
+                                class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-th-large mr-1"></i>Categorías
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600" id="totalHematologia">0</div>
+                    <div class="text-xs text-red-800">Hematología</div>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalQuimica">0</div>
+                    <div class="text-xs text-blue-800">Química</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="totalMicrobiologia">0</div>
+                    <div class="text-xs text-green-800">Microbiología</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="totalInmunologia">0</div>
+                    <div class="text-xs text-purple-800">Inmunología</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="totalHormonas">0</div>
+                    <div class="text-xs text-yellow-800">Hormonas</div>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-600" id="totalOtros">0</div>
+                    <div class="text-xs text-gray-800">Otros</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Categorías -->
+    <div id="vistaCategorias" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="contenedorCategorias" class="space-y-6">
+            <!-- Las categorías se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 print-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Tabla</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Tabla</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Ítem</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción Ítem</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contenedorTablaValores" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalle/Edición -->
+    <div id="modalTablaValor" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex items-center mb-6">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-table text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Gestión de Tabla de Valores</h3>
+                            <p class="text-sm text-gray-500">Configuración de valores de referencia de laboratorio</p>
+                        </div>
+                    </div>
+                    
+                    <form id="formTablaValor" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Código de Tabla</label>
+                                <input type="text" id="modalCodTab" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nombre de Tabla</label>
+                                <input type="text" id="modalNombre" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Código Ítem</label>
+                                <input type="text" id="modalCodItem" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Descripción Ítem</label>
+                                <input type="text" id="modalItemDescripcion" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Categoría</label>
+                                <select id="modalCategoria" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Hematología">Hematología</option>
+                                    <option value="Química Clínica">Química Clínica</option>
+                                    <option value="Microbiología">Microbiología</option>
+                                    <option value="Inmunología">Inmunología</option>
+                                    <option value="Hormonas">Hormonas</option>
+                                    <option value="Cardiaco">Marcadores Cardíacos</option>
+                                    <option value="Hepático">Perfil Hepático</option>
+                                    <option value="Renal">Perfil Renal</option>
+                                    <option value="Lipídico">Perfil Lipídico</option>
+                                    <option value="Tiroideo">Perfil Tiroideo</option>
+                                    <option value="Otros">Otros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tipo de Valor</label>
+                                <select id="modalTipo" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Numérico">Numérico</option>
+                                    <option value="Cualitativo">Cualitativo</option>
+                                    <option value="Semicuantitativo">Semicuantitativo</option>
+                                    <option value="Texto">Texto</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Valores de Referencia -->
+                        <div class="mt-6 border-t pt-6">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Valores de Referencia</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Valor Mínimo</label>
+                                    <input type="number" step="0.01" id="modalValorMin" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Valor Máximo</label>
+                                    <input type="number" step="0.01" id="modalValorMax" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Unidad</label>
+                                    <input type="text" id="modalUnidad" placeholder="mg/dL, mmol/L, etc." class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="guardarTablaValor()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de tablas de valores de laboratorio
+        let tablasValores = [
+            {
+                id: 1,
+                codTab: "TAB001",
+                nombre: "Hemograma Completo",
+                codItem: "HGB",
+                itemDescripcion: "Hemoglobina",
+                categoria: "Hematología",
+                tipo: "Numérico",
+                valorMin: 12.0,
+                valorMax: 16.0,
+                unidad: "g/dL"
+            },
+            {
+                id: 2,
+                codTab: "TAB001",
+                nombre: "Hemograma Completo",
+                codItem: "HCT",
+                itemDescripcion: "Hematocrito",
+                categoria: "Hematología",
+                tipo: "Numérico",
+                valorMin: 36.0,
+                valorMax: 48.0,
+                unidad: "%"
+            },
+            {
+                id: 3,
+                codTab: "TAB002",
+                nombre: "Química Sanguínea",
+                codItem: "GLU",
+                itemDescripcion: "Glucosa",
+                categoria: "Química Clínica",
+                tipo: "Numérico",
+                valorMin: 70.0,
+                valorMax: 110.0,
+                unidad: "mg/dL"
+            },
+            {
+                id: 4,
+                codTab: "TAB002",
+                nombre: "Química Sanguínea",
+                codItem: "BUN",
+                itemDescripcion: "Nitrógeno Ureico",
+                categoria: "Química Clínica",
+                tipo: "Numérico",
+                valorMin: 7.0,
+                valorMax: 25.0,
+                unidad: "mg/dL"
+            },
+            {
+                id: 5,
+                codTab: "TAB003",
+                nombre: "Cultivo de Orina",
+                codItem: "COL",
+                itemDescripcion: "Coliformes",
+                categoria: "Microbiología",
+                tipo: "Cualitativo",
+                valorMin: null,
+                valorMax: null,
+                unidad: "UFC/mL"
+            },
+            {
+                id: 6,
+                codTab: "TAB004",
+                nombre: "Perfil Tiroideo",
+                codItem: "TSH",
+                itemDescripcion: "Hormona Estimulante de Tiroides",
+                categoria: "Hormonas",
+                tipo: "Numérico",
+                valorMin: 0.4,
+                valorMax: 4.5,
+                unidad: "mIU/L"
+            },
+            {
+                id: 7,
+                codTab: "TAB005",
+                nombre: "Marcadores Cardíacos",
+                codItem: "CK-MB",
+                itemDescripcion: "Creatinkinasa MB",
+                categoria: "Cardiaco",
+                tipo: "Numérico",
+                valorMin: 0.0,
+                valorMax: 6.0,
+                unidad: "ng/mL"
+            },
+            {
+                id: 8,
+                codTab: "TAB006",
+                nombre: "Perfil Hepático",
+                codItem: "ALT",
+                itemDescripcion: "Alanina Aminotransferasa",
+                categoria: "Hepático",
+                tipo: "Numérico",
+                valorMin: 7.0,
+                valorMax: 56.0,
+                unidad: "U/L"
+            },
+            {
+                id: 9,
+                codTab: "TAB007",
+                nombre: "Perfil Renal",
+                codItem: "CREA",
+                itemDescripcion: "Creatinina",
+                categoria: "Renal",
+                tipo: "Numérico",
+                valorMin: 0.6,
+                valorMax: 1.2,
+                unidad: "mg/dL"
+            },
+            {
+                id: 10,
+                codTab: "TAB008",
+                nombre: "Perfil Lipídico",
+                codItem: "CHOL",
+                itemDescripcion: "Colesterol Total",
+                categoria: "Lipídico",
+                tipo: "Numérico",
+                valorMin: 0.0,
+                valorMax: 200.0,
+                unidad: "mg/dL"
+            }
+        ];
+
+        let vistaActual = 'categorias';
+        let tablasFiltrdasas = [...tablasValores];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVista();
+            configurarFiltros();
+            actualizarEstadisticas();
+        });
+
+        function configurarFiltros() {
+            const buscar = document.getElementById('buscarTabla');
+            const filtroCategoria = document.getElementById('filtroCategoria');
+            const filtroTipo = document.getElementById('filtroTipo');
+
+            [buscar, filtroCategoria, filtroTipo].forEach(elemento => {
+                elemento.addEventListener('input', aplicarFiltros);
+            });
+        }
+
+        function aplicarFiltros() {
+            const textoBusqueda = document.getElementById('buscarTabla').value.toLowerCase();
+            const categoriaSeleccionada = document.getElementById('filtroCategoria').value;
+            const tipoSeleccionado = document.getElementById('filtroTipo').value;
+
+            tablasFiltrdasas = tablasValores.filter(tabla => {
+                const coincideTexto = 
+                    tabla.codTab.toLowerCase().includes(textoBusqueda) ||
+                    tabla.nombre.toLowerCase().includes(textoBusqueda) ||
+                    tabla.codItem.toLowerCase().includes(textoBusqueda) ||
+                    tabla.itemDescripcion.toLowerCase().includes(textoBusqueda);
+
+                const coincideCategoria = !categoriaSeleccionada || tabla.categoria === categoriaSeleccionada;
+                const coincideTipo = !tipoSeleccionado || tabla.tipo === tipoSeleccionado;
+
+                return coincideTexto && coincideCategoria && coincideTipo;
+            });
+
+            actualizarVista();
+            actualizarEstadisticas();
+        }
+
+        function cambiarVista(nuevaVista) {
+            vistaActual = nuevaVista;
+            
+            const btnCategorias = document.getElementById('btnCategorias');
+            const btnTabla = document.getElementById('btnTabla');
+            const vistaCategorias = document.getElementById('vistaCategorias');
+            const vistaTabla = document.getElementById('vistaTabla');
+
+            if (nuevaVista === 'categorias') {
+                btnCategorias.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTabla.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaCategorias.classList.remove('hidden');
+                vistaTabla.classList.add('hidden');
+            } else {
+                btnTabla.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnCategorias.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTabla.classList.remove('hidden');
+                vistaCategorias.classList.add('hidden');
+            }
+
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'categorias') {
+                mostrarCategorias();
+            } else {
+                mostrarTablaValores();
+            }
+        }
+
+        function obtenerClaseCategoria(categoria) {
+            const categorias = {
+                'Hematología': 'categoria-hematologia',
+                'Química Clínica': 'categoria-quimica',
+                'Microbiología': 'categoria-microbiologia',
+                'Inmunología': 'categoria-inmunologia',
+                'Hormonas': 'categoria-hormonas',
+                'Cardiaco': 'categoria-cardiaco',
+                'Hepático': 'categoria-hepatico',
+                'Renal': 'categoria-renal',
+                'Lipídico': 'categoria-lipidico',
+                'Tiroideo': 'categoria-tiroideo'
+            };
+            return categorias[categoria] || 'categoria-otros';
+        }
+
+        function obtenerIconoCategoria(categoria) {
+            const iconos = {
+                'Hematología': 'fas fa-tint',
+                'Química Clínica': 'fas fa-flask',
+                'Microbiología': 'fas fa-bacteria',
+                'Inmunología': 'fas fa-shield-alt',
+                'Hormonas': 'fas fa-dna',
+                'Cardiaco': 'fas fa-heartbeat',
+                'Hepático': 'fas fa-liver',
+                'Renal': 'fas fa-kidneys',
+                'Lipídico': 'fas fa-chart-line',
+                'Tiroideo': 'fas fa-thyroid'
+            };
+            return iconos[categoria] || 'fas fa-vial';
+        }
+
+        function mostrarCategorias() {
+            const contenedor = document.getElementById('contenedorCategorias');
+            
+            // Agrupar por categoría
+            const categoriaGrouped = tablasFiltrdasas.reduce((acc, tabla) => {
+                if (!acc[tabla.categoria]) {
+                    acc[tabla.categoria] = [];
+                }
+                acc[tabla.categoria].push(tabla);
+                return acc;
+            }, {});
+
+            if (Object.keys(categoriaGrouped).length === 0) {
+                contenedor.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-table text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron tablas</h3>
+                        <p class="text-gray-500">No hay tablas que coincidan con los filtros seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = Object.entries(categoriaGrouped).map(([categoria, tablas]) => `
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 ${obtenerClaseCategoria(categoria)} text-white">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <i class="${obtenerIconoCategoria(categoria)} text-2xl"></i>
+                                <div>
+                                    <h3 class="text-lg font-semibold">${categoria}</h3>
+                                    <p class="text-sm opacity-90">${tablas.length} tabla(s) de valores</p>
+                                </div>
+                            </div>
+                            <button onclick="agregarTablaCategoria('${categoria}')" class="bg-white bg-opacity-20 text-white px-3 py-1 rounded hover:bg-opacity-30 transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Agregar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                            ${tablas.map(tabla => `
+                                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="font-semibold text-gray-900">${tabla.nombre}</h4>
+                                        <span class="px-2 py-1 text-xs rounded-full ${
+                                            tabla.tipo === 'Numérico' ? 'bg-blue-100 text-blue-800' :
+                                            tabla.tipo === 'Cualitativo' ? 'bg-green-100 text-green-800' :
+                                            tabla.tipo === 'Semicuantitativo' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-gray-100 text-gray-800'
+                                        }">${tabla.tipo}</span>
+                                    </div>
+                                    
+                                    <div class="space-y-2 text-sm text-gray-600">
+                                        <div><span class="font-medium">Código:</span> ${tabla.codTab}</div>
+                                        <div><span class="font-medium">Ítem:</span> ${tabla.codItem} - ${tabla.itemDescripcion}</div>
+                                        ${tabla.valorMin !== null && tabla.valorMax !== null ? `
+                                            <div><span class="font-medium">Rango:</span> ${tabla.valorMin} - ${tabla.valorMax} ${tabla.unidad || ''}</div>
+                                        ` : ''}
+                                    </div>
+                                    
+                                    <div class="mt-4 flex space-x-2">
+                                        <button onclick="verDetalleTabla(${tabla.id})" 
+                                                class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-eye mr-1"></i>Ver
+                                        </button>
+                                        <button onclick="editarTabla(${tabla.id})" 
+                                                class="flex-1 bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700 transition-colors">
+                                            <i class="fas fa-edit mr-1"></i>Editar
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarTablaValores() {
+            const contenedor = document.getElementById('contenedorTablaValores');
+            
+            if (tablasFiltrdasas.length === 0) {
+                contenedor.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center">
+                            <i class="fas fa-table text-4xl text-gray-300 mb-4"></i>
+                            <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron tablas</div>
+                            <div class="text-gray-500">No hay tablas que coincidan con los filtros seleccionados.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = tablasFiltrdasas.map(tabla => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tabla.codTab}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tabla.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tabla.codItem}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${tabla.itemDescripcion}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 ${obtenerClaseCategoria(tabla.categoria)} rounded-full mr-2"></div>
+                            <span class="text-sm text-gray-900">${tabla.categoria}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full ${
+                            tabla.tipo === 'Numérico' ? 'bg-blue-100 text-blue-800' :
+                            tabla.tipo === 'Cualitativo' ? 'bg-green-100 text-green-800' :
+                            tabla.tipo === 'Semicuantitativo' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                        }">${tabla.tipo}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="verDetalleTabla(${tabla.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editarTabla(${tabla.id})" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarEstadisticas() {
+            const estadisticas = tablasFiltrdasas.reduce((acc, tabla) => {
+                const categoria = tabla.categoria;
+                if (categoria === 'Hematología') acc.hematologia++;
+                else if (categoria === 'Química Clínica') acc.quimica++;
+                else if (categoria === 'Microbiología') acc.microbiologia++;
+                else if (categoria === 'Inmunología') acc.inmunologia++;
+                else if (categoria === 'Hormonas') acc.hormonas++;
+                else acc.otros++;
+                return acc;
+            }, {
+                hematologia: 0,
+                quimica: 0,
+                microbiologia: 0,
+                inmunologia: 0,
+                hormonas: 0,
+                otros: 0
+            });
+
+            document.getElementById('totalHematologia').textContent = estadisticas.hematologia;
+            document.getElementById('totalQuimica').textContent = estadisticas.quimica;
+            document.getElementById('totalMicrobiologia').textContent = estadisticas.microbiologia;
+            document.getElementById('totalInmunologia').textContent = estadisticas.inmunologia;
+            document.getElementById('totalHormonas').textContent = estadisticas.hormonas;
+            document.getElementById('totalOtros').textContent = estadisticas.otros;
+        }
+
+        function verDetalleTabla(id) {
+            const tabla = tablasValores.find(t => t.id === id);
+            if (tabla) {
+                document.getElementById('modal-title').textContent = `${tabla.nombre} - ${tabla.itemDescripcion}`;
+                llenarFormulario(tabla);
+                document.getElementById('modalTablaValor').classList.remove('hidden');
+            }
+        }
+
+        function editarTabla(id) {
+            const tabla = tablasValores.find(t => t.id === id);
+            if (tabla) {
+                document.getElementById('modal-title').textContent = `Editar: ${tabla.nombre}`;
+                llenarFormulario(tabla);
+                document.getElementById('modalTablaValor').classList.remove('hidden');
+            }
+        }
+
+        function agregarTabla() {
+            document.getElementById('modal-title').textContent = 'Nueva Tabla de Valores';
+            document.getElementById('formTablaValor').reset();
+            document.getElementById('modalTablaValor').classList.remove('hidden');
+        }
+
+        function agregarTablaCategoria(categoria) {
+            document.getElementById('modal-title').textContent = `Nueva Tabla - ${categoria}`;
+            document.getElementById('formTablaValor').reset();
+            document.getElementById('modalCategoria').value = categoria;
+            document.getElementById('modalTablaValor').classList.remove('hidden');
+        }
+
+        function llenarFormulario(tabla) {
+            document.getElementById('modalCodTab').value = tabla.codTab;
+            document.getElementById('modalNombre').value = tabla.nombre;
+            document.getElementById('modalCodItem').value = tabla.codItem;
+            document.getElementById('modalItemDescripcion').value = tabla.itemDescripcion;
+            document.getElementById('modalCategoria').value = tabla.categoria;
+            document.getElementById('modalTipo').value = tabla.tipo;
+            document.getElementById('modalValorMin').value = tabla.valorMin || '';
+            document.getElementById('modalValorMax').value = tabla.valorMax || '';
+            document.getElementById('modalUnidad').value = tabla.unidad || '';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalTablaValor').classList.add('hidden');
+        }
+
+        function guardarTablaValor() {
+            // Aquí iría la lógica para guardar los cambios
+            cerrarModal();
+            // Simular actualización
+            setTimeout(() => {
+                actualizarVista();
+                actualizarEstadisticas();
+            }, 100);
+        }
+
+        function imprimirLista() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const datos = tablasFiltrdasas.map(tabla => ({
+                'Código Tabla': tabla.codTab,
+                'Nombre Tabla': tabla.nombre,
+                'Código Ítem': tabla.codItem,
+                'Descripción Ítem': tabla.itemDescripcion,
+                'Categoría': tabla.categoria,
+                'Tipo': tabla.tipo,
+                'Valor Mínimo': tabla.valorMin || '',
+                'Valor Máximo': tabla.valorMax || '',
+                'Unidad': tabla.unidad || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Tabla de Valores');
+            XLSX.writeFile(workbook, 'tabla_valores_laboratorio.xlsx');
+        }
+    </script>
+
+    <!-- Incluir XLSX para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

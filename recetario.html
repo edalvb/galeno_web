@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Recetario Médico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-receta { width: 100% !important; font-size: 12px !important; }
+            .print-header { text-align: center !important; margin-bottom: 30px !important; }
+            .receta-content { page-break-inside: avoid !important; }
+            body { background: white !important; }
+        }
+        .receta-paper { 
+            background: linear-gradient(to right, #f8fafc 0%, #ffffff 20px, #ffffff 100%);
+            border-left: 3px solid #3b82f6;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .medicamento-item { 
+            border-left: 4px solid #10b981; 
+            background: #f0fdf4; 
+            transition: all 0.3s ease;
+        }
+        .medicamento-item:hover { 
+            background: #dcfce7; 
+            border-left-color: #059669;
+        }
+        .indicacion-item { 
+            border-left: 4px solid #f59e0b; 
+            background: #fffbeb; 
+        }
+        .dr-signature { 
+            border-top: 2px solid #374151; 
+            font-family: cursive; 
+        }
+        .receta-watermark {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg opacity='0.03'%3E%3Cpath d='M50 10c22.1 0 40 17.9 40 40S72.1 90 50 90 10 72.1 10 50 27.9 10 50 10zm0 8c-17.7 0-32 14.3-32 32s14.3 32 32 32 32-14.3 32-32-14.3-32-32-32z'/%3E%3Cpath d='M45 30h10v40H45z'/%3E%3Cpath d='M30 45h40v10H30z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-prescription-bottle-alt text-3xl text-blue-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Recetario Médico</h1>
+                        <p class="text-sm text-gray-600">Sistema de recetas e indicaciones médicas</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 no-print">
+                    <button onclick="nuevaReceta()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Nueva Receta
+                    </button>
+                    <button onclick="imprimirRecetas()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Receta</label>
+                    <input type="text" id="buscarReceta" placeholder="Paciente, médico, medicamento..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Médico</label>
+                    <select id="filtroMedico" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los médicos</option>
+                        <option value="DR001">Dr. Carlos Martínez</option>
+                        <option value="DR002">Dra. Ana González</option>
+                        <option value="DR003">Dr. Roberto Silva</option>
+                        <option value="DR004">Dr. Luis Fernández</option>
+                        <option value="DR005">Dra. Patricia Morales</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                    <select id="filtroFecha" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las fechas</option>
+                        <option value="hoy">Hoy</option>
+                        <option value="semana">Esta semana</option>
+                        <option value="mes">Este mes</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('recetas')" id="btnRecetas" 
+                                class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-prescription-bottle mr-1"></i>Recetas
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalRecetas">0</div>
+                    <div class="text-xs text-blue-800">Total Recetas</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="recetasHoy">0</div>
+                    <div class="text-xs text-green-800">Hoy</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="medicamentos">0</div>
+                    <div class="text-xs text-purple-800">Medicamentos</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="medicos">0</div>
+                    <div class="text-xs text-yellow-800">Médicos</div>
+                </div>
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600" id="pacientes">0</div>
+                    <div class="text-xs text-red-800">Pacientes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Recetas -->
+    <div id="vistaRecetas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="contenedorRecetas" class="space-y-8">
+            <!-- Las recetas se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 print-receta">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médico</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medicamentos</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aseguradora</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contenedorTablaRecetas" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Creación/Edición de Receta -->
+    <div id="modalReceta" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex items-center mb-6">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-prescription-bottle-alt text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Nueva Receta Médica</h3>
+                            <p class="text-sm text-gray-500">Prescripción médica e indicaciones</p>
+                        </div>
+                    </div>
+                    
+                    <form id="formReceta" class="space-y-6">
+                        <!-- Información del Paciente y Médico -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Información del Paciente -->
+                            <div class="border rounded-lg p-4">
+                                <h4 class="text-lg font-medium text-gray-900 mb-4">Información del Paciente</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Nombre del Paciente *</label>
+                                        <input type="text" id="modalNombrePaciente" 
+                                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Número Documento</label>
+                                            <input type="text" id="modalNumDocumento" 
+                                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Edad</label>
+                                            <input type="number" min="0" max="120" id="modalEdad" 
+                                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Aseguradora</label>
+                                            <select id="modalAseguradora" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="">Seleccionar...</option>
+                                                <option value="EPS001">Sanitas EPS</option>
+                                                <option value="EPS002">Compensar EPS</option>
+                                                <option value="EPS003">Nueva EPS</option>
+                                                <option value="PART">Particular</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">ID Seguro</label>
+                                            <input type="text" id="modalIdSeguro" 
+                                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información del Médico -->
+                            <div class="border rounded-lg p-4">
+                                <h4 class="text-lg font-medium text-gray-900 mb-4">Información del Médico</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Médico *</label>
+                                        <select id="modalMedico" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Seleccionar médico...</option>
+                                            <option value="DR001">Dr. Carlos Eduardo Martínez - Cardiología</option>
+                                            <option value="DR002">Dra. Ana María González - Medicina General</option>
+                                            <option value="DR003">Dr. Roberto Silva - Pediatría</option>
+                                            <option value="DR004">Dr. Luis Fernández - Neurología</option>
+                                            <option value="DR005">Dra. Patricia Morales - Ginecología</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Especialidad</label>
+                                        <input type="text" id="modalEspecialidad" readonly
+                                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Fecha de Consulta</label>
+                                        <input type="date" id="modalFechaConsulta" 
+                                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">N° Movimiento</label>
+                                        <input type="text" id="modalNumMovimiento" 
+                                               class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medicamentos y Dosificación -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Medicamentos y Dosificación</h4>
+                            <div class="space-y-4">
+                                <div id="medicamentosContainer">
+                                    <div class="medicamento-row grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Medicamento</label>
+                                            <input type="text" class="medicamento-nombre mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Concentración</label>
+                                            <input type="text" class="medicamento-concentracion mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+                                            <input type="text" class="medicamento-cantidad mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div class="flex items-end">
+                                            <button type="button" onclick="eliminarMedicamento(this)" class="w-full px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                                                <i class="fas fa-trash mr-2"></i>Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="agregarMedicamento()" class="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>Agregar Medicamento
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Prescripción Detallada -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Prescripción Detallada</h4>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Recetario Completo</label>
+                                <textarea id="modalRecetario" rows="6" 
+                                          placeholder="Describa detalladamente los medicamentos, dosis, frecuencia y duración del tratamiento..."
+                                          class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Indicaciones Médicas -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Indicaciones Médicas</h4>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Indicaciones</label>
+                                <textarea id="modalIndicaciones" rows="5" 
+                                          placeholder="Instrucciones especiales, recomendaciones, cuidados, dieta, reposo, etc..."
+                                          class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="guardarReceta()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i>Guardar Receta
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de recetas médicas
+        let recetas = [
+            {
+                id: 1,
+                fechaPedido: "2024-01-15",
+                numeroMovimiento: "MOV001",
+                nombreMedico: "Dr. Carlos Eduardo Martínez",
+                especialidad: "Cardiología",
+                aseguradora: "EPS001",
+                idSeguro: "12345678901",
+                numDocumento: "52.456.789",
+                nombrePaciente: "María Elena García Rodríguez",
+                edad: 45,
+                medicamentos: [
+                    { nombre: "Losartán", concentracion: "50mg", cantidad: "30 tabletas" },
+                    { nombre: "Amlodipino", concentracion: "10mg", cantidad: "30 tabletas" }
+                ],
+                recetario: "1. Losartán 50mg: Tomar 1 tableta cada 12 horas, preferiblemente en ayunas.\n2. Amlodipino 10mg: Tomar 1 tableta diaria en la mañana.\n\nDuración del tratamiento: 30 días.\nControl médico en 15 días.",
+                indicaciones: "- Tomar los medicamentos a las horas indicadas.\n- Mantener dieta baja en sodio.\n- Realizar ejercicio ligero 30 minutos diarios.\n- Control de presión arterial diario.\n- Evitar bebidas alcohólicas."
+            },
+            {
+                id: 2,
+                fechaPedido: "2024-01-15",
+                numeroMovimiento: "MOV002",
+                nombreMedico: "Dra. Ana María González",
+                especialidad: "Medicina General",
+                aseguradora: "EPS002",
+                idSeguro: "98765432101",
+                numDocumento: "18.234.567",
+                nombrePaciente: "Juan Carlos López Sánchez",
+                edad: 32,
+                medicamentos: [
+                    { nombre: "Ibuprofeno", concentracion: "600mg", cantidad: "20 tabletas" },
+                    { nombre: "Acetaminofén", concentracion: "500mg", cantidad: "20 tabletas" }
+                ],
+                recetario: "1. Ibuprofeno 600mg: Tomar 1 tableta cada 8 horas después de las comidas por 5 días.\n2. Acetaminofén 500mg: Tomar 1 tableta cada 6 horas en caso de dolor o fiebre.\n\nNo exceder las dosis indicadas.",
+                indicaciones: "- Reposo relativo por 3 días.\n- Aplicar compresas frías en la zona afectada.\n- Evitar esfuerzos físicos intensos.\n- Consultar si persisten los síntomas.\n- Tomar abundante líquido."
+            },
+            {
+                id: 3,
+                fechaPedido: "2024-01-14",
+                numeroMovimiento: "MOV003",
+                nombreMedico: "Dr. Roberto Silva",
+                especialidad: "Pediatría",
+                aseguradora: "EPS003",
+                idSeguro: "11223344501",
+                numDocumento: "1.098.765.432",
+                nombrePaciente: "Sofía Alejandra Mendoza Torres",
+                edad: 8,
+                medicamentos: [
+                    { nombre: "Amoxicilina", concentracion: "250mg/5ml", cantidad: "100ml suspensión" },
+                    { nombre: "Acetaminofén", concentracion: "160mg/5ml", cantidad: "120ml jarabe" }
+                ],
+                recetario: "1. Amoxicilina 250mg/5ml: Administrar 5ml cada 8 horas por 7 días.\n2. Acetaminofén 160mg/5ml: Administrar 5ml cada 6 horas en caso de fiebre o dolor.\n\nCompletar todo el tratamiento antibiótico.",
+                indicaciones: "- Administrar con alimentos para evitar molestias gástricas.\n- Mantener refrigerada la suspensión.\n- Control en 3 días si no mejora.\n- Reposo en casa.\n- Hidratación abundante."
+            }
+        ];
+
+        let vistaActual = 'recetas';
+        let recetasFiltradas = [...recetas];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVista();
+            configurarFiltros();
+            actualizarEstadisticas();
+            configurarFormulario();
+            document.getElementById('modalFechaConsulta').value = new Date().toISOString().split('T')[0];
+        });
+
+        function configurarFiltros() {
+            const filtros = ['buscarReceta', 'filtroMedico', 'filtroFecha'];
+            filtros.forEach(id => {
+                document.getElementById(id).addEventListener('input', aplicarFiltros);
+            });
+        }
+
+        function configurarFormulario() {
+            // Autocompletar especialidad al seleccionar médico
+            document.getElementById('modalMedico').addEventListener('change', function() {
+                const medico = this.value;
+                const especialidades = {
+                    'DR001': 'Cardiología',
+                    'DR002': 'Medicina General',
+                    'DR003': 'Pediatría',
+                    'DR004': 'Neurología',
+                    'DR005': 'Ginecología'
+                };
+                document.getElementById('modalEspecialidad').value = especialidades[medico] || '';
+            });
+        }
+
+        function aplicarFiltros() {
+            const textoBusqueda = document.getElementById('buscarReceta').value.toLowerCase();
+            const medicoSeleccionado = document.getElementById('filtroMedico').value;
+            const fechaSeleccionada = document.getElementById('filtroFecha').value;
+
+            recetasFiltradas = recetas.filter(receta => {
+                const coincideTexto = 
+                    receta.nombrePaciente.toLowerCase().includes(textoBusqueda) ||
+                    receta.nombreMedico.toLowerCase().includes(textoBusqueda) ||
+                    receta.recetario.toLowerCase().includes(textoBusqueda) ||
+                    receta.medicamentos.some(med => med.nombre.toLowerCase().includes(textoBusqueda));
+
+                const coincideMedico = !medicoSeleccionado || receta.nombreMedico.includes(medicoSeleccionado);
+
+                let coincideFecha = true;
+                if (fechaSeleccionada) {
+                    const fechaReceta = new Date(receta.fechaPedido);
+                    const hoy = new Date();
+                    
+                    switch (fechaSeleccionada) {
+                        case 'hoy':
+                            coincideFecha = fechaReceta.toDateString() === hoy.toDateString();
+                            break;
+                        case 'semana':
+                            const semanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            coincideFecha = fechaReceta >= semanaAtras;
+                            break;
+                        case 'mes':
+                            coincideFecha = fechaReceta.getMonth() === hoy.getMonth() && fechaReceta.getFullYear() === hoy.getFullYear();
+                            break;
+                    }
+                }
+
+                return coincideTexto && coincideMedico && coincideFecha;
+            });
+
+            actualizarVista();
+            actualizarEstadisticas();
+        }
+
+        function cambiarVista(nuevaVista) {
+            vistaActual = nuevaVista;
+            
+            const btnRecetas = document.getElementById('btnRecetas');
+            const btnTabla = document.getElementById('btnTabla');
+            const vistaRecetas = document.getElementById('vistaRecetas');
+            const vistaTabla = document.getElementById('vistaTabla');
+
+            if (nuevaVista === 'recetas') {
+                btnRecetas.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTabla.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaRecetas.classList.remove('hidden');
+                vistaTabla.classList.add('hidden');
+            } else {
+                btnTabla.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnRecetas.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTabla.classList.remove('hidden');
+                vistaRecetas.classList.add('hidden');
+            }
+
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'recetas') {
+                mostrarRecetas();
+            } else {
+                mostrarTablaRecetas();
+            }
+        }
+
+        function mostrarRecetas() {
+            const contenedor = document.getElementById('contenedorRecetas');
+            
+            if (recetasFiltradas.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-prescription-bottle-alt text-4xl text-gray-300 mb-4"></i>
+                        <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron recetas</div>
+                        <div class="text-gray-500">No hay recetas que coincidan con los filtros seleccionados.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = recetasFiltradas.map(receta => `
+                <div class="receta-paper receta-content bg-white rounded-lg p-8 receta-watermark">
+                    <!-- Header de la Receta -->
+                    <div class="border-b-2 border-blue-600 pb-6 mb-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 class="text-2xl font-bold text-blue-800 mb-2">${receta.nombreMedico}</h2>
+                                <p class="text-lg text-blue-600 italic">${receta.especialidad}</p>
+                                <p class="text-sm text-gray-600 mt-2">Registro Médico: ${receta.nombreMedico.includes('Dr.') ? 'RM' : 'RM'}-${receta.id.toString().padStart(6, '0')}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-gray-600">
+                                    <p><strong>Fecha:</strong> ${new Date(receta.fechaPedido).toLocaleDateString()}</p>
+                                    <p><strong>Movimiento:</strong> ${receta.numeroMovimiento}</p>
+                                    <p><strong>Receta N°:</strong> ${receta.id.toString().padStart(8, '0')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Paciente -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Información del Paciente</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+                            <div>
+                                <p class="text-sm text-gray-600">Nombre Completo</p>
+                                <p class="font-semibold text-gray-900">${receta.nombrePaciente}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Documento</p>
+                                <p class="font-semibold text-gray-900">${receta.numDocumento}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Edad</p>
+                                <p class="font-semibold text-gray-900">${receta.edad} años</p>
+                            </div>
+                            ${receta.aseguradora !== 'PART' ? `
+                                <div>
+                                    <p class="text-sm text-gray-600">Aseguradora</p>
+                                    <p class="font-semibold text-gray-900">${receta.aseguradora}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">ID Seguro</p>
+                                    <p class="font-semibold text-gray-900">${receta.idSeguro}</p>
+                                </div>
+                            ` : `
+                                <div>
+                                    <p class="text-sm text-gray-600">Tipo</p>
+                                    <p class="font-semibold text-gray-900">Particular</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Medicamentos Prescritos -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-pills text-green-600 mr-2"></i>Medicamentos Prescritos
+                        </h3>
+                        <div class="space-y-3">
+                            ${receta.medicamentos.map((med, index) => `
+                                <div class="medicamento-item p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">${index + 1}. ${med.nombre}</h4>
+                                            <p class="text-sm text-gray-600">Concentración: ${med.concentracion}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-medium text-gray-900">${med.cantidad}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Prescripción Detallada -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-prescription text-blue-600 mr-2"></i>Prescripción Detallada
+                        </h3>
+                        <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
+                            <pre class="whitespace-pre-wrap text-sm text-gray-800 font-mono">${receta.recetario}</pre>
+                        </div>
+                    </div>
+
+                    <!-- Indicaciones Médicas -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-notes-medical text-yellow-600 mr-2"></i>Indicaciones Médicas
+                        </h3>
+                        <div class="indicacion-item p-4 rounded-lg">
+                            <pre class="whitespace-pre-wrap text-sm text-gray-800">${receta.indicaciones}</pre>
+                        </div>
+                    </div>
+
+                    <!-- Firma del Médico -->
+                    <div class="mt-8 pt-6 border-t border-gray-300">
+                        <div class="flex justify-between items-end">
+                            <div class="text-sm text-gray-600">
+                                <p>Esta receta tiene validez de 30 días</p>
+                                <p>Para uso exclusivo del paciente indicado</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="dr-signature pt-4 mt-8 w-64">
+                                    <p class="text-lg font-semibold">${receta.nombreMedico}</p>
+                                    <p class="text-sm text-gray-600">${receta.especialidad}</p>
+                                    <p class="text-xs text-gray-500">Firma y sello médico</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="mt-6 pt-4 border-t flex justify-between items-center no-print">
+                        <button onclick="editarReceta(${receta.id})" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-edit mr-2"></i>Editar
+                        </button>
+                        <button onclick="imprimirReceta(${receta.id})" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-print mr-2"></i>Imprimir
+                        </button>
+                        <button onclick="duplicarReceta(${receta.id})" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-copy mr-2"></i>Duplicar
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarTablaRecetas() {
+            const contenedor = document.getElementById('contenedorTablaRecetas');
+            
+            if (recetasFiltradas.length === 0) {
+                contenedor.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <i class="fas fa-prescription-bottle-alt text-4xl text-gray-300 mb-4"></i>
+                            <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron recetas</div>
+                            <div class="text-gray-500">No hay recetas que coincidan con los filtros seleccionados.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = recetasFiltradas.map(receta => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${new Date(receta.fechaPedido).toLocaleDateString()}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-900">
+                        <div class="font-medium">${receta.nombrePaciente}</div>
+                        <div class="text-gray-500">${receta.numDocumento} • ${receta.edad} años</div>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-900">
+                        <div class="font-medium">${receta.nombreMedico}</div>
+                        <div class="text-gray-500">${receta.especialidad}</div>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-900">
+                        <div class="space-y-1">
+                            ${receta.medicamentos.slice(0, 2).map(med => `
+                                <div class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">${med.nombre}</div>
+                            `).join('')}
+                            ${receta.medicamentos.length > 2 ? `<div class="text-xs text-gray-500">+${receta.medicamentos.length - 2} más</div>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${receta.aseguradora !== 'PART' ? receta.aseguradora : 'Particular'}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarReceta(${receta.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="imprimirReceta(${receta.id})" class="text-green-600 hover:text-green-900 mr-3">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button onclick="duplicarReceta(${receta.id})" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarEstadisticas() {
+            const totalRecetas = recetasFiltradas.length;
+            const hoy = new Date().toDateString();
+            const recetasHoy = recetasFiltradas.filter(r => new Date(r.fechaPedido).toDateString() === hoy).length;
+            
+            const medicamentosUnicos = new Set();
+            const medicosUnicos = new Set();
+            const pacientesUnicos = new Set();
+            
+            recetasFiltradas.forEach(receta => {
+                receta.medicamentos.forEach(med => medicamentosUnicos.add(med.nombre));
+                medicosUnicos.add(receta.nombreMedico);
+                pacientesUnicos.add(receta.nombrePaciente);
+            });
+
+            document.getElementById('totalRecetas').textContent = totalRecetas;
+            document.getElementById('recetasHoy').textContent = recetasHoy;
+            document.getElementById('medicamentos').textContent = medicamentosUnicos.size;
+            document.getElementById('medicos').textContent = medicosUnicos.size;
+            document.getElementById('pacientes').textContent = pacientesUnicos.size;
+        }
+
+        function agregarMedicamento() {
+            const container = document.getElementById('medicamentosContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'medicamento-row grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg';
+            newRow.innerHTML = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Medicamento</label>
+                    <input type="text" class="medicamento-nombre mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Concentración</label>
+                    <input type="text" class="medicamento-concentracion mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+                    <input type="text" class="medicamento-cantidad mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-end">
+                    <button type="button" onclick="eliminarMedicamento(this)" class="w-full px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Eliminar
+                    </button>
+                </div>
+            `;
+            container.appendChild(newRow);
+        }
+
+        function eliminarMedicamento(button) {
+            const container = document.getElementById('medicamentosContainer');
+            if (container.children.length > 1) {
+                button.closest('.medicamento-row').remove();
+            }
+        }
+
+        function nuevaReceta() {
+            document.getElementById('modal-title').textContent = 'Nueva Receta Médica';
+            document.getElementById('formReceta').reset();
+            document.getElementById('modalFechaConsulta').value = new Date().toISOString().split('T')[0];
+            
+            // Resetear medicamentos a uno solo
+            const container = document.getElementById('medicamentosContainer');
+            container.innerHTML = `
+                <div class="medicamento-row grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Medicamento</label>
+                        <input type="text" class="medicamento-nombre mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Concentración</label>
+                        <input type="text" class="medicamento-concentracion mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+                        <input type="text" class="medicamento-cantidad mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" onclick="eliminarMedicamento(this)" class="w-full px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Eliminar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalReceta').classList.remove('hidden');
+        }
+
+        function editarReceta(id) {
+            const receta = recetas.find(r => r.id === id);
+            if (receta) {
+                document.getElementById('modal-title').textContent = `Editar Receta: ${receta.nombrePaciente}`;
+                // Aquí cargarías los datos de la receta en el formulario
+                document.getElementById('modalReceta').classList.remove('hidden');
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalReceta').classList.add('hidden');
+        }
+
+        function guardarReceta() {
+            cerrarModal();
+            setTimeout(() => {
+                actualizarVista();
+                actualizarEstadisticas();
+            }, 100);
+        }
+
+        function imprimirReceta(id) {
+            window.print();
+        }
+
+        function duplicarReceta(id) {
+            const receta = recetas.find(r => r.id === id);
+            if (receta) {
+                const nuevaReceta = { ...receta, id: recetas.length + 1, fechaPedido: new Date().toISOString().split('T')[0] };
+                recetas.push(nuevaReceta);
+                aplicarFiltros();
+            }
+        }
+
+        function imprimirRecetas() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const datos = recetasFiltradas.map(receta => ({
+                'Fecha': new Date(receta.fechaPedido).toLocaleDateString(),
+                'Paciente': receta.nombrePaciente,
+                'Documento': receta.numDocumento,
+                'Edad': receta.edad,
+                'Médico': receta.nombreMedico,
+                'Especialidad': receta.especialidad,
+                'Medicamentos': receta.medicamentos.map(m => m.nombre).join(', '),
+                'Aseguradora': receta.aseguradora !== 'PART' ? receta.aseguradora : 'Particular',
+                'Recetario': receta.recetario,
+                'Indicaciones': receta.indicaciones
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Recetas Médicas');
+            XLSX.writeFile(workbook, 'recetas_medicas.xlsx');
+        }
+    </script>
+
+    <!-- Incluir XLSX para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

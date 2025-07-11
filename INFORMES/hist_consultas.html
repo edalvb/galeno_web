@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HISTORIAL DE CONSULTAS - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-break { page-break-after: always; }
+            body { font-size: 12px; }
+            .container { max-width: none; margin: 0; padding: 10px; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .consulta-card:hover { 
+            transform: translateY(-2px); 
+            transition: all 0.3s ease; 
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .timeline-line {
+            position: relative;
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #3B82F6, #8B5CF6);
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 50px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 24px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3B82F6;
+            border: 4px solid white;
+            box-shadow: 0 0 0 2px #3B82F6;
+        }
+        .atencion-text {
+            line-height: 1.6;
+            font-family: 'Times New Roman', serif;
+            color: #7C2D12;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-purple-600 no-print">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-history text-3xl text-purple-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">HISTORIAL DE CONSULTAS</h1>
+                        <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="fechaHora" class="text-sm text-gray-600"></span>
+                    <button onclick="window.print()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters Panel -->
+    <div class="container mx-auto px-6 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-purple-600"></i>
+                Filtros de Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ID Paciente:</label>
+                    <input type="text" id="filtroPaciente" placeholder="Ingrese ID del paciente..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Paciente:</label>
+                    <input type="text" id="filtroNombre" placeholder="Ingrese nombre..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Aseguradora:</label>
+                    <select id="filtroAseguradora" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas las aseguradoras</option>
+                        <option value="ESSALUD">EsSalud</option>
+                        <option value="SIS">SIS</option>
+                        <option value="PRIVADO">Privado</option>
+                        <option value="OTROS">Otros</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Rango de Fechas:</label>
+                    <select id="filtroFecha" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas las fechas</option>
+                        <option value="hoy">Hoy</option>
+                        <option value="semana">Esta semana</option>
+                        <option value="mes">Este mes</option>
+                        <option value="trimestre">Último trimestre</option>
+                        <option value="año">Este año</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-4">
+                <button onclick="limpiarFiltros()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-eraser"></i>
+                    <span>Limpiar Filtros</span>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleVista()" id="btnVista" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-stream"></i>
+                        <span>Vista Timeline</span>
+                    </button>
+                    <button onclick="exportarPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Exportar PDF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Consultas</p>
+                        <p id="totalConsultas" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                    <i class="fas fa-notes-medical text-2xl text-purple-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Pacientes Únicos</p>
+                        <p id="pacientesUnicos" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <i class="fas fa-users text-2xl text-blue-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Este Mes</p>
+                        <p id="consultasMes" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <i class="fas fa-calendar-check text-2xl text-green-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Consultas Filtradas</p>
+                        <p id="consultasFiltradas" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <i class="fas fa-filter text-2xl text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="container mx-auto px-6 pb-6">
+        <div id="vistaTabla" class="space-y-6">
+            <div id="consultasContainer">
+                <!-- Los datos se cargarán dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Timeline View -->
+        <div id="vistaTimeline" class="hidden">
+            <div id="timelineContainer" class="timeline-line">
+                <!-- Las consultas se cargarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header (only visible when printing) -->
+    <div class="hidden print:block">
+        <div class="text-center mb-8">
+            <h1 class="text-xl font-bold mb-2">HISTORIAL DE CONSULTAS</h1>
+            <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+            <p class="text-sm text-gray-600">Fecha de impresión: <span id="fechaImpresion"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de consultas médicas
+        let consultasData = [
+            {
+                id_paciente: "001",
+                nompaci: "MARÍA ELENA GONZÁLEZ TORRES",
+                aseguradora: "ESSALUD",
+                id_seguro: "12345678",
+                cinpaci: "12345678",
+                fec_ped: "2025-01-15",
+                nromov: "ORD-001",
+                atencion: "CONSULTA GENERAL\n\nMotivo de consulta: Dolor abdominal\nExamen físico: Paciente en buen estado general, signos vitales estables.\nPresión arterial: 120/80 mmHg\nFrecuencia cardíaca: 72 lpm\nTemperatura: 36.5°C\n\nDiagnóstico: Gastritis aguda\nTratamiento: Omeprazol 20mg c/12h por 14 días\nDieta blanda\nControl en 7 días\n\nIndicaciones:\n- Evitar alimentos irritantes\n- Tomar medicación con las comidas\n- Acudir a emergencia si presenta vómitos persistentes"
+            },
+            {
+                id_paciente: "002",
+                nompaci: "JUAN CARLOS MARTÍNEZ SILVA",
+                aseguradora: "SIS",
+                id_seguro: "87654321",
+                cinpaci: "87654321",
+                fec_ped: "2025-01-14",
+                nromov: "ORD-002",
+                atencion: "CONTROL HIPERTENSIÓN\n\nControl de presión arterial\nPresión arterial: 140/90 mmHg\nPeso: 75 kg\nTalla: 1.70 m\nIMC: 25.9\n\nEvolución: Paciente refiere buen control con medicación actual\nSin síntomas cardiovasculares\n\nDiagnóstico: Hipertensión arterial esencial\nTratamiento: Continuar con Enalapril 10mg c/12h\nControl en 30 días\n\nIndicaciones:\n- Dieta hiposódica\n- Ejercicio regular\n- Control de peso\n- Monitoreo domiciliario de presión arterial"
+            },
+            {
+                id_paciente: "001",
+                nompaci: "MARÍA ELENA GONZÁLEZ TORRES",
+                aseguradora: "ESSALUD",
+                id_seguro: "12345678",
+                cinpaci: "12345678",
+                fec_ped: "2025-01-08",
+                nromov: "ORD-003",
+                atencion: "CONTROL POST-TRATAMIENTO\n\nPaciente regresa para control de gastritis\nReferencia mejoría significativa del dolor abdominal\nTolerado bien la medicación\nSin efectos adversos\n\nExamen físico: Abdomen blando, no doloroso\nNo hay signos de irritación peritoneal\n\nEvolución favorable\nSe suspende omeprazol\nRecomendaciones dietéticas\nAlta médica del cuadro actual\n\nIndicaciones:\n- Mantener dieta balanceada\n- Evitar alimentos irritantes\n- Consultar si reaparecen síntomas"
+            },
+            {
+                id_paciente: "003",
+                nompaci: "ANA LUCÍA FERNÁNDEZ CASTRO",
+                aseguradora: "PRIVADO",
+                id_seguro: "11223344",
+                cinpaci: "11223344",
+                fec_ped: "2025-01-12",
+                nromov: "ORD-004",
+                atencion: "CONSULTA GINECOLÓGICA\n\nControl ginecológico rutinario\nÚltima menstruación: 28/12/2024\nCiclos regulares cada 28 días\nSin síntomas asociados\n\nExamen físico: \n- Mamas: sin alteraciones palpables\n- Examen pélvico: normal\n- Citología cervical: programada\n\nDiagnóstico: Control ginecológico normal\nPlanificación familiar: DIU vigente\n\nIndicaciones:\n- Continuar control anual\n- Autoexamen mamario mensual\n- Realizar citología según cronograma\n- Control DIU en 6 meses"
+            },
+            {
+                id_paciente: "004",
+                nompaci: "ROBERTO DANIEL HERRERA MENDOZA",
+                aseguradora: "ESSALUD",
+                id_seguro: "55667788",
+                cinpaci: "55667788",
+                fec_ped: "2025-01-10",
+                nromov: "ORD-005",
+                atencion: "CONSULTA CARDIOLÓGICA\n\nPaciente de 59 años con antecedente de IAM hace 2 años\nRefiere disnea de esfuerzo clase II\nNo dolor torácico actual\nTratamiento antiagregante vigente\n\nExamen cardiovascular:\n- FC: 68 lpm, regular\n- PA: 130/85 mmHg\n- Auscultación cardíaca: ruidos rítmicos, no soplos\n- Pulmones: murmullo vesicular conservado\n\nECG: Ritmo sinusal, secuelas de IAM anterior\n\nDiagnóstico: \n- Cardiopatía isquémica post-IAM\n- Insuficiencia cardíaca NYHA II\n\nTratamiento:\n- Continuar ASA 100mg/día\n- Enalapril 10mg c/12h\n- Metoprolol 50mg c/12h\n- Atorvastatina 40mg/día\n\nControl en 3 meses con ecocardiograma"
+            }
+        ];
+
+        let consultasFiltradas = [...consultasData];
+        let vistaActual = 'tabla';
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializar();
+            cargarConsultas();
+            configurarFiltros();
+        });
+
+        function inicializar() {
+            actualizarFechaHora();
+            setInterval(actualizarFechaHora, 1000);
+            document.getElementById('fechaImpresion').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function actualizarFechaHora() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES');
+            document.getElementById('fechaHora').textContent = `${fecha} ${hora}`;
+        }
+
+        function cargarConsultas() {
+            if (vistaActual === 'tabla') {
+                cargarVistaTabla();
+            } else {
+                cargarVistaTimeline();
+            }
+            actualizarEstadisticas();
+        }
+
+        function cargarVistaTabla() {
+            const container = document.getElementById('consultasContainer');
+            container.innerHTML = '';
+
+            // Agrupar por paciente
+            const pacientesAgrupados = {};
+            consultasFiltradas.forEach(consulta => {
+                if (!pacientesAgrupados[consulta.id_paciente]) {
+                    pacientesAgrupados[consulta.id_paciente] = {
+                        paciente: consulta,
+                        consultas: []
+                    };
+                }
+                pacientesAgrupados[consulta.id_paciente].consultas.push(consulta);
+            });
+
+            // Crear tarjetas por paciente
+            Object.values(pacientesAgrupados).forEach(grupo => {
+                const pacienteCard = document.createElement('div');
+                pacienteCard.className = 'bg-white rounded-lg shadow-md overflow-hidden fade-in';
+                
+                // Ordenar consultas por fecha descendente
+                grupo.consultas.sort((a, b) => new Date(b.fec_ped) - new Date(a.fec_ped));
+                
+                pacienteCard.innerHTML = `
+                    <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-bold">${grupo.paciente.nompaci}</h3>
+                                <div class="flex items-center space-x-4 text-sm text-purple-100 mt-1">
+                                    <span><i class="fas fa-id-card mr-1"></i>ID: ${grupo.paciente.id_paciente}</span>
+                                    <span><i class="fas fa-shield-alt mr-1"></i>${grupo.paciente.aseguradora}</span>
+                                    <span><i class="fas fa-certificate mr-1"></i>CI: ${grupo.paciente.cinpaci}</span>
+                                    <span><i class="fas fa-credit-card mr-1"></i>Seguro: ${grupo.paciente.id_seguro}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="bg-white bg-opacity-20 rounded-lg px-3 py-1">
+                                    <span class="font-bold">${grupo.consultas.length}</span>
+                                    <div class="text-xs">Consulta${grupo.consultas.length > 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            ${grupo.consultas.map(consulta => `
+                                <div class="border-l-4 border-purple-400 pl-4 py-2 consulta-card">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center space-x-4">
+                                            <span class="text-sm font-medium text-purple-600">
+                                                <i class="fas fa-calendar mr-1"></i>
+                                                ${new Date(consulta.fec_ped).toLocaleDateString('es-ES')}
+                                            </span>
+                                            <span class="text-sm font-medium text-gray-600">
+                                                <i class="fas fa-file-medical mr-1"></i>
+                                                ${consulta.nromov}
+                                            </span>
+                                        </div>
+                                        <div class="flex space-x-2 no-print">
+                                            <button onclick="verDetalleConsulta('${consulta.nromov}')" class="text-blue-600 hover:text-blue-800 p-1" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button onclick="imprimirConsulta('${consulta.nromov}')" class="text-green-600 hover:text-green-800 p-1" title="Imprimir">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="atencion-text text-sm bg-gray-50 p-3 rounded-md">
+                                        ${consulta.atencion}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(pacienteCard);
+            });
+        }
+
+        function cargarVistaTimeline() {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '';
+
+            // Ordenar consultas por fecha descendente
+            const consultasOrdenadas = [...consultasFiltradas].sort((a, b) => new Date(b.fec_ped) - new Date(a.fec_ped));
+
+            consultasOrdenadas.forEach((consulta, index) => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item mb-8 fade-in';
+                
+                timelineItem.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-md p-6 ml-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">${consulta.nompaci}</h3>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                    <span><i class="fas fa-calendar mr-1 text-purple-500"></i>${new Date(consulta.fec_ped).toLocaleDateString('es-ES')}</span>
+                                    <span><i class="fas fa-file-medical mr-1 text-blue-500"></i>${consulta.nromov}</span>
+                                    <span><i class="fas fa-shield-alt mr-1 text-green-500"></i>${consulta.aseguradora}</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 no-print">
+                                <button onclick="verDetalleConsulta('${consulta.nromov}')" class="text-blue-600 hover:text-blue-800 p-2" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="imprimirConsulta('${consulta.nromov}')" class="text-green-600 hover:text-green-800 p-2" title="Imprimir">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="atencion-text bg-gray-50 p-4 rounded-md border-l-4 border-purple-400">
+                            ${consulta.atencion}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(timelineItem);
+            });
+        }
+
+        function configurarFiltros() {
+            ['filtroPaciente', 'filtroNombre', 'filtroAseguradora', 'filtroFecha'].forEach(id => {
+                document.getElementById(id).addEventListener('input', aplicarFiltros);
+                document.getElementById(id).addEventListener('change', aplicarFiltros);
+            });
+        }
+
+        function aplicarFiltros() {
+            const filtroPaciente = document.getElementById('filtroPaciente').value.toLowerCase();
+            const filtroNombre = document.getElementById('filtroNombre').value.toLowerCase();
+            const filtroAseguradora = document.getElementById('filtroAseguradora').value;
+            const filtroFecha = document.getElementById('filtroFecha').value;
+
+            consultasFiltradas = consultasData.filter(consulta => {
+                const cumplePaciente = consulta.id_paciente.toLowerCase().includes(filtroPaciente);
+                const cumpleNombre = consulta.nompaci.toLowerCase().includes(filtroNombre);
+                const cumpleAseguradora = !filtroAseguradora || consulta.aseguradora === filtroAseguradora;
+                
+                let cumpleFecha = true;
+                if (filtroFecha) {
+                    const fechaConsulta = new Date(consulta.fec_ped);
+                    const hoy = new Date();
+                    
+                    switch(filtroFecha) {
+                        case 'hoy':
+                            cumpleFecha = fechaConsulta.toDateString() === hoy.toDateString();
+                            break;
+                        case 'semana':
+                            const semanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            cumpleFecha = fechaConsulta >= semanaAtras;
+                            break;
+                        case 'mes':
+                            cumpleFecha = fechaConsulta.getMonth() === hoy.getMonth() && fechaConsulta.getFullYear() === hoy.getFullYear();
+                            break;
+                        case 'trimestre':
+                            const trimestreAtras = new Date(hoy.getTime() - 90 * 24 * 60 * 60 * 1000);
+                            cumpleFecha = fechaConsulta >= trimestreAtras;
+                            break;
+                        case 'año':
+                            cumpleFecha = fechaConsulta.getFullYear() === hoy.getFullYear();
+                            break;
+                    }
+                }
+
+                return cumplePaciente && cumpleNombre && cumpleAseguradora && cumpleFecha;
+            });
+
+            cargarConsultas();
+        }
+
+        function limpiarFiltros() {
+            ['filtroPaciente', 'filtroNombre', 'filtroAseguradora', 'filtroFecha'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            consultasFiltradas = [...consultasData];
+            cargarConsultas();
+        }
+
+        function toggleVista() {
+            const btnVista = document.getElementById('btnVista');
+            const vistaTabla = document.getElementById('vistaTabla');
+            const vistaTimeline = document.getElementById('vistaTimeline');
+
+            if (vistaActual === 'tabla') {
+                vistaActual = 'timeline';
+                vistaTabla.classList.add('hidden');
+                vistaTimeline.classList.remove('hidden');
+                btnVista.innerHTML = '<i class="fas fa-th-list"></i><span>Vista Agrupada</span>';
+            } else {
+                vistaActual = 'tabla';
+                vistaTimeline.classList.add('hidden');
+                vistaTabla.classList.remove('hidden');
+                btnVista.innerHTML = '<i class="fas fa-stream"></i><span>Vista Timeline</span>';
+            }
+            
+            cargarConsultas();
+        }
+
+        function actualizarEstadisticas() {
+            document.getElementById('totalConsultas').textContent = consultasData.length;
+            document.getElementById('consultasFiltradas').textContent = consultasFiltradas.length;
+            
+            // Calcular pacientes únicos
+            const pacientesUnicos = new Set(consultasData.map(c => c.id_paciente)).size;
+            document.getElementById('pacientesUnicos').textContent = pacientesUnicos;
+            
+            // Calcular consultas de este mes
+            const hoy = new Date();
+            const consultasMes = consultasData.filter(c => {
+                const fechaConsulta = new Date(c.fec_ped);
+                return fechaConsulta.getMonth() === hoy.getMonth() && fechaConsulta.getFullYear() === hoy.getFullYear();
+            }).length;
+            document.getElementById('consultasMes').textContent = consultasMes;
+        }
+
+        // Funciones de acciones
+        function verDetalleConsulta(nromov) {
+            const consulta = consultasData.find(c => c.nromov === nromov);
+            if (consulta) {
+                alert(`Detalles de la consulta ${nromov}\n\nPaciente: ${consulta.nompaci}\nFecha: ${new Date(consulta.fec_ped).toLocaleDateString('es-ES')}\nAseguradora: ${consulta.aseguradora}`);
+            }
+        }
+
+        function imprimirConsulta(nromov) {
+            const consulta = consultasData.find(c => c.nromov === nromov);
+            if (consulta) {
+                // Crear ventana de impresión personalizada
+                const ventanaImpresion = window.open('', '_blank');
+                ventanaImpresion.document.write(`
+                    <html>
+                        <head>
+                            <title>Consulta ${nromov}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; }
+                                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                                .atencion { font-family: 'Times New Roman', serif; line-height: 1.6; white-space: pre-wrap; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h1>HISTORIAL DE CONSULTAS</h1>
+                                <h2>MEG@SYS - Sistema Integral de Gestión Médica</h2>
+                            </div>
+                            <h3>Paciente: ${consulta.nompaci}</h3>
+                            <p><strong>ID Paciente:</strong> ${consulta.id_paciente}</p>
+                            <p><strong>Aseguradora:</strong> ${consulta.aseguradora}</p>
+                            <p><strong>N° Seguro:</strong> ${consulta.id_seguro}</p>
+                            <p><strong>CI:</strong> ${consulta.cinpaci}</p>
+                            <p><strong>Fecha:</strong> ${new Date(consulta.fec_ped).toLocaleDateString('es-ES')}</p>
+                            <p><strong>N° Movimiento:</strong> ${consulta.nromov}</p>
+                            <hr>
+                            <h3>ATENCIÓN MÉDICA:</h3>
+                            <div class="atencion">${consulta.atencion}</div>
+                            <hr>
+                            <p style="text-align: center; margin-top: 50px; font-size: 12px;">
+                                Impreso el ${new Date().toLocaleDateString('es-ES')} - ${new Date().toLocaleTimeString('es-ES')}
+                            </p>
+                        </body>
+                    </html>
+                `);
+                ventanaImpresion.document.close();
+                ventanaImpresion.print();
+            }
+        }
+
+        function exportarPDF() {
+            alert('Función de exportar PDF en desarrollo. Se generará un reporte completo del historial de consultas.');
+        }
+
+        // Manejo de mensajes del sistema padre
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'refresh':
+                        location.reload();
+                        break;
+                    case 'search':
+                        document.getElementById('filtroNombre').focus();
+                        break;
+                }
+            }
+        });
+
+        // Notificar al sistema padre sobre el estado
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'status_update',
+                message: 'Historial de consultas cargado correctamente'
+            }, '*');
+            
+            window.parent.postMessage({
+                type: 'record_info',
+                info: `Total: ${consultasData.length} consultas registradas`
+            }, '*');
+        }
+    </script>
+</body>
+</html>

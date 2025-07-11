@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEGASYS - Sistema de Gestión Médica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-heartbeat text-3xl text-red-400"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">MEGASYS</h1>
+                        <p class="text-blue-200 text-sm">Sistema de Gestión Médica Integral</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="font-semibold">Dr. García, María Elena</p>
+                        <p class="text-blue-200 text-sm">Administrador del Sistema</p>
+                    </div>
+                    <i class="fas fa-user-circle text-3xl"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Menu -->
+    <nav class="bg-blue-800 text-white">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex space-x-1">
+                    <button onclick="mostrarMenu('principal')" class="nav-item active" id="nav-principal">
+                        <i class="fas fa-home mr-2"></i>
+                        Principal
+                    </button>
+                    <button onclick="mostrarMenu('pacientes')" class="nav-item" id="nav-pacientes">
+                        <i class="fas fa-users mr-2"></i>
+                        Pacientes
+                    </button>
+                    <button onclick="mostrarMenu('servicios')" class="nav-item" id="nav-servicios">
+                        <i class="fas fa-cogs mr-2"></i>
+                        Servicios
+                    </button>
+                    <button onclick="mostrarMenu('administracion')" class="nav-item" id="nav-administracion">
+                        <i class="fas fa-wrench mr-2"></i>
+                        Administración
+                    </button>
+                    <button onclick="mostrarMenu('reportes')" class="nav-item" id="nav-reportes">
+                        <i class="fas fa-chart-bar mr-2"></i>
+                        Reportes
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-blue-200 text-sm" id="statusMessage">Sistema listo</span>
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="text-center">
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <i class="fas fa-heartbeat text-6xl text-blue-600 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Bienvenido a MEGASYS</h2>
+                <p class="text-gray-600 mb-6">Sistema Integral de Gestión Médica - Versión Web</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <i class="fas fa-users text-2xl text-blue-600 mb-2"></i>
+                        <h3 class="font-semibold text-gray-800">Pacientes</h3>
+                        <p class="text-sm text-gray-600">1,250 registrados</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <i class="fas fa-user-md text-2xl text-green-600 mb-2"></i>
+                        <h3 class="font-semibold text-gray-800">Doctores</h3>
+                        <p class="text-sm text-gray-600">45 activos</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <i class="fas fa-clipboard-list text-2xl text-purple-600 mb-2"></i>
+                        <h3 class="font-semibold text-gray-800">Servicios</h3>
+                        <p class="text-sm text-gray-600">3,450 este mes</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <i class="fas fa-bed text-2xl text-orange-600 mb-2"></i>
+                        <h3 class="font-semibold text-gray-800">Internaciones</h3>
+                        <p class="text-sm text-gray-600">12 activas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Sections -->
+        <div id="menu-content" class="hidden">
+            <!-- Principal Menu -->
+            <div id="menu-principal" class="menu-section">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Menú Principal</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="menu-card" onclick="abrirPantalla('frmODBCLogon.html', 'Configuración de Conexión')">
+                        <i class="fas fa-database text-3xl text-blue-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Configuración de BD</h3>
+                        <p class="text-gray-600 text-sm">Configurar conexión a base de datos</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('PANT02A.html', 'Interfaz Principal')">
+                        <i class="fas fa-desktop text-3xl text-green-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Interfaz Principal</h3>
+                        <p class="text-gray-600 text-sm">Acceso a la interfaz MDI principal</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('USUARIOS.html', 'Gestión de Usuarios')">
+                        <i class="fas fa-user-shield text-3xl text-purple-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Permisos de Usuario</h3>
+                        <p class="text-gray-600 text-sm">Configurar permisos y accesos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pacientes Menu -->
+            <div id="menu-pacientes" class="menu-section hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Gestión de Pacientes</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="menu-card" onclick="abrirPantalla('ALTASPACIENTE.html', 'Registro de Pacientes')">
+                        <i class="fas fa-user-plus text-3xl text-green-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Registro de Pacientes</h3>
+                        <p class="text-gray-600 text-sm">Dar de alta nuevos pacientes</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('HISTORIACLINICA.html', 'Historia Clínica')">
+                        <i class="fas fa-file-medical text-3xl text-blue-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Historia Clínica</h3>
+                        <p class="text-gray-600 text-sm">Gestionar historiales médicos</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('FICHACLINICA.html', 'Ficha Clínica')">
+                        <i class="fas fa-clipboard-check text-3xl text-purple-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Ficha Clínica</h3>
+                        <p class="text-gray-600 text-sm">Consultar fichas clínicas</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('FrmCon.html', 'Consultar Pacientes')">
+                        <i class="fas fa-search text-3xl text-orange-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Consultar Pacientes</h3>
+                        <p class="text-gray-600 text-sm">Buscar y consultar información</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('dw_pacientes.html', 'Análisis OLAP Pacientes')">
+                        <i class="fas fa-chart-pie text-3xl text-red-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Análisis OLAP</h3>
+                        <p class="text-gray-600 text-sm">Reportes analíticos de pacientes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Servicios Menu -->
+            <div id="menu-servicios" class="menu-section hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Gestión de Servicios</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="menu-card" onclick="abrirPantalla('MOVIMIENTOS.html', 'Órdenes de Servicio')">
+                        <i class="fas fa-clipboard-list text-3xl text-blue-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Órdenes de Servicio</h3>
+                        <p class="text-gray-600 text-sm">Gestionar órdenes médicas</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('SERVICIOINTERNACION.html', 'Servicios Hospitalarios')">
+                        <i class="fas fa-bed text-3xl text-purple-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Servicios Hospitalarios</h3>
+                        <p class="text-gray-600 text-sm">Gestión de internaciones</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('LIQUIDACIONES.html', 'Liquidaciones')">
+                        <i class="fas fa-calculator text-3xl text-green-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Liquidaciones</h3>
+                        <p class="text-gray-600 text-sm">Facturación y liquidaciones</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('dw_procedimientos.html', 'Análisis de Procedimientos')">
+                        <i class="fas fa-procedures text-3xl text-orange-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Análisis de Procedimientos</h3>
+                        <p class="text-gray-600 text-sm">Reportes OLAP de procedimientos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Administración Menu -->
+            <div id="menu-administracion" class="menu-section hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Administración del Sistema</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="menu-card" onclick="abrirPantalla('MANTENIMIENTO.html', 'Mantenimiento')">
+                        <i class="fas fa-tools text-3xl text-blue-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Mantenimiento</h3>
+                        <p class="text-gray-600 text-sm">Gestión de datos maestros</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('frmPermisoABM.html', 'Gestión de Permisos')">
+                        <i class="fas fa-key text-3xl text-purple-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Gestión de Permisos</h3>
+                        <p class="text-gray-600 text-sm">Administrar permisos ABM</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('EDITOR.html', 'Editor de Textos')">
+                        <i class="fas fa-edit text-3xl text-green-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Editor de Textos</h3>
+                        <p class="text-gray-600 text-sm">Editor para documentos médicos</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('frmFiltro.html', 'Filtros Avanzados')">
+                        <i class="fas fa-filter text-3xl text-orange-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Filtros Avanzados</h3>
+                        <p class="text-gray-600 text-sm">Configurar filtros de búsqueda</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reportes Menu -->
+            <div id="menu-reportes" class="menu-section hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Reportes y Análisis</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="menu-card" onclick="abrirPantalla('dw_institutos.html', 'Análisis por Institutos')">
+                        <i class="fas fa-building text-3xl text-blue-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Análisis por Institutos</h3>
+                        <p class="text-gray-600 text-sm">Reportes OLAP de institutos</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('dw_pacientes.html', 'Análisis de Pacientes')">
+                        <i class="fas fa-users text-3xl text-green-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Análisis de Pacientes</h3>
+                        <p class="text-gray-600 text-sm">Estadísticas de pacientes</p>
+                    </div>
+                    <div class="menu-card" onclick="abrirPantalla('dw_procedimientos.html', 'Análisis de Procedimientos')">
+                        <i class="fas fa-procedures text-3xl text-purple-600 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Análisis de Procedimientos</h3>
+                        <p class="text-gray-600 text-sm">Reportes de procedimientos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">MEGASYS</h3>
+                    <p class="text-gray-300 text-sm">Sistema Integral de Gestión Médica desarrollado para optimizar la administración hospitalaria y mejorar la atención al paciente.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Módulos Principales</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><i class="fas fa-users mr-2"></i>Gestión de Pacientes</li>
+                        <li><i class="fas fa-user-md mr-2"></i>Personal Médico</li>
+                        <li><i class="fas fa-clipboard-list mr-2"></i>Servicios Médicos</li>
+                        <li><i class="fas fa-bed mr-2"></i>Hospitalización</li>
+                        <li><i class="fas fa-chart-bar mr-2"></i>Reportes y Análisis</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Información del Sistema</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><i class="fas fa-code mr-2"></i>Versión: 2.0 Web</li>
+                        <li><i class="fas fa-calendar mr-2"></i>Actualizado: Diciembre 2024</li>
+                        <li><i class="fas fa-shield-alt mr-2"></i>Seguridad: SSL/TLS</li>
+                        <li><i class="fas fa-database mr-2"></i>Base de Datos: MS SQL Server</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
+                <p>&copy; 2024 MEGASYS - Sistema de Gestión Médica. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .nav-item {
+            padding: 12px 16px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-bottom-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-bottom-color: #fbbf24;
+        }
+        
+        .menu-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6;
+        }
+        
+        .menu-card i {
+            transition: all 0.3s;
+        }
+        
+        .menu-card:hover i {
+            transform: scale(1.1);
+        }
+        
+        .menu-section {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script>
+        let currentMenu = 'principal';
+
+        function mostrarMenu(menuId) {
+            // Actualizar navegación
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById('nav-' + menuId).classList.add('active');
+            
+            // Mostrar/ocultar secciones
+            if (menuId === 'principal' && currentMenu === 'principal') {
+                // Toggle welcome screen
+                const welcomeScreen = document.getElementById('welcome-screen');
+                const menuContent = document.getElementById('menu-content');
+                
+                if (welcomeScreen.style.display === 'none') {
+                    welcomeScreen.style.display = 'block';
+                    menuContent.classList.add('hidden');
+                } else {
+                    welcomeScreen.style.display = 'none';
+                    menuContent.classList.remove('hidden');
+                    mostrarSeccionMenu(menuId);
+                }
+            } else {
+                document.getElementById('welcome-screen').style.display = 'none';
+                document.getElementById('menu-content').classList.remove('hidden');
+                mostrarSeccionMenu(menuId);
+            }
+            
+            currentMenu = menuId;
+        }
+
+        function mostrarSeccionMenu(menuId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.menu-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Mostrar la sección seleccionada
+            document.getElementById('menu-' + menuId).classList.remove('hidden');
+        }
+
+        function abrirPantalla(archivo, titulo) {
+            // Abrir en nueva ventana
+            window.open('./PANTALLAS/' + archivo, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+            
+            // Actualizar estado
+            actualizarEstado(`Abriendo ${titulo}...`);
+        }
+
+        function actualizarEstado(mensaje) {
+            document.getElementById('statusMessage').textContent = mensaje;
+            
+            // Volver al estado normal después de 3 segundos
+            setTimeout(() => {
+                document.getElementById('statusMessage').textContent = 'Sistema listo';
+            }, 3000);
+        }
+
+        // Manejo de teclado
+        document.addEventListener('keydown', function(event) {
+            // Teclas de acceso rápido
+            if (event.altKey) {
+                switch(event.key) {
+                    case '1':
+                        mostrarMenu('principal');
+                        break;
+                    case '2':
+                        mostrarMenu('pacientes');
+                        break;
+                    case '3':
+                        mostrarMenu('servicios');
+                        break;
+                    case '4':
+                        mostrarMenu('administracion');
+                        break;
+                    case '5':
+                        mostrarMenu('reportes');
+                        break;
+                }
+            }
+        });
+
+        // Funciones adicionales para integración
+        function mostrarContenido(archivo, titulo) {
+            abrirPantalla(archivo, titulo);
+        }
+
+        function cerrarVentana() {
+            if (confirm('¿Está seguro de que desea cerrar el sistema?')) {
+                window.close();
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mostrar animación de carga inicial
+            actualizarEstado('Iniciando MEGASYS...');
+            
+            setTimeout(() => {
+                actualizarEstado('Sistema listo');
+            }, 2000);
+        });
+
+        // Verificar si hay pantallas abiertas
+        window.addEventListener('beforeunload', function(event) {
+            // Aquí podrías verificar si hay cambios sin guardar
+        });
+    </script>
+</body>
+</html>

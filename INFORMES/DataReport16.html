@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Gestión de Pedidos y Materiales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-visible { display: block !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .page-break { page-break-after: always; }
+        }
+        
+        .pedido-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .pedido-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .material-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .status-pendiente { background-color: #fef3c7; color: #92400e; }
+        .status-procesando { background-color: #dbeafe; color: #1e40af; }
+        .status-completado { background-color: #dcfce7; color: #166534; }
+        .status-cancelado { background-color: #fee2e2; color: #991b1b; }
+        
+        .proveedor-badge {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .area-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-4">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="pedido-card p-3 rounded-full">
+                    <i class="fas fa-clipboard-list text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Gestión de Pedidos y Materiales</h1>
+                    <p class="text-gray-600">Control de órdenes de compra y suministros</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="toggleView()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-th-large mr-2"></i>
+                    <span id="viewToggleText">Vista Detallada</span>
+                </button>
+                <button onclick="nuevoPedido()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nuevo Pedido
+                </button>
+                <button onclick="exportData()" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Exportar
+                </button>
+                <button onclick="window.print()" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Estadísticas -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Filtros -->
+        <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 no-print">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                <i class="fas fa-filter mr-2 text-blue-500"></i>
+                Filtros de Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Pedido</label>
+                    <input type="text" id="filtroidpedido" placeholder="Buscar por ID..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                    <select id="filtroproveedor" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todos los proveedores</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Área</label>
+                    <select id="filtroarea" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todas las áreas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
+                    <input type="date" id="filtrofechadesde" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
+                    <input type="date" id="filtrofechahasta" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <select id="filtroestado" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="procesando">Procesando</option>
+                        <option value="completado">Completado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button onclick="aplicarFiltros()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Aplicar Filtros
+                </button>
+                <button onclick="limpiarFiltros()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                <i class="fas fa-chart-bar mr-2 text-green-500"></i>
+                Estadísticas
+            </h3>
+            <div class="space-y-3">
+                <div class="pedido-card p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="totalPedidos">0</div>
+                    <div class="text-sm opacity-90">Total Pedidos</div>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-blue-800" id="pedidosPendientes">0</div>
+                    <div class="text-sm text-blue-600">Pendientes</div>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-green-800" id="pedidosCompletados">0</div>
+                    <div class="text-sm text-green-600">Completados</div>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-yellow-800" id="totalMateriales">0</div>
+                    <div class="text-sm text-yellow-600">Materiales Únicos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header (Solo visible en impresión) -->
+    <div class="hidden print-visible mb-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">REPORTE DE PEDIDOS Y MATERIALES</h1>
+            <p class="text-gray-600 mb-4">MEG@SYS - Sistema de Gestión Médica</p>
+            <div class="border-b-2 border-gray-300 mb-4"></div>
+            <div class="flex justify-between text-sm text-gray-600">
+                <span id="fechaImpresion"></span>
+                <span>Página 1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Resumen -->
+    <div id="vistaResumen" class="space-y-6">
+        <!-- Se llena dinámicamente -->
+    </div>
+
+    <!-- Vista Detallada -->
+    <div id="vistaDetallada" class="hidden bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gradient-to-r from-green-500 to-blue-600 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">ID Pedido</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Fecha</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Área</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Proveedor</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">ID Material</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Material</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Cantidad</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaDetalles" class="divide-y divide-gray-200">
+                    <!-- Los datos se cargarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal de Detalle de Pedido -->
+    <div id="modalPedido" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-90vh overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">Detalle del Pedido</h3>
+                        <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="contenidoPedido">
+                        <!-- Contenido del modal se carga dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo para demostración
+        let datosPedidos = [
+            {
+                idPedido: 'PED001',
+                fechaPedido: '2024-01-15',
+                area: 'Laboratorio',
+                idProveedor: 'PROV001',
+                nombreCompania: 'Suministros Médicos S.A.',
+                estado: 'completado',
+                materiales: [
+                    {
+                        idMaterial: 'MAT001',
+                        nombreMaterial: 'Jeringas 5ml',
+                        cantidad: 100
+                    },
+                    {
+                        idMaterial: 'MAT002',
+                        nombreMaterial: 'Guantes de Látex',
+                        cantidad: 50
+                    }
+                ]
+            },
+            {
+                idPedido: 'PED002',
+                fechaPedido: '2024-01-18',
+                area: 'Cirugía',
+                idProveedor: 'PROV002',
+                nombreCompania: 'Instrumental Quirúrgico Ltda.',
+                estado: 'pendiente',
+                materiales: [
+                    {
+                        idMaterial: 'MAT003',
+                        nombreMaterial: 'Bisturíes Desechables',
+                        cantidad: 25
+                    },
+                    {
+                        idMaterial: 'MAT004',
+                        nombreMaterial: 'Gasas Estériles',
+                        cantidad: 200
+                    },
+                    {
+                        idMaterial: 'MAT005',
+                        nombreMaterial: 'Suturas 3-0',
+                        cantidad: 30
+                    }
+                ]
+            },
+            {
+                idPedido: 'PED003',
+                fechaPedido: '2024-01-20',
+                area: 'Farmacia',
+                idProveedor: 'PROV003',
+                nombreCompania: 'Droguería Central',
+                estado: 'procesando',
+                materiales: [
+                    {
+                        idMaterial: 'MAT006',
+                        nombreMaterial: 'Suero Fisiológico 500ml',
+                        cantidad: 50
+                    },
+                    {
+                        idMaterial: 'MAT007',
+                        nombreMaterial: 'Alcohol 70%',
+                        cantidad: 20
+                    }
+                ]
+            },
+            {
+                idPedido: 'PED004',
+                fechaPedido: '2024-01-22',
+                area: 'Urgencias',
+                idProveedor: 'PROV001',
+                nombreCompania: 'Suministros Médicos S.A.',
+                estado: 'completado',
+                materiales: [
+                    {
+                        idMaterial: 'MAT008',
+                        nombreMaterial: 'Vendas Elásticas',
+                        cantidad: 40
+                    },
+                    {
+                        idMaterial: 'MAT009',
+                        nombreMaterial: 'Termómetros Digitales',
+                        cantidad: 5
+                    }
+                ]
+            },
+            {
+                idPedido: 'PED005',
+                fechaPedido: '2024-01-25',
+                area: 'Consulta Externa',
+                idProveedor: 'PROV004',
+                nombreCompania: 'Equipos Médicos del Sur',
+                estado: 'cancelado',
+                materiales: [
+                    {
+                        idMaterial: 'MAT010',
+                        nombreMaterial: 'Tensiómetros',
+                        cantidad: 3
+                    }
+                ]
+            }
+        ];
+
+        let datosOriginales = JSON.parse(JSON.stringify(datosPedidos));
+        let vistaActual = 'resumen'; // 'resumen' o 'detallada'
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarFiltros();
+            mostrarDatos();
+            actualizarEstadisticas();
+            document.getElementById('fechaImpresion').textContent = 
+                'Fecha de impresión: ' + new Date().toLocaleDateString('es-ES');
+        });
+
+        function cargarFiltros() {
+            // Cargar proveedores únicos
+            const proveedores = [...new Set(datosOriginales.map(item => item.nombreCompania))];
+            const selectProveedor = document.getElementById('filtroproveedor');
+            proveedores.forEach(proveedor => {
+                const option = document.createElement('option');
+                option.value = proveedor;
+                option.textContent = proveedor;
+                selectProveedor.appendChild(option);
+            });
+
+            // Cargar áreas únicas
+            const areas = [...new Set(datosOriginales.map(item => item.area))];
+            const selectArea = document.getElementById('filtroarea');
+            areas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                selectArea.appendChild(option);
+            });
+        }
+
+        function mostrarDatos() {
+            if (vistaActual === 'resumen') {
+                mostrarVistaResumen();
+            } else {
+                mostrarVistaDetallada();
+            }
+        }
+
+        function mostrarVistaResumen() {
+            const container = document.getElementById('vistaResumen');
+            container.innerHTML = '';
+
+            datosPedidos.forEach(pedido => {
+                const totalMateriales = pedido.materiales.length;
+                const totalCantidad = pedido.materiales.reduce((sum, m) => sum + m.cantidad, 0);
+
+                const pedidoCard = document.createElement('div');
+                pedidoCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+
+                pedidoCard.innerHTML = `
+                    <div class="pedido-card p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                    <i class="fas fa-clipboard-list text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold">${pedido.idPedido}</h3>
+                                    <p class="opacity-90">Fecha: ${formatearFecha(pedido.fechaPedido)}</p>
+                                    <div class="flex items-center space-x-3 mt-2">
+                                        <span class="area-tag">${pedido.area}</span>
+                                        <span class="proveedor-badge">${pedido.idProveedor}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold">${totalMateriales}</div>
+                                <div class="text-sm opacity-90">Materiales</div>
+                                <div class="text-lg">${totalCantidad} unidades</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${pedido.nombreCompania}</h4>
+                                <span class="${obtenerClaseEstado(pedido.estado)} px-3 py-1 rounded-full text-sm font-semibold">
+                                    ${pedido.estado.toUpperCase()}
+                                </span>
+                            </div>
+                            <button onclick="verDetallePedido('${pedido.idPedido}')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-eye mr-2"></i>
+                                Ver Detalle
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="text-sm font-medium text-gray-700 mb-2">Materiales del Pedido:</div>
+                            ${pedido.materiales.map(material => `
+                                <div class="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
+                                    <div class="flex-1">
+                                        <div class="font-medium">${material.nombreMaterial}</div>
+                                        <div class="text-sm text-gray-600">ID: ${material.idMaterial}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-blue-600">${material.cantidad}</div>
+                                        <div class="text-xs text-gray-500">unidades</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="mt-4 flex space-x-2">
+                            <button onclick="editarPedido('${pedido.idPedido}')" class="flex-1 bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar
+                            </button>
+                            <button onclick="imprimirPedido('${pedido.idPedido}')" class="flex-1 bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                                <i class="fas fa-print mr-2"></i>
+                                Imprimir
+                            </button>
+                            <button onclick="cambiarEstado('${pedido.idPedido}')" class="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-check mr-2"></i>
+                                Estado
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(pedidoCard);
+            });
+        }
+
+        function mostrarVistaDetallada() {
+            const tbody = document.getElementById('tablaDetalles');
+            tbody.innerHTML = '';
+
+            datosPedidos.forEach(pedido => {
+                pedido.materiales.forEach(material => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+
+                    const claseEstado = obtenerClaseEstado(pedido.estado);
+
+                    row.innerHTML = `
+                        <td class="px-4 py-3 font-mono text-sm font-semibold text-blue-600">${pedido.idPedido}</td>
+                        <td class="px-4 py-3 text-sm">${formatearFecha(pedido.fechaPedido)}</td>
+                        <td class="px-4 py-3">
+                            <span class="area-tag">${pedido.area}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="font-medium">${pedido.nombreCompania}</div>
+                            <div class="text-xs text-gray-500">${pedido.idProveedor}</div>
+                        </td>
+                        <td class="px-4 py-3 font-mono text-sm">${material.idMaterial}</td>
+                        <td class="px-4 py-3 font-medium">${material.nombreMaterial}</td>
+                        <td class="px-4 py-3 text-center font-bold text-blue-600">${material.cantidad}</td>
+                        <td class="px-4 py-3">
+                            <span class="${claseEstado} px-2 py-1 rounded-full text-xs font-semibold">
+                                ${pedido.estado.toUpperCase()}
+                            </span>
+                        </td>
+                    `;
+
+                    tbody.appendChild(row);
+                });
+            });
+        }
+
+        function obtenerClaseEstado(estado) {
+            switch(estado) {
+                case 'pendiente': return 'status-pendiente';
+                case 'procesando': return 'status-procesando';
+                case 'completado': return 'status-completado';
+                case 'cancelado': return 'status-cancelado';
+                default: return 'status-pendiente';
+            }
+        }
+
+        function formatearFecha(fecha) {
+            return new Date(fecha).toLocaleDateString('es-ES');
+        }
+
+        function toggleView() {
+            const vistaResumen = document.getElementById('vistaResumen');
+            const vistaDetallada = document.getElementById('vistaDetallada');
+            const toggleText = document.getElementById('viewToggleText');
+
+            if (vistaActual === 'resumen') {
+                vistaResumen.classList.add('hidden');
+                vistaDetallada.classList.remove('hidden');
+                vistaActual = 'detallada';
+                toggleText.textContent = 'Vista Resumen';
+            } else {
+                vistaDetallada.classList.add('hidden');
+                vistaResumen.classList.remove('hidden');
+                vistaActual = 'resumen';
+                toggleText.textContent = 'Vista Detallada';
+            }
+
+            mostrarDatos();
+        }
+
+        function aplicarFiltros() {
+            const filtros = {
+                idPedido: document.getElementById('filtroidpedido').value.toLowerCase(),
+                proveedor: document.getElementById('filtroproveedor').value,
+                area: document.getElementById('filtroarea').value,
+                fechaDesde: document.getElementById('filtrofechadesde').value,
+                fechaHasta: document.getElementById('filtrofechahasta').value,
+                estado: document.getElementById('filtroestado').value
+            };
+
+            datosPedidos = datosOriginales.filter(pedido => {
+                const cumpleId = !filtros.idPedido || pedido.idPedido.toLowerCase().includes(filtros.idPedido);
+                const cumpleProveedor = !filtros.proveedor || pedido.nombreCompania === filtros.proveedor;
+                const cumpleArea = !filtros.area || pedido.area === filtros.area;
+                const cumpleEstado = !filtros.estado || pedido.estado === filtros.estado;
+                
+                let cumpleFecha = true;
+                if (filtros.fechaDesde || filtros.fechaHasta) {
+                    const fechaPedido = new Date(pedido.fechaPedido);
+                    const cumpleFechaDesde = !filtros.fechaDesde || fechaPedido >= new Date(filtros.fechaDesde);
+                    const cumpleFechaHasta = !filtros.fechaHasta || fechaPedido <= new Date(filtros.fechaHasta);
+                    cumpleFecha = cumpleFechaDesde && cumpleFechaHasta;
+                }
+
+                return cumpleId && cumpleProveedor && cumpleArea && cumpleEstado && cumpleFecha;
+            });
+
+            mostrarDatos();
+            actualizarEstadisticas();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtroidpedido').value = '';
+            document.getElementById('filtroproveedor').value = '';
+            document.getElementById('filtroarea').value = '';
+            document.getElementById('filtrofechadesde').value = '';
+            document.getElementById('filtrofechahasta').value = '';
+            document.getElementById('filtroestado').value = '';
+            
+            datosPedidos = JSON.parse(JSON.stringify(datosOriginales));
+            mostrarDatos();
+            actualizarEstadisticas();
+        }
+
+        function actualizarEstadisticas() {
+            const totalPedidos = datosPedidos.length;
+            const pedidosPendientes = datosPedidos.filter(p => p.estado === 'pendiente').length;
+            const pedidosCompletados = datosPedidos.filter(p => p.estado === 'completado').length;
+            
+            const todosMateriales = new Set();
+            datosPedidos.forEach(p => {
+                p.materiales.forEach(m => todosMateriales.add(m.idMaterial));
+            });
+            const totalMateriales = todosMateriales.size;
+
+            document.getElementById('totalPedidos').textContent = totalPedidos;
+            document.getElementById('pedidosPendientes').textContent = pedidosPendientes;
+            document.getElementById('pedidosCompletados').textContent = pedidosCompletados;
+            document.getElementById('totalMateriales').textContent = totalMateriales;
+        }
+
+        function verDetallePedido(idPedido) {
+            const pedido = datosPedidos.find(p => p.idPedido === idPedido);
+            if (!pedido) return;
+
+            const totalMateriales = pedido.materiales.length;
+            const totalCantidad = pedido.materiales.reduce((sum, m) => sum + m.cantidad, 0);
+
+            const contenido = `
+                <div class="space-y-6">
+                    <!-- Header del Pedido -->
+                    <div class="pedido-card p-6 rounded-lg text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-xl font-bold">${pedido.idPedido}</h4>
+                                <p class="opacity-90">Fecha: ${formatearFecha(pedido.fechaPedido)}</p>
+                                <p class="opacity-90">Área: ${pedido.area}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold">${totalMateriales}</div>
+                                <div class="text-sm opacity-90">Materiales</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Proveedor -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2">Información del Proveedor:</h5>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><strong>ID Proveedor:</strong> ${pedido.idProveedor}</div>
+                            <div><strong>Compañía:</strong> ${pedido.nombreCompania}</div>
+                        </div>
+                    </div>
+
+                    <!-- Detalle de Materiales -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold">ID Material</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold">Nombre</th>
+                                    <th class="px-4 py-2 text-center text-sm font-semibold">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${pedido.materiales.map(material => `
+                                    <tr>
+                                        <td class="px-4 py-2 font-mono text-sm">${material.idMaterial}</td>
+                                        <td class="px-4 py-2 font-medium">${material.nombreMaterial}</td>
+                                        <td class="px-4 py-2 text-center font-bold text-blue-600">${material.cantidad}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Resumen -->
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600">${totalMateriales}</div>
+                                <div class="text-sm text-blue-600">Tipos de Material</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-green-600">${totalCantidad}</div>
+                                <div class="text-sm text-green-600">Total Unidades</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-purple-600">${pedido.estado.toUpperCase()}</div>
+                                <div class="text-sm text-purple-600">Estado Actual</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="flex space-x-2">
+                        <button onclick="editarPedido('${pedido.idPedido}')" class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar Pedido
+                        </button>
+                        <button onclick="imprimirPedido('${pedido.idPedido}')" class="flex-1 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-print mr-2"></i>
+                            Imprimir
+                        </button>
+                        <button onclick="cambiarEstado('${pedido.idPedido}')" class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                            <i class="fas fa-check mr-2"></i>
+                            Cambiar Estado
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('contenidoPedido').innerHTML = contenido;
+            document.getElementById('modalPedido').classList.remove('hidden');
+        }
+
+        function editarPedido(idPedido) {
+            alert(`Editando pedido: ${idPedido}`);
+        }
+
+        function imprimirPedido(idPedido) {
+            alert(`Imprimiendo pedido: ${idPedido}`);
+        }
+
+        function cambiarEstado(idPedido) {
+            const nuevoEstado = prompt('Ingrese el nuevo estado (pendiente, procesando, completado, cancelado):');
+            if (nuevoEstado) {
+                const pedido = datosPedidos.find(p => p.idPedido === idPedido);
+                if (pedido) {
+                    pedido.estado = nuevoEstado;
+                    mostrarDatos();
+                    actualizarEstadisticas();
+                    alert(`Estado del pedido ${idPedido} cambiado a: ${nuevoEstado}`);
+                }
+            }
+        }
+
+        function nuevoPedido() {
+            alert('Función de nuevo pedido en desarrollo');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalPedido').classList.add('hidden');
+        }
+
+        function exportData() {
+            let csv = 'ID Pedido,Fecha,Área,Proveedor,ID Material,Material,Cantidad,Estado\n';
+            
+            datosPedidos.forEach(pedido => {
+                pedido.materiales.forEach(material => {
+                    csv += `"${pedido.idPedido}","${pedido.fechaPedido}","${pedido.area}","${pedido.nombreCompania}","${material.idMaterial}","${material.nombreMaterial}",${material.cantidad},"${pedido.estado}"\n`;
+                });
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'pedidos_materiales.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalPedido').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
+
+        // Event listeners para filtros en tiempo real
+        document.getElementById('filtroidpedido').addEventListener('input', aplicarFiltros);
+    </script>
+</body>
+</html>

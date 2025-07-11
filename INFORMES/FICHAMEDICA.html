@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FICHA MÉDICA - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-area { box-shadow: none !important; }
+            .medical-record { max-width: none !important; margin: 0 !important; }
+        }
+        
+        .medical-record {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        .record-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #374151;
+            padding-bottom: 20px;
+        }
+        
+        .record-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        .date-info {
+            text-align: right;
+            font-weight: bold;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        
+        .patient-info {
+            border: 2px solid #374151;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #f9fafb;
+        }
+        
+        .patient-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .patient-label {
+            font-weight: bold;
+            color: #374151;
+            min-width: 100px;
+            font-size: 12px;
+        }
+        
+        .patient-value {
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .services-section {
+            margin-top: 30px;
+        }
+        
+        .services-header {
+            display: grid;
+            grid-template-columns: 80px 120px 100px 200px 180px 1fr;
+            gap: 10px;
+            padding: 10px 5px;
+            background-color: #374151;
+            color: white;
+            font-weight: bold;
+            font-style: italic;
+            border: 1px solid #374151;
+        }
+        
+        .service-row {
+            display: grid;
+            grid-template-columns: 80px 120px 100px 200px 180px 1fr;
+            gap: 10px;
+            padding: 8px 5px;
+            border-left: 1px solid #d1d5db;
+            border-right: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+            min-height: 40px;
+            align-items: center;
+        }
+        
+        .service-row:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        .service-cell {
+            padding: 2px 5px;
+            font-size: 10px;
+            word-wrap: break-word;
+        }
+        
+        .service-cell.center {
+            text-align: center;
+        }
+        
+        .divider-line {
+            border-top: 1px solid #374151;
+            margin: 20px 0;
+        }
+        
+        .footer-spacing {
+            height: 50px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Toolbar (No Print) -->
+    <div class="no-print bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button onclick="window.history.back()" class="flex items-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver
+                </button>
+                <h1 class="text-xl font-semibold text-gray-800">Ficha Médica</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="buscarPaciente()" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Buscar Paciente
+                </button>
+                <button onclick="nuevaFicha()" class="flex items-center px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nueva Ficha
+                </button>
+                <button onclick="exportToPDF()" class="flex items-center px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    PDF
+                </button>
+                <button onclick="window.print()" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Panel (No Print) -->
+    <div class="no-print container mx-auto px-6 py-4">
+        <div id="searchPanel" class="hidden bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Buscar Paciente</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Paciente</label>
+                    <input type="text" id="searchIdPaciente" placeholder="ID del paciente..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cédula</label>
+                    <input type="text" id="searchCedula" placeholder="Número de cédula..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input type="text" id="searchNombre" placeholder="Nombre del paciente..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button onclick="realizarBusquedaPaciente()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Buscar
+                </button>
+                <button onclick="limpiarBusquedaPaciente()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-eraser mr-2"></i>
+                    Limpiar
+                </button>
+                <button onclick="cerrarBusquedaPaciente()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical Record Content -->
+    <div class="container mx-auto p-6 print-area">
+        <div class="medical-record bg-white shadow-lg rounded-lg overflow-hidden p-8">
+            
+            <!-- Header -->
+            <div class="record-header">
+                <div class="date-info" id="recordDate">11 de julio de 2025</div>
+                <h1 class="record-title">FICHA MÉDICA</h1>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="patient-info">
+                <div class="patient-row">
+                    <span class="patient-label">ID:</span>
+                    <span id="patientId" class="patient-value">001234</span>
+                    
+                    <span class="patient-label ml-8">ASEGURADORA:</span>
+                    <span id="patientInsurance" class="patient-value">IPS</span>
+                    
+                    <span class="patient-label ml-8">ID SEGURO:</span>
+                    <span id="patientInsuranceId" class="patient-value">SEG-567890</span>
+                </div>
+                
+                <div class="patient-row">
+                    <span class="patient-label">CÉDULA:</span>
+                    <span id="patientCedula" class="patient-value">1.234.567</span>
+                    
+                    <span class="patient-label ml-8">NOMBRE:</span>
+                    <span id="patientName" class="patient-value">MARÍA GONZÁLEZ RODRÍGUEZ</span>
+                </div>
+            </div>
+
+            <!-- Services Section -->
+            <div class="services-section">
+                <!-- Column Headers -->
+                <div class="services-header">
+                    <div>TIPO</div>
+                    <div>FECHA</div>
+                    <div>Nº MOV</div>
+                    <div>DOCTOR</div>
+                    <div>SERVICIO</div>
+                    <div>ANTECEDENTE</div>
+                </div>
+                
+                <!-- Services Data -->
+                <div id="servicesContainer">
+                    <!-- Los servicios se cargarán dinámicamente -->
+                </div>
+            </div>
+
+            <div class="footer-spacing"></div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg">
+            <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+            <p class="mt-2 text-gray-600">Cargando ficha médica...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentPatient = {};
+
+        // Initialize the medical record
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRecordDate();
+            loadPatientData();
+        });
+
+        function updateRecordDate() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('recordDate').textContent = dateStr;
+        }
+
+        // Mock data for demo - En un sistema real vendría de la base de datos
+        function generateMockPatient() {
+            return {
+                id: '001234',
+                aseguradora: 'IPS',
+                idSeguro: 'SEG-567890',
+                cedula: '1.234.567',
+                nombre: 'MARÍA GONZÁLEZ RODRÍGUEZ',
+                servicios: [
+                    {
+                        tipo: 'CONSULTA',
+                        fecha: '15/06/2025',
+                        nroMov: '001',
+                        doctor: 'Dr. JUAN PÉREZ',
+                        servicio: 'Consulta Cardiología',
+                        antecedente: 'Hipertensión arterial controlada'
+                    },
+                    {
+                        tipo: 'ESTUDIO',
+                        fecha: '18/06/2025',
+                        nroMov: '002',
+                        doctor: 'Dr. ANA MARTÍNEZ',
+                        servicio: 'Electrocardiograma',
+                        antecedente: 'Control rutinario'
+                    },
+                    {
+                        tipo: 'ANÁLISIS',
+                        fecha: '20/06/2025',
+                        nroMov: '003',
+                        doctor: 'Dr. CARLOS LÓPEZ',
+                        servicio: 'Análisis de Sangre',
+                        antecedente: 'Perfil lipídico y glucemia'
+                    },
+                    {
+                        tipo: 'CONSULTA',
+                        fecha: '22/06/2025',
+                        nroMov: '004',
+                        doctor: 'Dr. JUAN PÉREZ',
+                        servicio: 'Control Cardiología',
+                        antecedente: 'Seguimiento tratamiento'
+                    },
+                    {
+                        tipo: 'ESTUDIO',
+                        fecha: '25/06/2025',
+                        nroMov: '005',
+                        doctor: 'Dr. LUIS GARCÍA',
+                        servicio: 'Ecocardiograma',
+                        antecedente: 'Evaluación función ventricular'
+                    },
+                    {
+                        tipo: 'CONSULTA',
+                        fecha: '28/06/2025',
+                        nroMov: '006',
+                        doctor: 'Dr. MARÍA SILVA',
+                        servicio: 'Consulta Nutrición',
+                        antecedente: 'Plan alimentario para hipertensión'
+                    },
+                    {
+                        tipo: 'ANÁLISIS',
+                        fecha: '02/07/2025',
+                        nroMov: '007',
+                        doctor: 'Dr. CARLOS LÓPEZ',
+                        servicio: 'Análisis de Orina',
+                        antecedente: 'Control función renal'
+                    },
+                    {
+                        tipo: 'CONSULTA',
+                        fecha: '05/07/2025',
+                        nroMov: '008',
+                        doctor: 'Dr. JUAN PÉREZ',
+                        servicio: 'Control Cardiología',
+                        antecedente: 'Revisión resultados estudios'
+                    }
+                ]
+            };
+        }
+
+        function loadPatientData() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            // Simular carga de datos
+            setTimeout(() => {
+                currentPatient = generateMockPatient();
+                renderPatientRecord();
+                document.getElementById('loadingState').classList.add('hidden');
+                updateParentStatus('Ficha médica cargada correctamente');
+            }, 1000);
+        }
+
+        function renderPatientRecord() {
+            // Patient basic information
+            document.getElementById('patientId').textContent = currentPatient.id;
+            document.getElementById('patientInsurance').textContent = currentPatient.aseguradora;
+            document.getElementById('patientInsuranceId').textContent = currentPatient.idSeguro;
+            document.getElementById('patientCedula').textContent = currentPatient.cedula;
+            document.getElementById('patientName').textContent = currentPatient.nombre;
+            
+            // Services
+            const container = document.getElementById('servicesContainer');
+            container.innerHTML = '';
+            
+            currentPatient.servicios.forEach(servicio => {
+                const row = document.createElement('div');
+                row.className = 'service-row';
+                row.innerHTML = `
+                    <div class="service-cell center">${servicio.tipo}</div>
+                    <div class="service-cell center">${servicio.fecha}</div>
+                    <div class="service-cell center">${servicio.nroMov}</div>
+                    <div class="service-cell">${servicio.doctor}</div>
+                    <div class="service-cell">${servicio.servicio}</div>
+                    <div class="service-cell">${servicio.antecedente}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function buscarPaciente() {
+            const panel = document.getElementById('searchPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function cerrarBusquedaPaciente() {
+            document.getElementById('searchPanel').classList.add('hidden');
+        }
+
+        function realizarBusquedaPaciente() {
+            const idPaciente = document.getElementById('searchIdPaciente').value;
+            const cedula = document.getElementById('searchCedula').value;
+            const nombre = document.getElementById('searchNombre').value;
+            
+            // En un sistema real, esto haría una consulta a la base de datos
+            if (idPaciente || cedula || nombre) {
+                document.getElementById('loadingState').classList.remove('hidden');
+                setTimeout(() => {
+                    // Simular búsqueda y carga de nuevos datos
+                    currentPatient = generateMockPatient();
+                    if (idPaciente) currentPatient.id = idPaciente;
+                    if (cedula) currentPatient.cedula = cedula;
+                    if (nombre) currentPatient.nombre = nombre.toUpperCase();
+                    
+                    renderPatientRecord();
+                    document.getElementById('loadingState').classList.add('hidden');
+                    cerrarBusquedaPaciente();
+                    updateParentStatus('Paciente encontrado y ficha cargada');
+                }, 1000);
+            } else {
+                alert('Por favor, ingrese al menos un criterio de búsqueda');
+            }
+        }
+
+        function limpiarBusquedaPaciente() {
+            document.getElementById('searchIdPaciente').value = '';
+            document.getElementById('searchCedula').value = '';
+            document.getElementById('searchNombre').value = '';
+        }
+
+        function nuevaFicha() {
+            if (confirm('¿Desea crear una nueva ficha médica? Se perderán los datos actuales.')) {
+                // En un sistema real, esto abriría un formulario para nueva ficha
+                alert('Funcionalidad de nueva ficha médica pendiente de implementación');
+            }
+        }
+
+        function exportToPDF() {
+            // En un sistema real, esto generaría un PDF
+            alert('Funcionalidad de exportación a PDF pendiente de implementación');
+        }
+
+        // Handle toolbar commands from parent frame
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'refresh':
+                        loadPatientData();
+                        break;
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'search':
+                        buscarPaciente();
+                        break;
+                    case 'add':
+                        nuevaFicha();
+                        break;
+                }
+            }
+        });
+
+        // Send status updates to parent frame
+        function updateParentStatus(message) {
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: message
+                }, '*');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey) {
+                switch(event.key) {
+                    case 'p':
+                        event.preventDefault();
+                        window.print();
+                        break;
+                    case 'f':
+                        event.preventDefault();
+                        buscarPaciente();
+                        break;
+                    case 'n':
+                        event.preventDefault();
+                        nuevaFicha();
+                        break;
+                }
+            }
+        });
+
+        // Search inputs with Enter key support
+        document.getElementById('searchIdPaciente').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') realizarBusquedaPaciente();
+        });
+
+        document.getElementById('searchCedula').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') realizarBusquedaPaciente();
+        });
+
+        document.getElementById('searchNombre').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') realizarBusquedaPaciente();
+        });
+    </script>
+</body>
+</html>

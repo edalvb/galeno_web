@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios OLAP por Pacientes - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg mb-4 p-4">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-users mr-3 text-green-600"></i>
+                SERVICIOS OLAP DE GALENO POR PACIENTES
+            </h2>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="bg-white rounded-lg shadow-lg mb-4 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Período</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="fechaDesde" class="form-input" value="2024-01-01">
+                        <input type="date" id="fechaHasta" class="form-input" value="2024-12-31">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Documento</label>
+                    <input type="text" id="documentoFiltro" class="form-input" placeholder="Número de documento">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Nombre Paciente</label>
+                    <input type="text" id="nombreFiltro" class="form-input" placeholder="Nombre del paciente">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Estado</label>
+                    <select id="estadoFiltro" class="form-input">
+                        <option value="">Todos los Estados</option>
+                        <option value="ACTIVO">Activo</option>
+                        <option value="INACTIVO">Inactivo</option>
+                        <option value="HOSPITALIZADO">Hospitalizado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end space-x-2">
+                <button onclick="filtrarDatos()" class="btn-primary">
+                    <i class="fas fa-filter mr-2"></i>
+                    Aplicar Filtros
+                </button>
+                <button onclick="exportarDatos()" class="btn-secondary">
+                    <i class="fas fa-download mr-2"></i>
+                    Exportar
+                </button>
+                <button onclick="actualizarDatos()" class="btn-refresh">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Charts and Statistics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Services by Patient Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    Top 10 Pacientes
+                </h3>
+                <canvas id="chartTopPacientes" height="200"></canvas>
+            </div>
+
+            <!-- Age Distribution Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    Distribución por Edad
+                </h3>
+                <canvas id="chartEdades" height="200"></canvas>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="space-y-4">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-sm opacity-90">Total Pacientes</p>
+                            <p class="text-2xl font-bold" id="totalPacientes">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-sm opacity-90">Servicios Totales</p>
+                            <p class="text-2xl font-bold" id="serviciosTotales">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                    <div class="flex items-center">
+                        <i class="fas fa-dollar-sign text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-sm opacity-90">Ingresos Totales</p>
+                            <p class="text-xl font-bold" id="ingresosTotales">$0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-4 bg-gray-50 rounded-t-lg border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-table mr-2"></i>
+                        Resumen de Servicios por Paciente
+                    </h3>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">
+                            Mostrando <span id="registrosMostrados">0</span> de <span id="totalRegistros">0</span> registros
+                        </span>
+                        <select id="registrosPorPagina" class="form-input w-auto" onchange="cambiarPaginacion()">
+                            <option value="10">10 por página</option>
+                            <option value="25">25 por página</option>
+                            <option value="50">50 por página</option>
+                            <option value="100">100 por página</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="tablaPacientes">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('documento')">
+                                Documento
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('nombre')">
+                                Nombre del Paciente
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('edad')">
+                                Edad
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('servicios')">
+                                Total Servicios
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('ultimoServicio')">
+                                Último Servicio
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('ingresos')">
+                                Ingresos Totales
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header cursor-pointer" onclick="ordenarTabla('estado')">
+                                Estado
+                                <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="table-header">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="pacientesBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="px-6 py-3 bg-gray-50 border-t">
+                <div class="flex justify-between items-center">
+                    <button onclick="paginaAnterior()" class="btn-secondary" id="btnAnterior" disabled>
+                        <i class="fas fa-chevron-left mr-2"></i>
+                        Anterior
+                    </button>
+                    <span class="text-sm text-gray-600" id="infoPaginacion">
+                        Página 1 de 1
+                    </span>
+                    <button onclick="paginaSiguiente()" class="btn-secondary" id="btnSiguiente" disabled>
+                        Siguiente
+                        <i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-screen overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="modalTitle" class="text-lg font-semibold">Detalle del Paciente</h3>
+                        <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="modalContent" class="overflow-x-auto">
+                        <!-- Contenido dinámico -->
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <button onclick="abrirHistoriaClinica()" class="btn-primary">
+                            <i class="fas fa-file-medical mr-2"></i>
+                            Historia Clínica
+                        </button>
+                        <button onclick="cerrarModal()" class="btn-secondary">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .btn-secondary:disabled {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .btn-refresh {
+            background-color: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-refresh:hover {
+            background-color: #059669;
+        }
+        
+        .table-header {
+            padding: 12px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table-cell {
+            padding: 12px 6px;
+            font-size: 14px;
+            color: #1f2937;
+        }
+        
+        .estado-activo {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .estado-inactivo {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .estado-hospitalizado {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let datosPacientes = [];
+        let datosFiltrados = [];
+        let paginaActual = 1;
+        let registrosPorPagina = 10;
+        let ordenActual = { campo: '', direccion: 'asc' };
+        let chartTopPacientes = null;
+        let chartEdades = null;
+        let pacienteSeleccionado = null;
+
+        // Datos de ejemplo
+        const datosEjemplo = [
+            {
+                documento: '12345678',
+                nombre: 'García Pérez, María Elena',
+                edad: 35,
+                servicios: 15,
+                ultimoServicio: '2024-12-20',
+                ingresos: 750000,
+                estado: 'ACTIVO',
+                telefono: '555-0001',
+                direccion: 'Calle 123 #45-67',
+                email: 'maria.garcia@email.com'
+            },
+            {
+                documento: '87654321',
+                nombre: 'López Martínez, Juan Carlos',
+                edad: 42,
+                servicios: 23,
+                ultimoServicio: '2024-12-19',
+                ingresos: 1150000,
+                estado: 'HOSPITALIZADO',
+                telefono: '555-0002',
+                direccion: 'Carrera 89 #12-34',
+                email: 'juan.lopez@email.com'
+            },
+            {
+                documento: '11223344',
+                nombre: 'Rodríguez Silva, Ana Sofía',
+                edad: 28,
+                servicios: 8,
+                ultimoServicio: '2024-12-18',
+                ingresos: 420000,
+                estado: 'ACTIVO',
+                telefono: '555-0003',
+                direccion: 'Avenida 56 #78-90',
+                email: 'ana.rodriguez@email.com'
+            },
+            {
+                documento: '55667788',
+                nombre: 'Hernández Torres, José Miguel',
+                edad: 55,
+                servicios: 31,
+                ultimoServicio: '2024-12-17',
+                ingresos: 1850000,
+                estado: 'ACTIVO',
+                telefono: '555-0004',
+                direccion: 'Calle 34 #56-78',
+                email: 'jose.hernandez@email.com'
+            },
+            {
+                documento: '99887766',
+                nombre: 'Morales Jiménez, Laura Patricia',
+                edad: 67,
+                servicios: 45,
+                ultimoServicio: '2024-12-16',
+                ingresos: 2250000,
+                estado: 'ACTIVO',
+                telefono: '555-0005',
+                direccion: 'Diagonal 90 #12-34',
+                email: 'laura.morales@email.com'
+            }
+        ];
+
+        function inicializar() {
+            datosPacientes = [...datosEjemplo];
+            datosFiltrados = [...datosPacientes];
+            cargarTabla();
+            inicializarGraficos();
+            actualizarEstadisticas();
+            
+            // Manejar mensajes del toolbar
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'toolbar_command') {
+                    manejarComandoToolbar(event.data.command);
+                }
+            });
+        }
+
+        function cargarTabla() {
+            const inicio = (paginaActual - 1) * registrosPorPagina;
+            const fin = inicio + registrosPorPagina;
+            const datosPagina = datosFiltrados.slice(inicio, fin);
+            
+            const tbody = document.getElementById('pacientesBody');
+            tbody.innerHTML = datosPagina.map(paciente => `
+                <tr class="hover:bg-gray-50">
+                    <td class="table-cell">
+                        <span class="font-medium">${paciente.documento}</span>
+                    </td>
+                    <td class="table-cell">
+                        <div class="font-medium text-gray-900">${paciente.nombre}</div>
+                        <div class="text-sm text-gray-500">${paciente.email}</div>
+                    </td>
+                    <td class="table-cell text-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            ${paciente.edad} años
+                        </span>
+                    </td>
+                    <td class="table-cell text-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            ${paciente.servicios}
+                        </span>
+                    </td>
+                    <td class="table-cell">${paciente.ultimoServicio}</td>
+                    <td class="table-cell text-right">
+                        <span class="font-medium text-gray-900">$${paciente.ingresos.toLocaleString()}</span>
+                    </td>
+                    <td class="table-cell">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium estado-${paciente.estado.toLowerCase()}">
+                            ${paciente.estado}
+                        </span>
+                    </td>
+                    <td class="table-cell">
+                        <div class="flex space-x-2">
+                            <button onclick="verDetalle('${paciente.documento}')" class="text-blue-600 hover:text-blue-900" title="Ver Detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="verHistoria('${paciente.documento}')" class="text-green-600 hover:text-green-900" title="Historia Clínica">
+                                <i class="fas fa-file-medical"></i>
+                            </button>
+                            <button onclick="verServicios('${paciente.documento}')" class="text-purple-600 hover:text-purple-900" title="Ver Servicios">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            actualizarPaginacion();
+        }
+
+        function inicializarGraficos() {
+            // Top 10 pacientes por servicios
+            const topPacientes = [...datosFiltrados]
+                .sort((a, b) => b.servicios - a.servicios)
+                .slice(0, 10);
+            
+            const ctxTop = document.getElementById('chartTopPacientes').getContext('2d');
+            chartTopPacientes = new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: topPacientes.map(p => p.nombre.split(',')[0]),
+                    datasets: [{
+                        label: 'Servicios',
+                        data: topPacientes.map(p => p.servicios),
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Distribución por edades
+            const rangosEdad = {
+                '0-18': 0,
+                '19-35': 0,
+                '36-50': 0,
+                '51-65': 0,
+                '65+': 0
+            };
+            
+            datosFiltrados.forEach(p => {
+                if (p.edad <= 18) rangosEdad['0-18']++;
+                else if (p.edad <= 35) rangosEdad['19-35']++;
+                else if (p.edad <= 50) rangosEdad['36-50']++;
+                else if (p.edad <= 65) rangosEdad['51-65']++;
+                else rangosEdad['65+']++;
+            });
+            
+            const ctxEdad = document.getElementById('chartEdades').getContext('2d');
+            chartEdades = new Chart(ctxEdad, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(rangosEdad),
+                    datasets: [{
+                        data: Object.values(rangosEdad),
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function actualizarEstadisticas() {
+            const totalPacientes = datosFiltrados.length;
+            const serviciosTotales = datosFiltrados.reduce((sum, p) => sum + p.servicios, 0);
+            const ingresosTotales = datosFiltrados.reduce((sum, p) => sum + p.ingresos, 0);
+            
+            document.getElementById('totalPacientes').textContent = totalPacientes.toLocaleString();
+            document.getElementById('serviciosTotales').textContent = serviciosTotales.toLocaleString();
+            document.getElementById('ingresosTotales').textContent = '$' + ingresosTotales.toLocaleString();
+        }
+
+        function filtrarDatos() {
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+            const documento = document.getElementById('documentoFiltro').value.toLowerCase();
+            const nombre = document.getElementById('nombreFiltro').value.toLowerCase();
+            const estado = document.getElementById('estadoFiltro').value;
+
+            datosFiltrados = datosPacientes.filter(paciente => {
+                let cumple = true;
+                
+                if (documento && !paciente.documento.includes(documento)) {
+                    cumple = false;
+                }
+                
+                if (nombre && !paciente.nombre.toLowerCase().includes(nombre)) {
+                    cumple = false;
+                }
+                
+                if (estado && paciente.estado !== estado) {
+                    cumple = false;
+                }
+                
+                return cumple;
+            });
+            
+            paginaActual = 1;
+            cargarTabla();
+            actualizarGraficos();
+            actualizarEstadisticas();
+            
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: `Filtros aplicados - ${datosFiltrados.length} registros`
+                }, '*');
+            }
+        }
+
+        function actualizarGraficos() {
+            // Actualizar top pacientes
+            const topPacientes = [...datosFiltrados]
+                .sort((a, b) => b.servicios - a.servicios)
+                .slice(0, 10);
+            
+            chartTopPacientes.data.labels = topPacientes.map(p => p.nombre.split(',')[0]);
+            chartTopPacientes.data.datasets[0].data = topPacientes.map(p => p.servicios);
+            chartTopPacientes.update();
+
+            // Actualizar distribución edades
+            const rangosEdad = {
+                '0-18': 0,
+                '19-35': 0,
+                '36-50': 0,
+                '51-65': 0,
+                '65+': 0
+            };
+            
+            datosFiltrados.forEach(p => {
+                if (p.edad <= 18) rangosEdad['0-18']++;
+                else if (p.edad <= 35) rangosEdad['19-35']++;
+                else if (p.edad <= 50) rangosEdad['36-50']++;
+                else if (p.edad <= 65) rangosEdad['51-65']++;
+                else rangosEdad['65+']++;
+            });
+            
+            chartEdades.data.datasets[0].data = Object.values(rangosEdad);
+            chartEdades.update();
+        }
+
+        function ordenarTabla(campo) {
+            if (ordenActual.campo === campo) {
+                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                ordenActual.campo = campo;
+                ordenActual.direccion = 'asc';
+            }
+
+            datosFiltrados.sort((a, b) => {
+                let valorA = a[campo];
+                let valorB = b[campo];
+                
+                if (typeof valorA === 'string') {
+                    valorA = valorA.toLowerCase();
+                    valorB = valorB.toLowerCase();
+                }
+                
+                if (ordenActual.direccion === 'asc') {
+                    return valorA > valorB ? 1 : -1;
+                } else {
+                    return valorA < valorB ? 1 : -1;
+                }
+            });
+            
+            cargarTabla();
+        }
+
+        function cambiarPaginacion() {
+            registrosPorPagina = parseInt(document.getElementById('registrosPorPagina').value);
+            paginaActual = 1;
+            cargarTabla();
+        }
+
+        function actualizarPaginacion() {
+            const totalPaginas = Math.ceil(datosFiltrados.length / registrosPorPagina);
+            const inicio = (paginaActual - 1) * registrosPorPagina + 1;
+            const fin = Math.min(paginaActual * registrosPorPagina, datosFiltrados.length);
+            
+            document.getElementById('registrosMostrados').textContent = `${inicio}-${fin}`;
+            document.getElementById('totalRegistros').textContent = datosFiltrados.length;
+            document.getElementById('infoPaginacion').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+            
+            document.getElementById('btnAnterior').disabled = paginaActual === 1;
+            document.getElementById('btnSiguiente').disabled = paginaActual === totalPaginas;
+        }
+
+        function paginaAnterior() {
+            if (paginaActual > 1) {
+                paginaActual--;
+                cargarTabla();
+            }
+        }
+
+        function paginaSiguiente() {
+            const totalPaginas = Math.ceil(datosFiltrados.length / registrosPorPagina);
+            if (paginaActual < totalPaginas) {
+                paginaActual++;
+                cargarTabla();
+            }
+        }
+
+        function verDetalle(documento) {
+            const paciente = datosPacientes.find(p => p.documento === documento);
+            if (!paciente) return;
+
+            pacienteSeleccionado = paciente;
+            document.getElementById('modalTitle').textContent = `Detalle de ${paciente.nombre}`;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800">Información Personal</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p><strong>Documento:</strong> ${paciente.documento}</p>
+                            <p><strong>Nombre:</strong> ${paciente.nombre}</p>
+                            <p><strong>Edad:</strong> ${paciente.edad} años</p>
+                            <p><strong>Teléfono:</strong> ${paciente.telefono}</p>
+                            <p><strong>Dirección:</strong> ${paciente.direccion}</p>
+                            <p><strong>Email:</strong> ${paciente.email}</p>
+                            <p><strong>Estado:</strong> <span class="estado-${paciente.estado.toLowerCase()} px-2 py-1 rounded text-xs">${paciente.estado}</span></p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-gray-800">Estadísticas de Servicios</h4>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p><strong>Total Servicios:</strong> ${paciente.servicios}</p>
+                            <p><strong>Último Servicio:</strong> ${paciente.ultimoServicio}</p>
+                            <p><strong>Ingresos Totales:</strong> $${paciente.ingresos.toLocaleString()}</p>
+                            <p><strong>Promedio por Servicio:</strong> $${Math.round(paciente.ingresos / paciente.servicios).toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">Últimos Servicios</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="table-header">Fecha</th>
+                                    <th class="table-header">Servicio</th>
+                                    <th class="table-header">Doctor</th>
+                                    <th class="table-header">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr><td class="table-cell">2024-12-20</td><td class="table-cell">Consulta Médica</td><td class="table-cell">Dr. García</td><td class="table-cell">$50,000</td></tr>
+                                <tr><td class="table-cell">2024-12-18</td><td class="table-cell">Examen de Laboratorio</td><td class="table-cell">Dr. López</td><td class="table-cell">$25,000</td></tr>
+                                <tr><td class="table-cell">2024-12-15</td><td class="table-cell">Radiografía</td><td class="table-cell">Dr. Martínez</td><td class="table-cell">$40,000</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function verHistoria(documento) {
+            if (window.parent && window.parent.mostrarContenido) {
+                window.parent.mostrarContenido('HISTORIACLINICA.html?documento=' + documento, 'Historia Clínica');
+            } else {
+                window.open('HISTORIACLINICA.html?documento=' + documento, '_blank');
+            }
+        }
+
+        function verServicios(documento) {
+            alert(`Mostrar servicios detallados del paciente ${documento}`);
+        }
+
+        function abrirHistoriaClinica() {
+            if (pacienteSeleccionado) {
+                verHistoria(pacienteSeleccionado.documento);
+                cerrarModal();
+            }
+        }
+
+        function exportarDatos() {
+            alert('Exportando datos de pacientes');
+        }
+
+        function actualizarDatos() {
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: 'Datos actualizados'
+                }, '*');
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            pacienteSeleccionado = null;
+        }
+
+        function manejarComandoToolbar(comando) {
+            switch(comando) {
+                case 'refresh':
+                    actualizarDatos();
+                    break;
+                case 'export':
+                    exportarDatos();
+                    break;
+                case 'print':
+                    window.print();
+                    break;
+            }
+        }
+
+        // Manejar teclas
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (!document.getElementById('detailModal').classList.contains('hidden')) {
+                    cerrarModal();
+                } else if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'close_window'
+                    }, '*');
+                }
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

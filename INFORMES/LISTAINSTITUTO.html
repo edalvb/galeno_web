@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE INSTITUTOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .codigo-column {
+            text-align: center;
+            width: 80px;
+            font-weight: bold;
+        }
+        .instituto-column {
+            width: 300px;
+        }
+        .domicilio-column {
+            width: 300px;
+        }
+        .telefono-column {
+            width: 120px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE INSTITUTOS</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PAGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="codigo-column">CODIGO:</th>
+                    <th class="instituto-column">INSTITUTO:</th>
+                    <th class="domicilio-column">DOMICILIO:</th>
+                    <th class="telefono-column">TELEFONOS:</th>
+                </tr>
+            </thead>
+            <tbody id="institutos-data">
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Cargando datos de institutos...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>PAGINA: <span id="footer-page">1</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de institutos médicos
+        const institutos = [
+            {
+                codigo: "001",
+                instituto: "HOSPITAL UNIVERSITARIO SAN IGNACIO",
+                domicilio: "CARRERA 7 NO. 40-62",
+                telefono1: "5946161",
+                telefono2: "5946000"
+            },
+            {
+                codigo: "002", 
+                instituto: "CLÍNICA DEL COUNTRY",
+                domicilio: "CARRERA 16 NO. 82-57",
+                telefono1: "5300470",
+                telefono2: "5300500"
+            },
+            {
+                codigo: "003",
+                instituto: "FUNDACIÓN SANTA FE DE BOGOTÁ",
+                domicilio: "CALLE 119 NO. 7-75",
+                telefono1: "6030303",
+                telefono2: "6030330"
+            },
+            {
+                codigo: "004",
+                instituto: "HOSPITAL MILITAR CENTRAL",
+                domicilio: "TRANSVERSAL 3A NO. 49-02",
+                telefono1: "3480441",
+                telefono2: "3480442"
+            },
+            {
+                codigo: "005",
+                instituto: "CLÍNICA SHAIO",
+                domicilio: "DIAGONAL 115A NO. 18-67",
+                telefono1: "7569000",
+                telefono2: "7569001"
+            },
+            {
+                codigo: "006",
+                instituto: "HOSPITAL SAN JUAN DE DIOS",
+                domicilio: "CARRERA 10 NO. 1-66 SUR",
+                telefono1: "3649090",
+                telefono2: "3649091"
+            },
+            {
+                codigo: "007",
+                instituto: "CLÍNICA MARLY",
+                domicilio: "CALLE 50 NO. 9-67",
+                telefono1: "3434360",
+                telefono2: "3434361"
+            },
+            {
+                codigo: "008",
+                instituto: "HOSPITAL DE LA MISERICORDIA",
+                domicilio: "DIAGONAL 15 NO. 18-86",
+                telefono1: "7469090",
+                telefono2: "7469091"
+            },
+            {
+                codigo: "009",
+                instituto: "CLÍNICA DE OCCIDENTE",
+                domicilio: "AVENIDA DE LAS AMÉRICAS NO. 13-57",
+                telefono1: "4434343",
+                telefono2: "4434344"
+            },
+            {
+                codigo: "010",
+                instituto: "INSTITUTO NACIONAL DE CANCEROLOGÍA",
+                domicilio: "CALLE 1 NO. 9-85",
+                telefono1: "3340199",
+                telefono2: "3340200"
+            }
+        ];
+
+        // Cargar datos de institutos
+        function loadInstitutos() {
+            const tbody = document.getElementById('institutos-data');
+            
+            if (institutos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay datos de institutos disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = institutos.map(instituto => `
+                <tr>
+                    <td class="codigo-column">${instituto.codigo}</td>
+                    <td class="instituto-column">${instituto.instituto}</td>
+                    <td class="domicilio-column">${instituto.domicilio}</td>
+                    <td class="telefono-column">${instituto.telefono1} ${instituto.telefono2}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadInstitutos();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

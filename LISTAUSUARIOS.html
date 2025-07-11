@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Gestión de Usuarios del Sistema</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-table { width: 100% !important; font-size: 11px !important; }
+            .print-header { text-align: center !important; margin-bottom: 20px !important; }
+        }
+        .rol-admin { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .rol-usuario { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .rol-operador { background: linear-gradient(135deg, #10b981, #059669); }
+        .rol-consulta { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .estado-activo { background: linear-gradient(135deg, #10b981, #059669); }
+        .estado-inactivo { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .estado-bloqueado { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .password-field { 
+            font-family: 'Courier New', monospace; 
+            letter-spacing: 2px; 
+        }
+        .security-high { border-left: 4px solid #10b981; }
+        .security-medium { border-left: 4px solid #f59e0b; }
+        .security-low { border-left: 4px solid #dc2626; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-users-cog text-3xl text-blue-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+                        <p class="text-sm text-gray-600">Administración de usuarios del sistema MEG@SYS</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 no-print">
+                    <button onclick="crearUsuario()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Nuevo Usuario
+                    </button>
+                    <button onclick="imprimirListado()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Usuario</label>
+                    <input type="text" id="buscarUsuario" placeholder="ID, nombre..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Usuario</label>
+                    <select id="filtroTipo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los tipos</option>
+                        <option value="admin">Administradores</option>
+                        <option value="usuario">Usuarios Estándar</option>
+                        <option value="operador">Operadores</option>
+                        <option value="consulta">Solo Consulta</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                    <select id="filtroEstado" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activos</option>
+                        <option value="inactivo">Inactivos</option>
+                        <option value="bloqueado">Bloqueados</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('tarjetas')" id="btnTarjetas" 
+                                class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-th-large mr-1"></i>Tarjetas
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas de Seguridad -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalUsuarios">0</div>
+                    <div class="text-xs text-blue-800">Total Usuarios</div>
+                </div>
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600" id="totalAdmins">0</div>
+                    <div class="text-xs text-red-800">Administradores</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="usuariosActivos">0</div>
+                    <div class="text-xs text-green-800">Activos</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="alertasSeguridad">0</div>
+                    <div class="text-xs text-yellow-800">Alertas Seguridad</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="ultimasConexiones">0</div>
+                    <div class="text-xs text-purple-800">Conexiones Hoy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Tarjetas -->
+    <div id="vistaTarjetas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="contenedorTarjetas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Las tarjetas se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 print-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Usuario</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última Conexión</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permisos</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contenedorTablaUsuarios" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Creación/Edición de Usuario -->
+    <div id="modalUsuario" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex items-center mb-6">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-user-plus text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Nuevo Usuario</h3>
+                            <p class="text-sm text-gray-500">Configuración de usuario del sistema</p>
+                        </div>
+                    </div>
+                    
+                    <form id="formUsuario" class="space-y-6">
+                        <!-- Información Básica -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Información Básica</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">ID de Usuario *</label>
+                                    <input type="text" id="modalIdUsuario" maxlength="20" 
+                                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <p class="text-xs text-gray-500 mt-1">Mínimo 3 caracteres, sin espacios</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nombre Completo *</label>
+                                    <input type="text" id="modalNombre" 
+                                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                                    <input type="email" id="modalEmail" 
+                                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Cargo</label>
+                                    <input type="text" id="modalCargo" 
+                                           class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuración de Acceso -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Configuración de Acceso</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Contraseña *</label>
+                                    <div class="relative">
+                                        <input type="password" id="modalClave" 
+                                               class="password-field mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <button type="button" onclick="togglePassword('modalClave')" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <i class="fas fa-eye text-gray-400" id="toggleIconClave"></i>
+                                        </button>
+                                    </div>
+                                    <div id="passwordStrength" class="mt-2 text-xs"></div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña *</label>
+                                    <input type="password" id="modalConfirmarClave" 
+                                           class="password-field mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <div id="passwordMatch" class="mt-1 text-xs"></div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Tipo de Usuario</label>
+                                    <select id="modalTipoUsuario" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="usuario">Usuario Estándar</option>
+                                        <option value="operador">Operador</option>
+                                        <option value="admin">Administrador</option>
+                                        <option value="consulta">Solo Consulta</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Estado</label>
+                                    <select id="modalEstado" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="activo">Activo</option>
+                                        <option value="inactivo">Inactivo</option>
+                                        <option value="bloqueado">Bloqueado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permisos y Restricciones -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Permisos del Sistema</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Módulos Permitidos</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="permisoPackientes" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Gestión de Pacientes</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="permisoLaboratorio" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Laboratorio</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="permisoFacturacion" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Facturación</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="permisoInventario" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Inventario</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Configuración Adicional</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="cambiarClave" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Debe cambiar contraseña en el próximo ingreso</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="sesionMultiple" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Permitir sesiones múltiples</span>
+                                        </label>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Duración de Sesión (minutos)</label>
+                                            <input type="number" id="duracionSesion" value="480" min="30" max="1440"
+                                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="guardarUsuario()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i>Guardar Usuario
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de usuarios
+        let usuarios = [
+            {
+                id: "ADMIN01",
+                nombre: "Dr. Carlos Eduardo Martínez",
+                email: "admin@megasys.com",
+                cargo: "Director Médico",
+                clave: "Admin123!",
+                tipo: "admin",
+                estado: "activo",
+                ultimaConexion: "2024-01-15 08:30:00",
+                permisos: ["pacientes", "laboratorio", "facturacion", "inventario", "administracion"],
+                sesionMultiple: false,
+                cambiarClave: false,
+                duracionSesion: 480
+            },
+            {
+                id: "LAB001",
+                nombre: "Dra. Ana María González",
+                email: "lab01@megasys.com",
+                cargo: "Jefe de Laboratorio",
+                clave: "Lab2024*",
+                tipo: "usuario",
+                estado: "activo",
+                ultimaConexion: "2024-01-15 09:15:00",
+                permisos: ["pacientes", "laboratorio"],
+                sesionMultiple: true,
+                cambiarClave: false,
+                duracionSesion: 360
+            },
+            {
+                id: "FACT01",
+                nombre: "María Elena Rodríguez",
+                email: "facturacion@megasys.com",
+                cargo: "Facturación",
+                clave: "Fact123$",
+                tipo: "operador",
+                estado: "activo",
+                ultimaConexion: "2024-01-15 07:45:00",
+                permisos: ["pacientes", "facturacion"],
+                sesionMultiple: false,
+                cambiarClave: true,
+                duracionSesion: 240
+            },
+            {
+                id: "REC001",
+                nombre: "Luis Fernando Pérez",
+                email: "recepcion@megasys.com",
+                cargo: "Recepcionista",
+                clave: "Rec2024#",
+                tipo: "operador",
+                estado: "activo",
+                ultimaConexion: "2024-01-14 18:20:00",
+                permisos: ["pacientes"],
+                sesionMultiple: true,
+                cambiarClave: false,
+                duracionSesion: 480
+            },
+            {
+                id: "CONS01",
+                nombre: "Dr. Roberto Silva",
+                email: "consulta@megasys.com",
+                cargo: "Médico Consultor",
+                clave: "Cons123&",
+                tipo: "consulta",
+                estado: "activo",
+                ultimaConexion: "2024-01-13 16:30:00",
+                permisos: ["pacientes"],
+                sesionMultiple: false,
+                cambiarClave: false,
+                duracionSesion: 180
+            },
+            {
+                id: "TEMP01",
+                nombre: "Patricia Morales",
+                email: "temp@megasys.com",
+                cargo: "Usuario Temporal",
+                clave: "Temp123@",
+                tipo: "usuario",
+                estado: "inactivo",
+                ultimaConexion: "2024-01-10 14:15:00",
+                permisos: ["pacientes"],
+                sesionMultiple: false,
+                cambiarClave: true,
+                duracionSesion: 120
+            }
+        ];
+
+        let vistaActual = 'tarjetas';
+        let usuariosFiltrados = [...usuarios];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVista();
+            configurarFiltros();
+            actualizarEstadisticas();
+            configurarValidaciones();
+        });
+
+        function configurarFiltros() {
+            const buscar = document.getElementById('buscarUsuario');
+            const filtroTipo = document.getElementById('filtroTipo');
+            const filtroEstado = document.getElementById('filtroEstado');
+
+            [buscar, filtroTipo, filtroEstado].forEach(elemento => {
+                elemento.addEventListener('input', aplicarFiltros);
+            });
+        }
+
+        function configurarValidaciones() {
+            const clave = document.getElementById('modalClave');
+            const confirmarClave = document.getElementById('modalConfirmarClave');
+
+            clave.addEventListener('input', validarFortalezaClave);
+            confirmarClave.addEventListener('input', validarCoincidenciaClave);
+        }
+
+        function aplicarFiltros() {
+            const textoBusqueda = document.getElementById('buscarUsuario').value.toLowerCase();
+            const tipoSeleccionado = document.getElementById('filtroTipo').value;
+            const estadoSeleccionado = document.getElementById('filtroEstado').value;
+
+            usuariosFiltrados = usuarios.filter(usuario => {
+                const coincideTexto = 
+                    usuario.id.toLowerCase().includes(textoBusqueda) ||
+                    usuario.nombre.toLowerCase().includes(textoBusqueda) ||
+                    usuario.email.toLowerCase().includes(textoBusqueda);
+
+                const coincideTipo = !tipoSeleccionado || usuario.tipo === tipoSeleccionado;
+                const coincideEstado = !estadoSeleccionado || usuario.estado === estadoSeleccionado;
+
+                return coincideTexto && coincideTipo && coincideEstado;
+            });
+
+            actualizarVista();
+            actualizarEstadisticas();
+        }
+
+        function cambiarVista(nuevaVista) {
+            vistaActual = nuevaVista;
+            
+            const btnTarjetas = document.getElementById('btnTarjetas');
+            const btnTabla = document.getElementById('btnTabla');
+            const vistaTarjetas = document.getElementById('vistaTarjetas');
+            const vistaTabla = document.getElementById('vistaTabla');
+
+            if (nuevaVista === 'tarjetas') {
+                btnTarjetas.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTabla.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTarjetas.classList.remove('hidden');
+                vistaTabla.classList.add('hidden');
+            } else {
+                btnTabla.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTarjetas.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTabla.classList.remove('hidden');
+                vistaTarjetas.classList.add('hidden');
+            }
+
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'tarjetas') {
+                mostrarTarjetasUsuarios();
+            } else {
+                mostrarTablaUsuarios();
+            }
+        }
+
+        function obtenerClaseRol(tipo) {
+            const clases = {
+                'admin': 'rol-admin',
+                'usuario': 'rol-usuario',
+                'operador': 'rol-operador',
+                'consulta': 'rol-consulta'
+            };
+            return clases[tipo] || 'rol-usuario';
+        }
+
+        function obtenerClaseEstado(estado) {
+            const clases = {
+                'activo': 'estado-activo',
+                'inactivo': 'estado-inactivo',
+                'bloqueado': 'estado-bloqueado'
+            };
+            return clases[estado] || 'estado-inactivo';
+        }
+
+        function obtenerIconoTipo(tipo) {
+            const iconos = {
+                'admin': 'fas fa-crown',
+                'usuario': 'fas fa-user',
+                'operador': 'fas fa-user-cog',
+                'consulta': 'fas fa-eye'
+            };
+            return iconos[tipo] || 'fas fa-user';
+        }
+
+        function obtenerTextoTipo(tipo) {
+            const textos = {
+                'admin': 'Administrador',
+                'usuario': 'Usuario Estándar',
+                'operador': 'Operador',
+                'consulta': 'Solo Consulta'
+            };
+            return textos[tipo] || 'Usuario';
+        }
+
+        function mostrarTarjetasUsuarios() {
+            const contenedor = document.getElementById('contenedorTarjetas');
+            
+            if (usuariosFiltrados.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-users-cog text-4xl text-gray-300 mb-4"></i>
+                        <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron usuarios</div>
+                        <div class="text-gray-500">No hay usuarios que coincidan con los filtros seleccionados.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = usuariosFiltrados.map(usuario => `
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 ${obtenerClaseRol(usuario.tipo)} rounded-full flex items-center justify-center text-white">
+                                    <i class="${obtenerIconoTipo(usuario.tipo)} text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">${usuario.nombre}</h3>
+                                    <p class="text-sm text-gray-600">${usuario.cargo}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium ${obtenerClaseEstado(usuario.estado)} text-white rounded-full">
+                                ${usuario.estado.charAt(0).toUpperCase() + usuario.estado.slice(1)}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">ID Usuario:</span>
+                                <span class="text-sm font-medium text-gray-900">${usuario.id}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Tipo:</span>
+                                <span class="text-sm font-medium text-gray-900">${obtenerTextoTipo(usuario.tipo)}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Email:</span>
+                                <span class="text-sm text-gray-900">${usuario.email}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Última Conexión:</span>
+                                <span class="text-sm text-gray-900">${new Date(usuario.ultimaConexion).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Permisos:</span>
+                                <span class="text-xs text-gray-500">${usuario.permisos.length} módulos</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                ${usuario.permisos.slice(0, 3).map(permiso => `
+                                    <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">${permiso}</span>
+                                `).join('')}
+                                ${usuario.permisos.length > 3 ? `<span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">+${usuario.permisos.length - 3}</span>` : ''}
+                            </div>
+                        </div>
+                        
+                        ${usuario.cambiarClave || usuario.sesionMultiple ? `
+                            <div class="border-t pt-3 mt-3">
+                                <div class="flex flex-wrap gap-2">
+                                    ${usuario.cambiarClave ? '<span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Cambiar Clave</span>' : ''}
+                                    ${usuario.sesionMultiple ? '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Sesión Múltiple</span>' : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="px-6 py-3 bg-gray-50 border-t flex justify-between items-center no-print">
+                        <button onclick="editarUsuario('${usuario.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <i class="fas fa-edit mr-1"></i>Editar
+                        </button>
+                        <button onclick="cambiarEstado('${usuario.id}')" class="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                            <i class="fas fa-toggle-on mr-1"></i>Estado
+                        </button>
+                        <button onclick="resetearClave('${usuario.id}')" class="text-orange-600 hover:text-orange-800 text-sm font-medium">
+                            <i class="fas fa-key mr-1"></i>Reset Clave
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarTablaUsuarios() {
+            const contenedor = document.getElementById('contenedorTablaUsuarios');
+            
+            if (usuariosFiltrados.length === 0) {
+                contenedor.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center">
+                            <i class="fas fa-users-cog text-4xl text-gray-300 mb-4"></i>
+                            <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron usuarios</div>
+                            <div class="text-gray-500">No hay usuarios que coincidan con los filtros seleccionados.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = usuariosFiltrados.map(usuario => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${usuario.id}</td>
+                    <td class="px-4 py-4 text-sm text-gray-900">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 ${obtenerClaseRol(usuario.tipo)} rounded-full flex items-center justify-center text-white mr-3">
+                                <i class="${obtenerIconoTipo(usuario.tipo)}"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">${usuario.nombre}</div>
+                                <div class="text-gray-500">${usuario.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="px-2 py-1 text-xs font-medium ${obtenerClaseRol(usuario.tipo)} text-white rounded-full">
+                            ${obtenerTextoTipo(usuario.tipo)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="px-2 py-1 text-xs font-medium ${obtenerClaseEstado(usuario.estado)} text-white rounded-full">
+                            ${usuario.estado.charAt(0).toUpperCase() + usuario.estado.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${new Date(usuario.ultimaConexion).toLocaleDateString()}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-900">
+                        <div class="flex flex-wrap gap-1">
+                            ${usuario.permisos.slice(0, 2).map(permiso => `
+                                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">${permiso}</span>
+                            `).join('')}
+                            ${usuario.permisos.length > 2 ? `<span class="text-xs text-gray-500">+${usuario.permisos.length - 2}</span>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarUsuario('${usuario.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="cambiarEstado('${usuario.id}')" class="text-gray-600 hover:text-gray-900 mr-3">
+                            <i class="fas fa-toggle-on"></i>
+                        </button>
+                        <button onclick="resetearClave('${usuario.id}')" class="text-orange-600 hover:text-orange-900">
+                            <i class="fas fa-key"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarEstadisticas() {
+            const totalUsuarios = usuariosFiltrados.length;
+            const totalAdmins = usuariosFiltrados.filter(u => u.tipo === 'admin').length;
+            const usuariosActivos = usuariosFiltrados.filter(u => u.estado === 'activo').length;
+            const alertasSeguridad = usuariosFiltrados.filter(u => u.cambiarClave || u.estado === 'bloqueado').length;
+            
+            // Simular conexiones de hoy
+            const hoy = new Date().toDateString();
+            const ultimasConexiones = usuariosFiltrados.filter(u => 
+                new Date(u.ultimaConexion).toDateString() === hoy
+            ).length;
+
+            document.getElementById('totalUsuarios').textContent = totalUsuarios;
+            document.getElementById('totalAdmins').textContent = totalAdmins;
+            document.getElementById('usuariosActivos').textContent = usuariosActivos;
+            document.getElementById('alertasSeguridad').textContent = alertasSeguridad;
+            document.getElementById('ultimasConexiones').textContent = ultimasConexiones;
+        }
+
+        function validarFortalezaClave() {
+            const clave = document.getElementById('modalClave').value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            
+            let score = 0;
+            let feedback = [];
+
+            if (clave.length >= 8) score++;
+            else feedback.push('Mínimo 8 caracteres');
+
+            if (/[A-Z]/.test(clave)) score++;
+            else feedback.push('Al menos una mayúscula');
+
+            if (/[a-z]/.test(clave)) score++;
+            else feedback.push('Al menos una minúscula');
+
+            if (/[0-9]/.test(clave)) score++;
+            else feedback.push('Al menos un número');
+
+            if (/[^A-Za-z0-9]/.test(clave)) score++;
+            else feedback.push('Al menos un símbolo');
+
+            const levels = [
+                { class: 'security-low', text: 'Muy débil', color: 'text-red-600' },
+                { class: 'security-low', text: 'Débil', color: 'text-red-600' },
+                { class: 'security-medium', text: 'Regular', color: 'text-yellow-600' },
+                { class: 'security-medium', text: 'Buena', color: 'text-yellow-600' },
+                { class: 'security-high', text: 'Fuerte', color: 'text-green-600' },
+                { class: 'security-high', text: 'Muy fuerte', color: 'text-green-600' }
+            ];
+
+            const level = levels[score] || levels[0];
+            strengthDiv.innerHTML = `
+                <div class="${level.color}">${level.text}</div>
+                ${feedback.length > 0 ? `<div class="text-gray-500">${feedback.join(', ')}</div>` : ''}
+            `;
+        }
+
+        function validarCoincidenciaClave() {
+            const clave = document.getElementById('modalClave').value;
+            const confirmar = document.getElementById('modalConfirmarClave').value;
+            const matchDiv = document.getElementById('passwordMatch');
+
+            if (confirmar.length === 0) {
+                matchDiv.innerHTML = '';
+                return;
+            }
+
+            if (clave === confirmar) {
+                matchDiv.innerHTML = '<span class="text-green-600">Las contraseñas coinciden</span>';
+            } else {
+                matchDiv.innerHTML = '<span class="text-red-600">Las contraseñas no coinciden</span>';
+            }
+        }
+
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById('toggleIcon' + fieldId.replace('modal', ''));
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.className = 'fas fa-eye-slash text-gray-400';
+            } else {
+                field.type = 'password';
+                icon.className = 'fas fa-eye text-gray-400';
+            }
+        }
+
+        function crearUsuario() {
+            document.getElementById('modal-title').textContent = 'Nuevo Usuario';
+            document.getElementById('formUsuario').reset();
+            
+            // Configurar valores por defecto
+            document.getElementById('modalTipoUsuario').value = 'usuario';
+            document.getElementById('modalEstado').value = 'activo';
+            document.getElementById('duracionSesion').value = '480';
+            
+            document.getElementById('modalUsuario').classList.remove('hidden');
+        }
+
+        function editarUsuario(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            if (usuario) {
+                document.getElementById('modal-title').textContent = `Editar: ${usuario.nombre}`;
+                llenarFormulario(usuario);
+                document.getElementById('modalUsuario').classList.remove('hidden');
+            }
+        }
+
+        function llenarFormulario(usuario) {
+            document.getElementById('modalIdUsuario').value = usuario.id;
+            document.getElementById('modalNombre').value = usuario.nombre;
+            document.getElementById('modalEmail').value = usuario.email;
+            document.getElementById('modalCargo').value = usuario.cargo;
+            document.getElementById('modalClave').value = usuario.clave;
+            document.getElementById('modalConfirmarClave').value = usuario.clave;
+            document.getElementById('modalTipoUsuario').value = usuario.tipo;
+            document.getElementById('modalEstado').value = usuario.estado;
+            document.getElementById('duracionSesion').value = usuario.duracionSesion;
+            
+            // Configurar checkboxes
+            document.getElementById('sesionMultiple').checked = usuario.sesionMultiple;
+            document.getElementById('cambiarClave').checked = usuario.cambiarClave;
+            
+            // Configurar permisos
+            const permisos = ['pacientes', 'laboratorio', 'facturacion', 'inventario'];
+            permisos.forEach(permiso => {
+                const elemento = document.getElementById('permiso' + permiso.charAt(0).toUpperCase() + permiso.slice(1));
+                if (elemento) {
+                    elemento.checked = usuario.permisos.includes(permiso);
+                }
+            });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalUsuario').classList.add('hidden');
+        }
+
+        function guardarUsuario() {
+            // Aquí iría la lógica para guardar los cambios
+            cerrarModal();
+            // Simular actualización
+            setTimeout(() => {
+                actualizarVista();
+                actualizarEstadisticas();
+            }, 100);
+        }
+
+        function cambiarEstado(id) {
+            const usuario = usuarios.find(u => u.id === id);
+            if (usuario) {
+                const estados = ['activo', 'inactivo', 'bloqueado'];
+                const indiceActual = estados.indexOf(usuario.estado);
+                usuario.estado = estados[(indiceActual + 1) % estados.length];
+                actualizarVista();
+                actualizarEstadisticas();
+            }
+        }
+
+        function resetearClave(id) {
+            if (confirm('¿Está seguro de que desea resetear la contraseña de este usuario?')) {
+                // Aquí iría la lógica para resetear la contraseña
+                console.log('Reseteando contraseña para usuario:', id);
+            }
+        }
+
+        function imprimirListado() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const datos = usuariosFiltrados.map(usuario => ({
+                'ID Usuario': usuario.id,
+                'Nombre': usuario.nombre,
+                'Email': usuario.email,
+                'Cargo': usuario.cargo,
+                'Tipo': obtenerTextoTipo(usuario.tipo),
+                'Estado': usuario.estado.charAt(0).toUpperCase() + usuario.estado.slice(1),
+                'Última Conexión': new Date(usuario.ultimaConexion).toLocaleDateString(),
+                'Permisos': usuario.permisos.join(', '),
+                'Sesión Múltiple': usuario.sesionMultiple ? 'Sí' : 'No',
+                'Cambiar Clave': usuario.cambiarClave ? 'Sí' : 'No',
+                'Duración Sesión': `${usuario.duracionSesion} min`
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Usuarios');
+            XLSX.writeFile(workbook, 'usuarios_sistema.xlsx');
+        }
+    </script>
+
+    <!-- Incluir XLSX para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

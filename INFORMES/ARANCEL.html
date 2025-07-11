@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFORME ARANCEL - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-area { box-shadow: none !important; }
+        }
+        
+        .report-container {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+        }
+        
+        .header-logo {
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+            color: #1f2937;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .data-table th {
+            background-color: #e5e7eb;
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            font-weight: bold;
+            text-align: left;
+            color: #374151;
+        }
+        
+        .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 6px 8px;
+            background-color: white;
+        }
+        
+        .data-table tr:nth-child(even) td {
+            background-color: #f9fafb;
+        }
+        
+        .footer-info {
+            border-top: 2px solid #dc2626;
+            padding-top: 10px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        .currency {
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Toolbar (No Print) -->
+    <div class="no-print bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button onclick="window.history.back()" class="flex items-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver
+                </button>
+                <h1 class="text-xl font-semibold text-gray-800">Informe de Aranceles</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="exportToExcel()" class="flex items-center px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Excel
+                </button>
+                <button onclick="exportToPDF()" class="flex items-center px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    PDF
+                </button>
+                <button onclick="window.print()" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+                <button onclick="refreshData()" class="flex items-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="container mx-auto p-6 print-area">
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden report-container">
+            
+            <!-- Header with Logo -->
+            <div class="header-logo">
+                <div class="flex items-center justify-center">
+                    <i class="fas fa-heartbeat text-3xl mr-3"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">MEG@SYS</h1>
+                        <p class="text-sm opacity-90">Sistema Integral de Gestión Médica</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Title -->
+            <div class="px-6">
+                <h2 class="report-title">LISTADO DE ARANCELES</h2>
+            </div>
+
+            <!-- Filters Section (No Print) -->
+            <div class="no-print px-6 py-4 bg-gray-50 border-b">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código Servicio</label>
+                        <input type="text" id="filterCodServicio" placeholder="Filtrar por código..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Servicio</label>
+                        <input type="text" id="filterNomServicio" placeholder="Filtrar por nombre..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Instituto</label>
+                        <select id="filterInstituto" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos los institutos</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-filter mr-2"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="px-6 py-4">
+                <div class="overflow-x-auto">
+                    <table class="data-table" id="arancelTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">CODSERVICIO</th>
+                                <th style="width: 25%;">NOMSERVICIO</th>
+                                <th style="width: 30%;">INSTITUTO</th>
+                                <th style="width: 15%;">ARANCEL</th>
+                                <th style="width: 15%;">COSTO</th>
+                            </tr>
+                        </thead>
+                        <tbody id="arancelTableBody">
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                    <p class="mt-2 text-gray-600">Cargando datos...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-8">
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No se encontraron registros</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 pb-6">
+                <div class="footer-info">
+                    <div class="flex items-center space-x-4">
+                        <span id="reportDate"></span>
+                        <span id="reportTime"></span>
+                    </div>
+                    <div>
+                        <span>PAGINA: <span id="pageNumber">1</span></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Summary Panel (No Print) -->
+    <div class="no-print container mx-auto px-6 py-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-list text-blue-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Total Servicios</p>
+                            <p class="text-xl font-bold text-gray-800" id="totalServicios">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-building text-green-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Institutos</p>
+                            <p class="text-xl font-bold text-gray-800" id="totalInstitutos">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-dollar-sign text-yellow-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Arancel Promedio</p>
+                            <p class="text-xl font-bold text-gray-800" id="promedioArancel">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-calculator text-purple-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Costo Promedio</p>
+                            <p class="text-xl font-bold text-gray-800" id="promedioCosto">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+
+        // Initialize the report
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            loadData();
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('reportDate').textContent = dateStr;
+            document.getElementById('reportTime').textContent = timeStr;
+        }
+
+        // Mock data - En un sistema real, esto vendría de la base de datos
+        function generateMockData() {
+            const institutos = [
+                'Hospital Central', 'Clínica San Rafael', 'Instituto Cardiovascular',
+                'Centro Médico Nacional', 'Hospital Universitario', 'Clínica del Norte'
+            ];
+            
+            const servicios = [
+                { cod: 'LAB001', nom: 'Hemograma Completo', base: 25000 },
+                { cod: 'LAB002', nom: 'Química Sanguínea', base: 35000 },
+                { cod: 'RAD001', nom: 'Radiografía de Tórax', base: 45000 },
+                { cod: 'RAD002', nom: 'Ecografía Abdominal', base: 65000 },
+                { cod: 'CON001', nom: 'Consulta General', base: 40000 },
+                { cod: 'CON002', nom: 'Consulta Especialista', base: 60000 },
+                { cod: 'CIR001', nom: 'Cirugía Menor', base: 150000 },
+                { cod: 'CIR002', nom: 'Cirugía Mayor', base: 350000 },
+                { cod: 'LAB003', nom: 'Perfil Lipídico', base: 28000 },
+                { cod: 'LAB004', nom: 'Examen de Orina', base: 15000 },
+                { cod: 'RAD003', nom: 'Resonancia Magnética', base: 180000 },
+                { cod: 'RAD004', nom: 'Tomografía Computarizada', base: 120000 }
+            ];
+
+            const data = [];
+            servicios.forEach(servicio => {
+                institutos.forEach(instituto => {
+                    const factor = 0.8 + Math.random() * 0.4; // Variación del 20%
+                    const arancel = Math.round(servicio.base * factor);
+                    const costo = Math.round(arancel * (0.6 + Math.random() * 0.3)); // 60-90% del arancel
+                    
+                    data.push({
+                        codservicio: servicio.cod,
+                        nomservicio: servicio.nom,
+                        instituto: instituto,
+                        arancel: arancel,
+                        costo: costo
+                    });
+                });
+            });
+            
+            return data;
+        }
+
+        function loadData() {
+            // Simular carga de datos
+            setTimeout(() => {
+                allData = generateMockData();
+                filteredData = [...allData];
+                populateInstitutoFilter();
+                renderTable();
+                updateSummary();
+                document.getElementById('loadingState').style.display = 'none';
+            }, 1000);
+        }
+
+        function populateInstitutoFilter() {
+            const select = document.getElementById('filterInstituto');
+            const institutos = [...new Set(allData.map(item => item.instituto))].sort();
+            
+            institutos.forEach(instituto => {
+                const option = document.createElement('option');
+                option.value = instituto;
+                option.textContent = instituto;
+                select.appendChild(option);
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('arancelTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('emptyState').classList.add('hidden');
+
+            filteredData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.codservicio}</td>
+                    <td>${item.nomservicio}</td>
+                    <td>${item.instituto}</td>
+                    <td class="currency">$${item.arancel.toLocaleString('es-ES')}</td>
+                    <td class="currency">$${item.costo.toLocaleString('es-ES')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateSummary() {
+            const totalServicios = filteredData.length;
+            const institutos = new Set(filteredData.map(item => item.instituto)).size;
+            const promedioArancel = filteredData.length > 0 ? 
+                Math.round(filteredData.reduce((sum, item) => sum + item.arancel, 0) / filteredData.length) : 0;
+            const promedioCosto = filteredData.length > 0 ? 
+                Math.round(filteredData.reduce((sum, item) => sum + item.costo, 0) / filteredData.length) : 0;
+
+            document.getElementById('totalServicios').textContent = totalServicios;
+            document.getElementById('totalInstitutos').textContent = institutos;
+            document.getElementById('promedioArancel').textContent = '$' + promedioArancel.toLocaleString('es-ES');
+            document.getElementById('promedioCosto').textContent = '$' + promedioCosto.toLocaleString('es-ES');
+        }
+
+        function applyFilters() {
+            const codServicio = document.getElementById('filterCodServicio').value.toLowerCase();
+            const nomServicio = document.getElementById('filterNomServicio').value.toLowerCase();
+            const instituto = document.getElementById('filterInstituto').value;
+
+            filteredData = allData.filter(item => {
+                return (codServicio === '' || item.codservicio.toLowerCase().includes(codServicio)) &&
+                       (nomServicio === '' || item.nomservicio.toLowerCase().includes(nomServicio)) &&
+                       (instituto === '' || item.instituto === instituto);
+            });
+
+            renderTable();
+            updateSummary();
+        }
+
+        function refreshData() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('arancelTableBody').innerHTML = '';
+            loadData();
+        }
+
+        function exportToExcel() {
+            // En un sistema real, esto generaría un archivo Excel
+            alert('Funcionalidad de exportación a Excel pendiente de implementación');
+        }
+
+        function exportToPDF() {
+            // En un sistema real, esto generaría un PDF
+            alert('Funcionalidad de exportación a PDF pendiente de implementación');
+        }
+
+        // Handle toolbar commands from parent frame
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'refresh':
+                        refreshData();
+                        break;
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'search':
+                        document.getElementById('filterCodServicio').focus();
+                        break;
+                }
+            }
+        });
+
+        // Send status updates to parent frame
+        function updateParentStatus(message) {
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: message
+                }, '*');
+            }
+        }
+
+        // Filter inputs with Enter key support
+        document.getElementById('filterCodServicio').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        document.getElementById('filterNomServicio').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        document.getElementById('filterInstituto').addEventListener('change', applyFilters);
+    </script>
+</body>
+</html>

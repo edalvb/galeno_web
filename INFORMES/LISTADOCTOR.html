@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE DOCTORES - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-area { box-shadow: none !important; }
+        }
+        
+        .report-container {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+        }
+        
+        .header-logo {
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+            color: #1f2937;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .data-table th {
+            background-color: #e5e7eb;
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            font-weight: bold;
+            text-align: left;
+            color: #374151;
+            font-size: 10px;
+        }
+        
+        .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 6px 8px;
+            background-color: white;
+            font-size: 10px;
+        }
+        
+        .data-table tr:nth-child(even) td {
+            background-color: #f9fafb;
+        }
+        
+        .footer-info {
+            border-top: 2px solid #dc2626;
+            padding-top: 10px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        .doctor-card {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .doctor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .doctor-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .doctor-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .doctor-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .doctor-code {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .doctor-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #374151;
+            margin-right: 8px;
+            min-width: 80px;
+        }
+        
+        .detail-value {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Toolbar (No Print) -->
+    <div class="no-print bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button onclick="window.history.back()" class="flex items-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver
+                </button>
+                <h1 class="text-xl font-semibold text-gray-800">Listado de Doctores</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleView()" class="flex items-center px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+                    <i id="viewIcon" class="fas fa-th-list mr-2"></i>
+                    <span id="viewText">Vista Tabla</span>
+                </button>
+                <button onclick="exportToExcel()" class="flex items-center px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Excel
+                </button>
+                <button onclick="exportToPDF()" class="flex items-center px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    PDF
+                </button>
+                <button onclick="window.print()" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+                <button onclick="refreshData()" class="flex items-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="container mx-auto p-6 print-area">
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden report-container">
+            
+            <!-- Header with Logo -->
+            <div class="header-logo">
+                <div class="flex items-center justify-center">
+                    <i class="fas fa-heartbeat text-3xl mr-3"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">MEG@SYS</h1>
+                        <p class="text-sm opacity-90">Sistema Integral de Gestión Médica</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Title -->
+            <div class="px-6">
+                <h2 class="report-title">LISTADO DE DOCTORES</h2>
+            </div>
+
+            <!-- Filters Section (No Print) -->
+            <div class="no-print px-6 py-4 bg-gray-50 border-b">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código Doctor</label>
+                        <input type="text" id="filterCodigo" placeholder="Filtrar por código..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
+                        <input type="text" id="filterNombres" placeholder="Filtrar por nombres..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
+                        <input type="text" id="filterApellidos" placeholder="Filtrar por apellidos..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="applyFilters()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-filter mr-2"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div id="tableView" class="px-6 py-4">
+                <div class="overflow-x-auto">
+                    <table class="data-table" id="doctorsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%;">COD DR</th>
+                                <th style="width: 12%;">TIPDOC</th>
+                                <th style="width: 15%;">Nº DOC</th>
+                                <th style="width: 25%;">NOMBRES</th>
+                                <th style="width: 25%;">APELLIDOS</th>
+                                <th style="width: 11%;">TELÉFONOS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorsTableBody">
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                    <p class="mt-2 text-gray-600">Cargando datos...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-8">
+                    <i class="fas fa-user-md text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No se encontraron doctores</p>
+                </div>
+            </div>
+
+            <!-- Card View (No Print) -->
+            <div id="cardView" class="hidden no-print px-6 py-4">
+                <div id="doctorsCardContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Las tarjetas se cargarán dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 pb-6">
+                <div class="footer-info">
+                    <div class="flex items-center space-x-4">
+                        <span id="reportDate"></span>
+                        <span id="reportTime"></span>
+                    </div>
+                    <div>
+                        <span>PÁGINA: <span id="pageNumber">1</span></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Summary Panel (No Print) -->
+    <div class="no-print container mx-auto px-6 py-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumen</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-md text-blue-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Total Doctores</p>
+                            <p class="text-xl font-bold text-gray-800" id="totalDoctores">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-id-card text-green-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Tipos Documento</p>
+                            <p class="text-xl font-bold text-gray-800" id="tiposDocumento">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <i class="fas fa-phone text-yellow-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="text-sm text-gray-600">Con Teléfono</p>
+                            <p class="text-xl font-bold text-gray-800" id="conTelefono">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let currentView = 'table'; // 'table' or 'cards'
+
+        // Initialize the report
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            loadData();
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('reportDate').textContent = dateStr;
+            document.getElementById('reportTime').textContent = timeStr;
+        }
+
+        // Mock data - En un sistema real, esto vendría de la base de datos
+        function generateMockData() {
+            const tiposDoc = ['C.I.', 'PASAPORTE', 'C.E.'];
+            const nombres = [
+                'JUAN CARLOS', 'MARÍA ELENA', 'PEDRO ANTONIO', 'ANA SOFÍA', 'LUIS MIGUEL',
+                'CARMEN ROSA', 'JORGE ALBERTO', 'PATRICIA BEATRIZ', 'RICARDO FERNANDO', 'LILIANA MERCEDES',
+                'CARLOS ALBERTO', 'ROSA MARINA', 'ANTONIO JOSÉ', 'SILVIA GRACIELA', 'FERNANDO DANIEL',
+                'MONICA ELIZABETH', 'ROBERTO ALEJANDRO', 'CLAUDIA PATRICIA', 'MIGUEL ANGEL', 'VIRGINIA ISABEL'
+            ];
+            const apellidos = [
+                'PÉREZ GONZÁLEZ', 'MARTÍNEZ LÓPEZ', 'GARCÍA RODRÍGUEZ', 'FERNÁNDEZ SILVA', 'LÓPEZ MARTÍN',
+                'GONZÁLEZ PÉREZ', 'RODRÍGUEZ GARCÍA', 'SILVA FERNÁNDEZ', 'MARTÍN LÓPEZ', 'HERNÁNDEZ RUIZ',
+                'MORALES TORRES', 'VARGAS MENDOZA', 'CASTRO JIMÉNEZ', 'RAMOS DELGADO', 'VEGA MORENO',
+                'GUERRERO HERRERA', 'MEDINA ORTEGA', 'CORTÉS AGUILAR', 'FLORES NAVARRO', 'ROJAS PAREDES'
+            ];
+
+            const data = [];
+            for (let i = 1; i <= 20; i++) {
+                const randomNombre = nombres[Math.floor(Math.random() * nombres.length)];
+                const randomApellido = apellidos[Math.floor(Math.random() * apellidos.length)];
+                const tipoDoc = tiposDoc[Math.floor(Math.random() * tiposDoc.length)];
+                
+                data.push({
+                    coddr: `DR${i.toString().padStart(3, '0')}`,
+                    tipdoc: tipoDoc,
+                    nrodoc: Math.floor(1000000 + Math.random() * 9000000).toString(),
+                    nombres: randomNombre,
+                    apellidos: randomApellido,
+                    telefonos: Math.random() > 0.2 ? `0981-${Math.floor(100000 + Math.random() * 900000)}` : ''
+                });
+            }
+            
+            return data.sort((a, b) => a.apellidos.localeCompare(b.apellidos));
+        }
+
+        function loadData() {
+            // Simular carga de datos
+            setTimeout(() => {
+                allData = generateMockData();
+                filteredData = [...allData];
+                renderCurrentView();
+                updateSummary();
+                document.getElementById('loadingState').style.display = 'none';
+            }, 1000);
+        }
+
+        function renderCurrentView() {
+            if (currentView === 'table') {
+                renderTable();
+            } else {
+                renderCards();
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('doctorsTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('emptyState').classList.add('hidden');
+
+            filteredData.forEach(doctor => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${doctor.coddr}</td>
+                    <td>${doctor.tipdoc}</td>
+                    <td>${doctor.nrodoc}</td>
+                    <td>${doctor.nombres}</td>
+                    <td>${doctor.apellidos}</td>
+                    <td>${doctor.telefonos || '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderCards() {
+            const container = document.getElementById('doctorsCardContainer');
+            container.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <i class="fas fa-user-md text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">No se encontraron doctores</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredData.forEach(doctor => {
+                const initials = (doctor.nombres.charAt(0) + doctor.apellidos.charAt(0)).toUpperCase();
+                const card = document.createElement('div');
+                card.className = 'doctor-card';
+                card.innerHTML = `
+                    <div class="doctor-header">
+                        <div class="doctor-avatar">${initials}</div>
+                        <div>
+                            <div class="doctor-name">${doctor.nombres} ${doctor.apellidos}</div>
+                            <div class="doctor-code">Código: ${doctor.coddr}</div>
+                        </div>
+                    </div>
+                    <div class="doctor-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Tipo Doc:</span>
+                            <span class="detail-value">${doctor.tipdoc}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Nº Doc:</span>
+                            <span class="detail-value">${doctor.nrodoc}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Teléfono:</span>
+                            <span class="detail-value">${doctor.telefonos || 'No registrado'}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleView() {
+            const tableView = document.getElementById('tableView');
+            const cardView = document.getElementById('cardView');
+            const viewIcon = document.getElementById('viewIcon');
+            const viewText = document.getElementById('viewText');
+
+            if (currentView === 'table') {
+                currentView = 'cards';
+                tableView.classList.add('hidden');
+                cardView.classList.remove('hidden');
+                viewIcon.className = 'fas fa-table mr-2';
+                viewText.textContent = 'Vista Tabla';
+                renderCards();
+            } else {
+                currentView = 'table';
+                cardView.classList.add('hidden');
+                tableView.classList.remove('hidden');
+                viewIcon.className = 'fas fa-th-list mr-2';
+                viewText.textContent = 'Vista Tarjetas';
+                renderTable();
+            }
+        }
+
+        function updateSummary() {
+            const totalDoctores = filteredData.length;
+            const tiposDocumento = new Set(filteredData.map(doctor => doctor.tipdoc)).size;
+            const conTelefono = filteredData.filter(doctor => doctor.telefonos && doctor.telefonos.trim() !== '').length;
+
+            document.getElementById('totalDoctores').textContent = totalDoctores;
+            document.getElementById('tiposDocumento').textContent = tiposDocumento;
+            document.getElementById('conTelefono').textContent = conTelefono;
+        }
+
+        function applyFilters() {
+            const codigo = document.getElementById('filterCodigo').value.toLowerCase();
+            const nombres = document.getElementById('filterNombres').value.toLowerCase();
+            const apellidos = document.getElementById('filterApellidos').value.toLowerCase();
+
+            filteredData = allData.filter(doctor => {
+                return (codigo === '' || doctor.coddr.toLowerCase().includes(codigo)) &&
+                       (nombres === '' || doctor.nombres.toLowerCase().includes(nombres)) &&
+                       (apellidos === '' || doctor.apellidos.toLowerCase().includes(apellidos));
+            });
+
+            renderCurrentView();
+            updateSummary();
+        }
+
+        function refreshData() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('doctorsTableBody').innerHTML = '';
+            document.getElementById('doctorsCardContainer').innerHTML = '';
+            loadData();
+        }
+
+        function exportToExcel() {
+            // En un sistema real, esto generaría un archivo Excel
+            alert('Funcionalidad de exportación a Excel pendiente de implementación');
+        }
+
+        function exportToPDF() {
+            // En un sistema real, esto generaría un PDF
+            alert('Funcionalidad de exportación a PDF pendiente de implementación');
+        }
+
+        // Handle toolbar commands from parent frame
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'refresh':
+                        refreshData();
+                        break;
+                    case 'print':
+                        // Ensure table view for printing
+                        if (currentView === 'cards') {
+                            toggleView();
+                        }
+                        window.print();
+                        break;
+                    case 'search':
+                        document.getElementById('filterCodigo').focus();
+                        break;
+                }
+            }
+        });
+
+        // Send status updates to parent frame
+        function updateParentStatus(message) {
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: message
+                }, '*');
+            }
+        }
+
+        // Filter inputs with Enter key support
+        document.getElementById('filterCodigo').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        document.getElementById('filterNombres').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        document.getElementById('filterApellidos').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
+        });
+    </script>
+</body>
+</html>

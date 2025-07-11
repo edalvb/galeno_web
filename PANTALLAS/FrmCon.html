@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg mb-4">
+            <!-- Toolbar -->
+            <div class="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-t-lg border-b">
+                <button onclick="buscar()" class="toolbar-btn bg-blue-500 hover:bg-blue-600 text-white" title="Buscar (F7)">
+                    <i class="fas fa-search mr-1"></i>
+                    Buscar
+                </button>
+                <button id="btnBuscarPrev" onclick="buscarAnterior()" class="toolbar-btn bg-gray-500 hover:bg-gray-600 text-white hidden" title="Buscar Anterior (F6)">
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Anterior
+                </button>
+                <button id="btnBuscarSig" onclick="buscarSiguiente()" class="toolbar-btn bg-gray-500 hover:bg-gray-600 text-white hidden" title="Buscar Siguiente (F8)">
+                    <i class="fas fa-chevron-right mr-1"></i>
+                    Siguiente
+                </button>
+                
+                <div class="border-l border-gray-300 mx-2"></div>
+                
+                <button onclick="filtrar()" class="toolbar-btn bg-purple-500 hover:bg-purple-600 text-white" title="Filtrar (F5)">
+                    <i class="fas fa-filter mr-1"></i>
+                    Filtrar
+                </button>
+                
+                <div class="border-l border-gray-300 mx-2"></div>
+                
+                <button onclick="primerRegistro()" class="toolbar-btn bg-green-500 hover:bg-green-600 text-white" title="Primer Registro (Home)">
+                    <i class="fas fa-angle-double-left mr-1"></i>
+                    Primero
+                </button>
+                <button onclick="registroAnterior()" class="toolbar-btn bg-green-500 hover:bg-green-600 text-white" title="Registro Anterior">
+                    <i class="fas fa-angle-left mr-1"></i>
+                    Anterior
+                </button>
+                <button onclick="registroSiguiente()" class="toolbar-btn bg-green-500 hover:bg-green-600 text-white" title="Registro Siguiente">
+                    <i class="fas fa-angle-right mr-1"></i>
+                    Siguiente
+                </button>
+                <button onclick="ultimoRegistro()" class="toolbar-btn bg-green-500 hover:bg-green-600 text-white" title="Último Registro (End)">
+                    <i class="fas fa-angle-double-right mr-1"></i>
+                    Último
+                </button>
+                
+                <div class="border-l border-gray-300 mx-2"></div>
+                
+                <button id="btnPegar" onclick="seleccionarMultiple()" class="toolbar-btn bg-orange-500 hover:bg-orange-600 text-white hidden" title="Seleccionar Múltiple">
+                    <i class="fas fa-check-square mr-1"></i>
+                    Seleccionar
+                </button>
+            </div>
+
+            <!-- Filter Options Menu -->
+            <div class="px-4 py-2 bg-gray-100 border-b">
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="chkFiltroMultiple" class="mr-2" onchange="toggleFiltroMultiple()">
+                        <span class="text-sm font-medium">Filtro Múltiple</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="chkFiltroOr" class="mr-2" onchange="toggleFiltroOr()">
+                        <span class="text-sm font-medium">Filtro OR</span>
+                    </label>
+                    <button onclick="limpiarFiltros()" class="text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-eraser mr-1"></i>
+                        Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search/Filter Input -->
+        <div id="searchPanel" class="bg-white rounded-lg shadow-lg p-4 mb-4 hidden">
+            <div class="flex items-center space-x-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar en columna: <span id="currentColumnName" class="font-bold text-blue-600"></span>
+                    </label>
+                    <input type="text" id="searchInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Ingrese el valor a buscar...">
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="ejecutarBusqueda()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                        <i class="fas fa-search mr-1"></i>
+                        Buscar
+                    </button>
+                    <button onclick="cerrarBusqueda()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                        <i class="fas fa-times mr-1"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Grid -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-table mr-2"></i>
+                    Resultados de la Consulta
+                    <span id="recordCount" class="text-sm font-normal text-gray-600"></span>
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="dataTable">
+                        <thead class="bg-gray-50">
+                            <tr id="tableHeader">
+                                <!-- Headers will be generated dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="tableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- No Data Message -->
+                <div id="noDataMessage" class="text-center py-8 text-gray-500 hidden">
+                    <i class="fas fa-info-circle text-4xl mb-4"></i>
+                    <p class="text-lg">No se encontraron registros</p>
+                    <p class="text-sm">Modifique los criterios de búsqueda o filtro</p>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 rounded-b-lg">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        <span id="paginationInfo">Mostrando 0 registros</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="previousPage()" id="btnPrevPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span id="pageInfo" class="px-3 py-1 text-sm">Página 1</span>
+                        <button onclick="nextPage()" id="btnNextPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="mt-4 bg-white rounded-lg shadow p-3">
+            <div class="flex justify-between items-center text-sm">
+                <span id="statusMessage" class="text-gray-600">Listo</span>
+                <span id="filterStatus" class="text-blue-600"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filter Modal -->
+    <div id="filterModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold mb-4">Filtro Avanzado</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Campo</label>
+                            <input type="text" id="filterField" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Operador</label>
+                            <select id="filterOperator" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="=">Igual a</option>
+                                <option value="<>">Diferente de</option>
+                                <option value=">">Mayor que</option>
+                                <option value="<">Menor que</option>
+                                <option value=">=">Mayor o igual que</option>
+                                <option value="<=">Menor o igual que</option>
+                                <option value="LIKE">Contiene</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Valor</label>
+                            <input type="text" id="filterValue" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="Ingrese el valor">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-2 mt-6">
+                        <button onclick="cerrarFiltroAvanzado()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                        <button onclick="aplicarFiltroAvanzado()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Aplicar Filtro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .toolbar-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .sortable:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .sort-asc::after {
+            content: ' ↑';
+            color: #3b82f6;
+        }
+        
+        .sort-desc::after {
+            content: ' ↓';
+            color: #3b82f6;
+        }
+        
+        .selected-row {
+            background-color: #dbeafe !important;
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let currentData = [];
+        let filteredData = [];
+        let currentColumn = 0;
+        let currentSearch = '';
+        let currentFilter = '';
+        let advancedFilters = [];
+        let isFilterOr = false;
+        let selectedRows = [];
+        let sortColumn = null;
+        let sortDirection = 'asc';
+        let currentPage = 1;
+        let itemsPerPage = 50;
+
+        // Sample data - En una aplicación real, esto vendría de la base de datos
+        const sampleData = [
+            { id: 1, nombre: 'Juan Pérez', documento: '12345678', fecha: '2025-01-01', estado: 'Activo' },
+            { id: 2, nombre: 'María García', documento: '87654321', fecha: '2025-01-02', estado: 'Activo' },
+            { id: 3, nombre: 'Carlos López', documento: '11223344', fecha: '2025-01-03', estado: 'Inactivo' },
+            { id: 4, nombre: 'Ana Martínez', documento: '44332211', fecha: '2025-01-04', estado: 'Activo' },
+            { id: 5, nombre: 'Luis Rodríguez', documento: '55667788', fecha: '2025-01-05', estado: 'Activo' }
+        ];
+
+        function inicializar() {
+            // Cargar datos de consulta desde parámetros URL o usar datos de ejemplo
+            const params = new URLSearchParams(window.location.search);
+            const query = params.get('query');
+            
+            if (query) {
+                loadDataFromQuery(query);
+            } else {
+                currentData = [...sampleData];
+                filteredData = [...currentData];
+            }
+            
+            generateTable();
+            updateStatus('Consulta cargada exitosamente');
+        }
+
+        function loadDataFromQuery(query) {
+            // En una aplicación real, aquí se haría la consulta a la base de datos
+            // Por ahora usamos datos de ejemplo
+            currentData = [...sampleData];
+            filteredData = [...currentData];
+        }
+
+        function generateTable() {
+            if (currentData.length === 0) {
+                showNoDataMessage();
+                return;
+            }
+
+            const headers = Object.keys(currentData[0]);
+            generateHeaders(headers);
+            renderTableData();
+            updatePagination();
+        }
+
+        function generateHeaders(headers) {
+            const headerRow = document.getElementById('tableHeader');
+            headerRow.innerHTML = '';
+
+            headers.forEach((header, index) => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable';
+                th.innerHTML = `
+                    <div class="flex items-center">
+                        <span>${header.replace(/_/g, ' ')}</span>
+                        <i class="fas fa-sort ml-1 text-gray-400"></i>
+                    </div>
+                `;
+                th.onclick = () => sortTable(index, header);
+                headerRow.appendChild(th);
+            });
+        }
+
+        function renderTableData() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                showNoDataMessage();
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            pageData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 cursor-pointer';
+                tr.onclick = () => selectRow(startIndex + index);
+                tr.ondblclick = () => confirmarSeleccion(startIndex + index);
+
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            hideNoDataMessage();
+            updateRecordCount();
+        }
+
+        function showNoDataMessage() {
+            document.getElementById('noDataMessage').classList.remove('hidden');
+            document.getElementById('dataTable').classList.add('hidden');
+        }
+
+        function hideNoDataMessage() {
+            document.getElementById('noDataMessage').classList.add('hidden');
+            document.getElementById('dataTable').classList.remove('hidden');
+        }
+
+        function sortTable(columnIndex, columnName) {
+            currentColumn = columnIndex;
+            
+            if (sortColumn === columnIndex) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortDirection = 'asc';
+            }
+            
+            sortColumn = columnIndex;
+
+            filteredData.sort((a, b) => {
+                const aValue = Object.values(a)[columnIndex];
+                const bValue = Object.values(b)[columnIndex];
+                
+                let comparison = 0;
+                if (aValue > bValue) comparison = 1;
+                if (aValue < bValue) comparison = -1;
+                
+                return sortDirection === 'asc' ? comparison : -comparison;
+            });
+
+            updateHeaderSortIndicators();
+            renderTableData();
+            updateStatus(`Ordenado por ${columnName} (${sortDirection === 'asc' ? 'ascendente' : 'descendente'})`);
+        }
+
+        function updateHeaderSortIndicators() {
+            const headers = document.querySelectorAll('.sortable');
+            headers.forEach((header, index) => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (index === sortColumn) {
+                    header.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+
+        function selectRow(index) {
+            // Deseleccionar todas las filas
+            document.querySelectorAll('.selected-row').forEach(row => {
+                row.classList.remove('selected-row');
+            });
+
+            // Seleccionar la fila actual
+            const rows = document.querySelectorAll('#tableBody tr');
+            if (rows[index - (currentPage - 1) * itemsPerPage]) {
+                rows[index - (currentPage - 1) * itemsPerPage].classList.add('selected-row');
+            }
+
+            currentColumn = 0; // Reset to first column for search
+            updateStatus(`Fila ${index + 1} seleccionada`);
+        }
+
+        function confirmarSeleccion(index) {
+            const selectedRow = filteredData[index];
+            if (selectedRow) {
+                // En una aplicación real, esto devolvería el valor a la ventana padre
+                const firstValue = Object.values(selectedRow)[0];
+                alert(`Seleccionado: ${firstValue}`);
+                
+                // Si se abrió como modal, cerrar
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'consulta_seleccion',
+                        data: selectedRow
+                    }, '*');
+                    window.close();
+                } else {
+                    window.history.back();
+                }
+            }
+        }
+
+        function buscar() {
+            const headers = Object.keys(currentData[0] || {});
+            if (headers.length === 0) return;
+
+            document.getElementById('currentColumnName').textContent = headers[currentColumn] || headers[0];
+            document.getElementById('searchPanel').classList.remove('hidden');
+            document.getElementById('searchInput').focus();
+        }
+
+        function ejecutarBusqueda() {
+            const searchValue = document.getElementById('searchInput').value.trim();
+            if (!searchValue) return;
+
+            currentSearch = searchValue;
+            const headers = Object.keys(currentData[0]);
+            const searchColumn = headers[currentColumn];
+
+            // Realizar búsqueda
+            const foundIndex = filteredData.findIndex(row => {
+                const value = row[searchColumn];
+                return value && value.toString().toLowerCase().includes(searchValue.toLowerCase());
+            });
+
+            if (foundIndex !== -1) {
+                // Ir a la página que contiene el resultado
+                const targetPage = Math.ceil((foundIndex + 1) / itemsPerPage);
+                currentPage = targetPage;
+                renderTableData();
+                updatePagination();
+                
+                // Seleccionar la fila encontrada
+                selectRow(foundIndex);
+                
+                // Mostrar botones de navegación de búsqueda
+                document.getElementById('btnBuscarPrev').classList.remove('hidden');
+                document.getElementById('btnBuscarSig').classList.remove('hidden');
+                
+                updateStatus(`Encontrado en registro ${foundIndex + 1}`);
+            } else {
+                alert(`No se encontró "${searchValue}" en la columna ${searchColumn}`);
+            }
+
+            cerrarBusqueda();
+        }
+
+        function cerrarBusqueda() {
+            document.getElementById('searchPanel').classList.add('hidden');
+            document.getElementById('searchInput').value = '';
+        }
+
+        function buscarAnterior() {
+            if (!currentSearch) return;
+            // Implementar búsqueda hacia atrás
+            updateStatus('Buscando registro anterior...');
+        }
+
+        function buscarSiguiente() {
+            if (!currentSearch) return;
+            // Implementar búsqueda hacia adelante
+            updateStatus('Buscando siguiente registro...');
+        }
+
+        function filtrar() {
+            const filtroMultiple = document.getElementById('chkFiltroMultiple').checked;
+            
+            if (filtroMultiple) {
+                mostrarFiltroAvanzado();
+            } else {
+                const headers = Object.keys(currentData[0] || {});
+                if (headers.length === 0) return;
+
+                const columnName = headers[currentColumn] || headers[0];
+                const filterValue = prompt(`Ingrese el valor para filtrar la columna "${columnName}"`);
+                
+                if (filterValue !== null && filterValue.trim() !== '') {
+                    aplicarFiltroSimple(columnName, filterValue.trim());
+                }
+            }
+        }
+
+        function aplicarFiltroSimple(columnName, value) {
+            filteredData = currentData.filter(row => {
+                const cellValue = row[columnName];
+                return cellValue && cellValue.toString().toLowerCase().includes(value.toLowerCase());
+            });
+
+            currentPage = 1;
+            renderTableData();
+            updatePagination();
+            updateFilterStatus(`Filtrado por ${columnName}: "${value}"`);
+            updateStatus(`${filteredData.length} registros encontrados`);
+        }
+
+        function mostrarFiltroAvanzado() {
+            const headers = Object.keys(currentData[0] || {});
+            if (headers.length === 0) return;
+
+            document.getElementById('filterField').value = headers[currentColumn] || headers[0];
+            document.getElementById('filterModal').classList.remove('hidden');
+        }
+
+        function cerrarFiltroAvanzado() {
+            document.getElementById('filterModal').classList.add('hidden');
+            document.getElementById('filterValue').value = '';
+        }
+
+        function aplicarFiltroAvanzado() {
+            const field = document.getElementById('filterField').value;
+            const operator = document.getElementById('filterOperator').value;
+            const value = document.getElementById('filterValue').value.trim();
+
+            if (!value) {
+                alert('Por favor ingrese un valor para el filtro');
+                return;
+            }
+
+            const newFilter = { field, operator, value };
+            
+            if (isFilterOr) {
+                advancedFilters.push({ ...newFilter, logic: 'OR' });
+            } else {
+                advancedFilters.push({ ...newFilter, logic: 'AND' });
+            }
+
+            aplicarFiltrosAvanzados();
+            cerrarFiltroAvanzado();
+        }
+
+        function aplicarFiltrosAvanzados() {
+            if (advancedFilters.length === 0) {
+                filteredData = [...currentData];
+            } else {
+                filteredData = currentData.filter(row => {
+                    return evaluateFilters(row, advancedFilters);
+                });
+            }
+
+            currentPage = 1;
+            renderTableData();
+            updatePagination();
+            updateFilterStatus(`${advancedFilters.length} filtros activos`);
+            updateStatus(`${filteredData.length} registros encontrados`);
+        }
+
+        function evaluateFilters(row, filters) {
+            if (filters.length === 0) return true;
+            
+            let result = evaluateFilter(row, filters[0]);
+            
+            for (let i = 1; i < filters.length; i++) {
+                const filterResult = evaluateFilter(row, filters[i]);
+                if (filters[i].logic === 'OR') {
+                    result = result || filterResult;
+                } else {
+                    result = result && filterResult;
+                }
+            }
+            
+            return result;
+        }
+
+        function evaluateFilter(row, filter) {
+            const cellValue = row[filter.field];
+            const filterValue = filter.value;
+            
+            if (cellValue === null || cellValue === undefined) return false;
+            
+            const cell = cellValue.toString().toLowerCase();
+            const value = filterValue.toLowerCase();
+            
+            switch (filter.operator) {
+                case '=': return cell === value;
+                case '<>': return cell !== value;
+                case '>': return parseFloat(cellValue) > parseFloat(filterValue);
+                case '<': return parseFloat(cellValue) < parseFloat(filterValue);
+                case '>=': return parseFloat(cellValue) >= parseFloat(filterValue);
+                case '<=': return parseFloat(cellValue) <= parseFloat(filterValue);
+                case 'LIKE': return cell.includes(value);
+                default: return false;
+            }
+        }
+
+        function limpiarFiltros() {
+            advancedFilters = [];
+            currentFilter = '';
+            filteredData = [...currentData];
+            currentPage = 1;
+            renderTableData();
+            updatePagination();
+            updateFilterStatus('');
+            updateStatus('Filtros eliminados');
+        }
+
+        function toggleFiltroMultiple() {
+            const isChecked = document.getElementById('chkFiltroMultiple').checked;
+            if (!isChecked) {
+                limpiarFiltros();
+            }
+        }
+
+        function toggleFiltroOr() {
+            isFilterOr = document.getElementById('chkFiltroOr').checked;
+        }
+
+        // Funciones de navegación
+        function primerRegistro() {
+            if (filteredData.length > 0) {
+                currentPage = 1;
+                renderTableData();
+                updatePagination();
+                selectRow(0);
+                updateStatus('Primer registro');
+            }
+        }
+
+        function ultimoRegistro() {
+            if (filteredData.length > 0) {
+                currentPage = Math.ceil(filteredData.length / itemsPerPage);
+                renderTableData();
+                updatePagination();
+                selectRow(filteredData.length - 1);
+                updateStatus('Último registro');
+            }
+        }
+
+        function registroAnterior() {
+            // En una implementación completa, esto navegaría por registros individuales
+            if (currentPage > 1) {
+                currentPage--;
+                renderTableData();
+                updatePagination();
+                updateStatus('Página anterior');
+            }
+        }
+
+        function registroSiguiente() {
+            // En una implementación completa, esto navegaría por registros individuales
+            const maxPage = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < maxPage) {
+                currentPage++;
+                renderTableData();
+                updatePagination();
+                updateStatus('Página siguiente');
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTableData();
+                updatePagination();
+            }
+        }
+
+        function nextPage() {
+            const maxPage = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < maxPage) {
+                currentPage++;
+                renderTableData();
+                updatePagination();
+            }
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            
+            document.getElementById('btnPrevPage').disabled = currentPage <= 1;
+            document.getElementById('btnNextPage').disabled = currentPage >= totalPages;
+            document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
+            
+            const startRecord = (currentPage - 1) * itemsPerPage + 1;
+            const endRecord = Math.min(currentPage * itemsPerPage, filteredData.length);
+            document.getElementById('paginationInfo').textContent = 
+                `Mostrando ${startRecord} a ${endRecord} de ${filteredData.length} registros`;
+        }
+
+        function updateRecordCount() {
+            document.getElementById('recordCount').textContent = `(${filteredData.length} registros)`;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
+
+        function updateFilterStatus(message) {
+            document.getElementById('filterStatus').textContent = message;
+        }
+
+        function seleccionarMultiple() {
+            // Funcionalidad para selección múltiple
+            updateStatus('Modo selección múltiple activo');
+        }
+
+        // Manejo de teclas
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case 'Escape':
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.close();
+                    }
+                    break;
+                case 'F5':
+                    e.preventDefault();
+                    filtrar();
+                    break;
+                case 'F7':
+                    e.preventDefault();
+                    buscar();
+                    break;
+                case 'F6':
+                    e.preventDefault();
+                    buscarAnterior();
+                    break;
+                case 'F8':
+                    e.preventDefault();
+                    buscarSiguiente();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    primerRegistro();
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    ultimoRegistro();
+                    break;
+                case 'Enter':
+                    if (document.getElementById('searchPanel').classList.contains('hidden')) {
+                        const selectedIndex = document.querySelector('.selected-row');
+                        if (selectedIndex) {
+                            const rowIndex = Array.from(selectedIndex.parentNode.children).indexOf(selectedIndex);
+                            confirmarSeleccion((currentPage - 1) * itemsPerPage + rowIndex);
+                        }
+                    } else {
+                        ejecutarBusqueda();
+                    }
+                    break;
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

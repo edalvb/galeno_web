@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Lista de Materiales e Insumos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-blue': '#2563eb',
+                        'medical-green': '#059669',
+                        'medical-red': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { print-color-adjust: exact; }
+            .print-header { display: block !important; }
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .material-alta {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .material-media {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        .material-baja {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .material-agotado {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+        .material-quirurgico {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .material-farmaceutico {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg no-print">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-boxes text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Sistema MEG@SYS</h1>
+                        <p class="text-blue-100">Gestión de Materiales e Insumos Médicos</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="window.history.back()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Print Header -->
+    <div class="print-header hidden">
+        <div class="text-center border-b-2 border-blue-600 pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-blue-800">LISTADO DE MATERIALES E INSUMOS</h1>
+            <p class="text-gray-600">Sistema MEG@SYS - Reporte Generado el <span id="print-date"></span></p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por código, nombre o línea..." 
+                               class="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <select id="stockFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los Stocks</option>
+                        <option value="AGOTADO">Agotado (0)</option>
+                        <option value="BAJO">Stock Bajo (1-10)</option>
+                        <option value="MEDIO">Stock Medio (11-50)</option>
+                        <option value="ALTO">Stock Alto (50+)</option>
+                    </select>
+                    <select id="lineaFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las Líneas</option>
+                        <option value="QUI">Quirúrgicos</option>
+                        <option value="FAR">Farmacéuticos</option>
+                        <option value="LAB">Laboratorio</option>
+                        <option value="RAD">Radiología</option>
+                        <option value="GEN">General</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">Vista:</span>
+                    <button id="viewCards" onclick="toggleView('cards')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-th-large mr-1"></i>Tarjetas
+                    </button>
+                    <button id="viewTable" onclick="toggleView('table')" class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors">
+                        <i class="fas fa-table mr-1"></i>Tabla
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="stats-card text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm uppercase tracking-wide">Total Materiales</p>
+                        <p class="text-3xl font-bold" id="totalMateriales">0</p>
+                    </div>
+                    <i class="fas fa-boxes text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm uppercase tracking-wide">En Stock</p>
+                        <p class="text-3xl font-bold" id="totalEnStock">0</p>
+                    </div>
+                    <i class="fas fa-check-circle text-4xl text-green-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm uppercase tracking-wide">Stock Bajo</p>
+                        <p class="text-3xl font-bold" id="totalStockBajo">0</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-4xl text-orange-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-red-400 to-red-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-100 text-sm uppercase tracking-wide">Agotados</p>
+                        <p class="text-3xl font-bold" id="totalAgotados">0</p>
+                    </div>
+                    <i class="fas fa-times-circle text-4xl text-red-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Button -->
+        <div class="mb-6 no-print">
+            <button onclick="agregarMaterial()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors shadow-lg">
+                <i class="fas fa-plus mr-2"></i>Agregar Nuevo Material
+            </button>
+        </div>
+
+        <!-- Cards View -->
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Table View -->
+        <div id="tableContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Código Material</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nombre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Código Línea</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">En Existencia</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div id="modalMaterial" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold" id="modalTitle">Agregar Nuevo Material</h3>
+                </div>
+                <form id="formMaterial" class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Código Material</label>
+                        <input type="text" id="modalIdMaterial" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Material</label>
+                        <input type="text" id="modalNombreMaterial" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Código Línea</label>
+                        <select id="modalIdLinea" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Seleccionar línea</option>
+                            <option value="QUI">QUI - Quirúrgicos</option>
+                            <option value="FAR">FAR - Farmacéuticos</option>
+                            <option value="LAB">LAB - Laboratorio</option>
+                            <option value="RAD">RAD - Radiología</option>
+                            <option value="GEN">GEN - General</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Unidades en Existencia</label>
+                        <input type="number" id="modalUnidadesEnExistencia" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción (Opcional)</label>
+                        <textarea id="modalDescripcion" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Descripción adicional del material"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let materiales = [
+            {
+                idmaterial: 'MAT001',
+                nombrematerial: 'GUANTES QUIRÚRGICOS TALLA M',
+                idlinea: 'QUI',
+                unidadesEnExistencia: 250,
+                descripcion: 'Guantes de látex estériles para cirugía'
+            },
+            {
+                idmaterial: 'MAT002',
+                nombrematerial: 'JERINGAS DESECHABLES 10ML',
+                idlinea: 'GEN',
+                unidadesEnExistencia: 150,
+                descripcion: 'Jeringas estériles de uso único'
+            },
+            {
+                idmaterial: 'MAT003',
+                nombrematerial: 'GASAS ESTÉRILES 10X10',
+                idlinea: 'QUI',
+                unidadesEnExistencia: 5,
+                descripcion: 'Gasas estériles para procedimientos'
+            },
+            {
+                idmaterial: 'MAT004',
+                nombrematerial: 'ALCOHOL ANTISÉPTICO 70%',
+                idlinea: 'FAR',
+                unidadesEnExistencia: 0,
+                descripcion: 'Alcohol para desinfección'
+            },
+            {
+                idmaterial: 'MAT005',
+                nombrematerial: 'TUBOS DE ENSAYO VACUTAINER',
+                idlinea: 'LAB',
+                unidadesEnExistencia: 300,
+                descripcion: 'Tubos para extracción de sangre'
+            },
+            {
+                idmaterial: 'MAT006',
+                nombrematerial: 'PLACAS RADIOGRÁFICAS 14X17',
+                idlinea: 'RAD',
+                unidadesEnExistencia: 75,
+                descripcion: 'Placas para radiografías'
+            },
+            {
+                idmaterial: 'MAT007',
+                nombrematerial: 'CATÉTER INTRAVENOSO 20G',
+                idlinea: 'QUI',
+                unidadesEnExistencia: 8,
+                descripcion: 'Catéteres para acceso venoso'
+            },
+            {
+                idmaterial: 'MAT008',
+                nombrematerial: 'SUERO FISIOLÓGICO 500ML',
+                idlinea: 'FAR',
+                unidadesEnExistencia: 120,
+                descripcion: 'Solución salina estéril'
+            }
+        ];
+
+        let currentView = 'cards';
+        let editingIndex = null;
+
+        function initializeApp() {
+            renderMateriales();
+            updateStatistics();
+            setupEventListeners();
+            updatePrintDate();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterMateriales);
+            document.getElementById('stockFiltro').addEventListener('change', filterMateriales);
+            document.getElementById('lineaFiltro').addEventListener('change', filterMateriales);
+            document.getElementById('formMaterial').addEventListener('submit', guardarMaterial);
+        }
+
+        function updatePrintDate() {
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function renderMateriales() {
+            if (currentView === 'cards') {
+                renderCards();
+            } else {
+                renderTable();
+            }
+        }
+
+        function getStockLevel(cantidad) {
+            if (cantidad === 0) return 'AGOTADO';
+            if (cantidad <= 10) return 'BAJO';
+            if (cantidad <= 50) return 'MEDIO';
+            return 'ALTO';
+        }
+
+        function getCardClass(material) {
+            const stock = getStockLevel(material.unidadesEnExistencia);
+            switch(stock) {
+                case 'AGOTADO': return 'material-agotado';
+                case 'BAJO': return 'material-baja';
+                case 'MEDIO': return 'material-media';
+                case 'ALTO': return 'material-alta';
+                default: return 'material-quirurgico';
+            }
+        }
+
+        function getIconClass(linea) {
+            switch(linea) {
+                case 'QUI': return 'fas fa-scalpel';
+                case 'FAR': return 'fas fa-pills';
+                case 'LAB': return 'fas fa-flask';
+                case 'RAD': return 'fas fa-radiation';
+                case 'GEN': return 'fas fa-box';
+                default: return 'fas fa-boxes';
+            }
+        }
+
+        function getLineaName(linea) {
+            switch(linea) {
+                case 'QUI': return 'Quirúrgicos';
+                case 'FAR': return 'Farmacéuticos';
+                case 'LAB': return 'Laboratorio';
+                case 'RAD': return 'Radiología';
+                case 'GEN': return 'General';
+                default: return 'Sin categoría';
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const filteredData = getFilteredMateriales();
+            
+            container.innerHTML = filteredData.map(material => {
+                const stockLevel = getStockLevel(material.unidadesEnExistencia);
+                const stockText = material.unidadesEnExistencia === 0 ? 'AGOTADO' : 
+                                 material.unidadesEnExistencia <= 10 ? 'STOCK BAJO' :
+                                 material.unidadesEnExistencia <= 50 ? 'STOCK MEDIO' : 'STOCK ALTO';
+                
+                return `
+                <div class="${getCardClass(material)} text-white rounded-lg shadow-lg card-hover transition-all duration-300">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                    <i class="${getIconClass(material.idlinea)} text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold">${material.nombrematerial}</h3>
+                                    <p class="text-blue-100">Código: ${material.idmaterial}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Línea:</span>
+                                <span class="px-2 py-1 bg-white bg-opacity-20 rounded text-sm">${getLineaName(material.idlinea)}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">En Stock:</span>
+                                <span class="px-2 py-1 bg-white bg-opacity-20 rounded text-sm font-bold">${material.unidadesEnExistencia} unidades</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Estado:</span>
+                                <span class="px-2 py-1 bg-white bg-opacity-30 rounded text-xs font-bold">${stockText}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2 no-print">
+                            <button onclick="editarMaterial(${getOriginalIndex(material)})" 
+                                    class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Editar
+                            </button>
+                            <button onclick="eliminarMaterial(${getOriginalIndex(material)})" 
+                                    class="flex-1 bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filteredData = getFilteredMateriales();
+            
+            tbody.innerHTML = filteredData.map(material => {
+                const stockLevel = getStockLevel(material.unidadesEnExistencia);
+                const stockBadge = getStockBadge(stockLevel);
+                
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${material.idmaterial}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${material.nombrematerial}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLineaBadgeClass(material.idlinea)}">
+                            <i class="${getIconClass(material.idlinea)} mr-1"></i>
+                            ${material.idlinea}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${material.unidadesEnExistencia}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${stockBadge}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarMaterial(${getOriginalIndex(material)})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarMaterial(${getOriginalIndex(material)})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function getStockBadge(level) {
+            switch(level) {
+                case 'AGOTADO': return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="fas fa-times-circle mr-1"></i>Agotado</span>';
+                case 'BAJO': return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"><i class="fas fa-exclamation-triangle mr-1"></i>Stock Bajo</span>';
+                case 'MEDIO': return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fas fa-minus-circle mr-1"></i>Stock Medio</span>';
+                case 'ALTO': return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Stock Alto</span>';
+                default: return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Sin definir</span>';
+            }
+        }
+
+        function getLineaBadgeClass(linea) {
+            switch(linea) {
+                case 'QUI': return 'bg-purple-100 text-purple-800';
+                case 'FAR': return 'bg-blue-100 text-blue-800';
+                case 'LAB': return 'bg-green-100 text-green-800';
+                case 'RAD': return 'bg-orange-100 text-orange-800';
+                case 'GEN': return 'bg-gray-100 text-gray-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getOriginalIndex(material) {
+            return materiales.findIndex(m => m.idmaterial === material.idmaterial);
+        }
+
+        function getFilteredMateriales() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const stockFiltro = document.getElementById('stockFiltro').value;
+            const lineaFiltro = document.getElementById('lineaFiltro').value;
+            
+            return materiales.filter(material => {
+                const stockLevel = getStockLevel(material.unidadesEnExistencia);
+                
+                const matchesSearch = !searchTerm || 
+                    material.idmaterial.toLowerCase().includes(searchTerm) ||
+                    material.nombrematerial.toLowerCase().includes(searchTerm) ||
+                    material.idlinea.toLowerCase().includes(searchTerm);
+                
+                const matchesStock = !stockFiltro || stockLevel === stockFiltro;
+                const matchesLinea = !lineaFiltro || material.idlinea === lineaFiltro;
+                
+                return matchesSearch && matchesStock && matchesLinea;
+            });
+        }
+
+        function filterMateriales() {
+            renderMateriales();
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const viewCards = document.getElementById('viewCards');
+            const viewTable = document.getElementById('viewTable');
+            
+            if (view === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                viewCards.classList.remove('bg-gray-300', 'text-gray-700');
+                viewCards.classList.add('bg-blue-500', 'text-white');
+                viewTable.classList.remove('bg-blue-500', 'text-white');
+                viewTable.classList.add('bg-gray-300', 'text-gray-700');
+            } else {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                viewTable.classList.remove('bg-gray-300', 'text-gray-700');
+                viewTable.classList.add('bg-blue-500', 'text-white');
+                viewCards.classList.remove('bg-blue-500', 'text-white');
+                viewCards.classList.add('bg-gray-300', 'text-gray-700');
+            }
+            
+            renderMateriales();
+        }
+
+        function updateStatistics() {
+            const total = materiales.length;
+            const enStock = materiales.filter(m => m.unidadesEnExistencia > 0).length;
+            const stockBajo = materiales.filter(m => m.unidadesEnExistencia > 0 && m.unidadesEnExistencia <= 10).length;
+            const agotados = materiales.filter(m => m.unidadesEnExistencia === 0).length;
+            
+            document.getElementById('totalMateriales').textContent = total;
+            document.getElementById('totalEnStock').textContent = enStock;
+            document.getElementById('totalStockBajo').textContent = stockBajo;
+            document.getElementById('totalAgotados').textContent = agotados;
+        }
+
+        function agregarMaterial() {
+            editingIndex = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Nuevo Material';
+            document.getElementById('formMaterial').reset();
+            document.getElementById('modalMaterial').classList.remove('hidden');
+        }
+
+        function editarMaterial(index) {
+            editingIndex = index;
+            const material = materiales[index];
+            
+            document.getElementById('modalTitle').textContent = 'Editar Material';
+            document.getElementById('modalIdMaterial').value = material.idmaterial;
+            document.getElementById('modalNombreMaterial').value = material.nombrematerial;
+            document.getElementById('modalIdLinea').value = material.idlinea;
+            document.getElementById('modalUnidadesEnExistencia').value = material.unidadesEnExistencia;
+            document.getElementById('modalDescripcion').value = material.descripcion || '';
+            
+            document.getElementById('modalMaterial').classList.remove('hidden');
+        }
+
+        function guardarMaterial(event) {
+            event.preventDefault();
+            
+            const formData = {
+                idmaterial: document.getElementById('modalIdMaterial').value.trim(),
+                nombrematerial: document.getElementById('modalNombreMaterial').value.trim(),
+                idlinea: document.getElementById('modalIdLinea').value.trim(),
+                unidadesEnExistencia: parseInt(document.getElementById('modalUnidadesEnExistencia').value),
+                descripcion: document.getElementById('modalDescripcion').value.trim()
+            };
+            
+            if (editingIndex !== null) {
+                // Edit existing
+                materiales[editingIndex] = formData;
+            } else {
+                // Add new
+                if (materiales.find(m => m.idmaterial === formData.idmaterial)) {
+                    alert('Ya existe un material con ese código');
+                    return;
+                }
+                materiales.push(formData);
+            }
+            
+            renderMateriales();
+            updateStatistics();
+            cerrarModal();
+        }
+
+        function eliminarMaterial(index) {
+            if (confirm('¿Está seguro de que desea eliminar este material?')) {
+                materiales.splice(index, 1);
+                renderMateriales();
+                updateStatistics();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalMaterial').classList.add('hidden');
+            editingIndex = null;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

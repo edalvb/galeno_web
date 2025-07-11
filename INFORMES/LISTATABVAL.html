@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE TABLA DE VALORES</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .cod-tab-column {
+            width: 120px;
+            text-align: center;
+        }
+        .nombre-column {
+            width: 200px;
+        }
+        .cod-item-column {
+            width: 120px;
+            text-align: center;
+        }
+        .descripcion-column {
+            width: auto;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .categoria-lab {
+            background-color: #e8f4fd;
+            color: #1565c0;
+        }
+        .categoria-proc {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .categoria-diag {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE TABLA DE VALORES</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PAGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="cod-tab-column">COD TAB:</th>
+                    <th class="nombre-column">NOMBRE:</th>
+                    <th class="cod-item-column">COD ITEM:</th>
+                    <th class="descripcion-column">DESCRIPCION ITEM:</th>
+                </tr>
+            </thead>
+            <tbody id="valores-data">
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Cargando datos de tabla de valores...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>PAGINA: <span id="footer-page">1</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de tabla de valores
+        const tablaValores = [
+            {
+                codTab: "LAB001",
+                nombre: "LABORATORIO",
+                codItem: "001",
+                descripcion: "HEMOGRAMA COMPLETO",
+                categoria: "lab"
+            },
+            {
+                codTab: "LAB001",
+                nombre: "LABORATORIO",
+                codItem: "002",
+                descripcion: "GLICEMIA EN AYUNAS",
+                categoria: "lab"
+            },
+            {
+                codTab: "LAB001",
+                nombre: "LABORATORIO",
+                codItem: "003",
+                descripcion: "CREATININA SÉRICA",
+                categoria: "lab"
+            },
+            {
+                codTab: "PROC001",
+                nombre: "PROCEDIMIENTOS",
+                codItem: "001",
+                descripcion: "ELECTROCARDIOGRAMA",
+                categoria: "proc"
+            },
+            {
+                codTab: "PROC001",
+                nombre: "PROCEDIMIENTOS",
+                codItem: "002",
+                descripcion: "ECOGRAFÍA ABDOMINAL",
+                categoria: "proc"
+            },
+            {
+                codTab: "PROC001",
+                nombre: "PROCEDIMIENTOS",
+                codItem: "003",
+                descripcion: "RADIOGRAFÍA DE TÓRAX",
+                categoria: "proc"
+            },
+            {
+                codTab: "DIAG001",
+                nombre: "DIAGNÓSTICOS",
+                codItem: "001",
+                descripcion: "HIPERTENSIÓN ARTERIAL",
+                categoria: "diag"
+            },
+            {
+                codTab: "DIAG001",
+                nombre: "DIAGNÓSTICOS",
+                codItem: "002",
+                descripcion: "DIABETES MELLITUS TIPO 2",
+                categoria: "diag"
+            },
+            {
+                codTab: "DIAG001",
+                nombre: "DIAGNÓSTICOS",
+                codItem: "003",
+                descripcion: "GASTRITIS CRÓNICA",
+                categoria: "diag"
+            },
+            {
+                codTab: "LAB002",
+                nombre: "MICROBIOLOGÍA",
+                codItem: "001",
+                descripcion: "UROCULTIVO",
+                categoria: "lab"
+            },
+            {
+                codTab: "LAB002",
+                nombre: "MICROBIOLOGÍA",
+                codItem: "002",
+                descripcion: "COPROCULTIVO",
+                categoria: "lab"
+            },
+            {
+                codTab: "LAB002",
+                nombre: "MICROBIOLOGÍA",
+                codItem: "003",
+                descripcion: "CULTIVO DE SECRECIONES",
+                categoria: "lab"
+            },
+            {
+                codTab: "PROC002",
+                nombre: "CIRUGÍA MENOR",
+                codItem: "001",
+                descripcion: "BIOPSIA DE PIEL",
+                categoria: "proc"
+            },
+            {
+                codTab: "PROC002",
+                nombre: "CIRUGÍA MENOR",
+                codItem: "002",
+                descripcion: "SUTURA SIMPLE",
+                categoria: "proc"
+            },
+            {
+                codTab: "PROC002",
+                nombre: "CIRUGÍA MENOR",
+                codItem: "003",
+                descripcion: "EXTRACCIÓN DE CUERPO EXTRAÑO",
+                categoria: "proc"
+            }
+        ];
+
+        // Función para obtener la clase CSS según la categoría
+        function getCategoriaClass(categoria) {
+            switch(categoria) {
+                case 'lab': return 'categoria-lab';
+                case 'proc': return 'categoria-proc';
+                case 'diag': return 'categoria-diag';
+                default: return '';
+            }
+        }
+
+        // Cargar datos de tabla de valores
+        function loadTablaValores() {
+            const tbody = document.getElementById('valores-data');
+            
+            if (tablaValores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay datos de tabla de valores disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = tablaValores.map(valor => `
+                <tr>
+                    <td class="cod-tab-column ${getCategoriaClass(valor.categoria)}">${valor.codTab}</td>
+                    <td class="nombre-column">${valor.nombre}</td>
+                    <td class="cod-item-column">${valor.codItem}</td>
+                    <td class="descripcion-column">${valor.descripcion}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadTablaValores();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

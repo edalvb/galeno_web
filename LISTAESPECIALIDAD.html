@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Lista de Especialidades Médicas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-blue': '#2563eb',
+                        'medical-green': '#059669',
+                        'medical-red': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { print-color-adjust: exact; }
+            .print-header { display: block !important; }
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .esp-card-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .esp-card-2 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .esp-card-3 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        .esp-card-4 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .esp-card-5 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        .esp-card-6 {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg no-print">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-stethoscope text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Sistema MEG@SYS</h1>
+                        <p class="text-blue-100">Gestión de Especialidades Médicas</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="window.history.back()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Print Header -->
+    <div class="print-header hidden">
+        <div class="text-center border-b-2 border-blue-600 pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-blue-800">LISTADO DE ESPECIALIDADES MÉDICAS</h1>
+            <p class="text-gray-600">Sistema MEG@SYS - Reporte Generado el <span id="print-date"></span></p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por código o nombre de especialidad..." 
+                               class="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <select id="categoriaFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las Categorías</option>
+                        <option value="CLÍNICA">Especialidades Clínicas</option>
+                        <option value="QUIRÚRGICA">Especialidades Quirúrgicas</option>
+                        <option value="DIAGNÓSTICA">Especialidades Diagnósticas</option>
+                        <option value="BÁSICA">Ciencias Básicas</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">Vista:</span>
+                    <button id="viewCards" onclick="toggleView('cards')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-th-large mr-1"></i>Tarjetas
+                    </button>
+                    <button id="viewTable" onclick="toggleView('table')" class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors">
+                        <i class="fas fa-table mr-1"></i>Tabla
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="stats-card text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm uppercase tracking-wide">Total Especialidades</p>
+                        <p class="text-3xl font-bold" id="totalEspecialidades">0</p>
+                    </div>
+                    <i class="fas fa-stethoscope text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm uppercase tracking-wide">Clínicas</p>
+                        <p class="text-3xl font-bold" id="totalClinicas">0</p>
+                    </div>
+                    <i class="fas fa-heartbeat text-4xl text-green-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm uppercase tracking-wide">Quirúrgicas</p>
+                        <p class="text-3xl font-bold" id="totalQuirurgicas">0</p>
+                    </div>
+                    <i class="fas fa-scalpel text-4xl text-purple-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm uppercase tracking-wide">Diagnósticas</p>
+                        <p class="text-3xl font-bold" id="totalDiagnosticas">0</p>
+                    </div>
+                    <i class="fas fa-microscope text-4xl text-orange-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Button -->
+        <div class="mb-6 no-print">
+            <button onclick="agregarEspecialidad()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors shadow-lg">
+                <i class="fas fa-plus mr-2"></i>Agregar Nueva Especialidad
+            </button>
+        </div>
+
+        <!-- Cards View -->
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Table View -->
+        <div id="tableContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Código</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nombre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Categoría</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div id="modalEspecialidad" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold" id="modalTitle">Agregar Nueva Especialidad</h3>
+                </div>
+                <form id="formEspecialidad" class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Código Especialidad</label>
+                        <input type="text" id="modalCodigo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                        <input type="text" id="modalNombre" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                        <select id="modalCategoria" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="CLÍNICA">Especialidad Clínica</option>
+                            <option value="QUIRÚRGICA">Especialidad Quirúrgica</option>
+                            <option value="DIAGNÓSTICA">Especialidad Diagnóstica</option>
+                            <option value="BÁSICA">Ciencia Básica</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let especialidades = [
+            {
+                cod_especialidad: 'ESP001',
+                nombre: 'CARDIOLOGÍA',
+                categoria: 'CLÍNICA'
+            },
+            {
+                cod_especialidad: 'ESP002',
+                nombre: 'PEDIATRÍA',
+                categoria: 'CLÍNICA'
+            },
+            {
+                cod_especialidad: 'ESP003',
+                nombre: 'CIRUGÍA GENERAL',
+                categoria: 'QUIRÚRGICA'
+            },
+            {
+                cod_especialidad: 'ESP004',
+                nombre: 'GINECOLOGÍA',
+                categoria: 'CLÍNICA'
+            },
+            {
+                cod_especialidad: 'ESP005',
+                nombre: 'RADIOLOGÍA',
+                categoria: 'DIAGNÓSTICA'
+            },
+            {
+                cod_especialidad: 'ESP006',
+                nombre: 'MEDICINA INTERNA',
+                categoria: 'CLÍNICA'
+            },
+            {
+                cod_especialidad: 'ESP007',
+                nombre: 'ORTOPEDIA',
+                categoria: 'QUIRÚRGICA'
+            },
+            {
+                cod_especialidad: 'ESP008',
+                nombre: 'DERMATOLOGÍA',
+                categoria: 'CLÍNICA'
+            },
+            {
+                cod_especialidad: 'ESP009',
+                nombre: 'NEUROLOGÍA',
+                categoria: 'CLÍNICA'
+            },
+            {
+                cod_especialidad: 'ESP010',
+                nombre: 'PATOLOGÍA',
+                categoria: 'DIAGNÓSTICA'
+            },
+            {
+                cod_especialidad: 'ESP011',
+                nombre: 'ANESTESIOLOGÍA',
+                categoria: 'QUIRÚRGICA'
+            },
+            {
+                cod_especialidad: 'ESP012',
+                nombre: 'MEDICINA GENERAL',
+                categoria: 'CLÍNICA'
+            }
+        ];
+
+        let currentView = 'cards';
+        let editingIndex = null;
+
+        function initializeApp() {
+            renderEspecialidades();
+            updateStatistics();
+            setupEventListeners();
+            updatePrintDate();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterEspecialidades);
+            document.getElementById('categoriaFiltro').addEventListener('change', filterEspecialidades);
+            document.getElementById('formEspecialidad').addEventListener('submit', guardarEspecialidad);
+        }
+
+        function updatePrintDate() {
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function renderEspecialidades() {
+            if (currentView === 'cards') {
+                renderCards();
+            } else {
+                renderTable();
+            }
+        }
+
+        function getCardClass(index) {
+            const classes = ['esp-card-1', 'esp-card-2', 'esp-card-3', 'esp-card-4', 'esp-card-5', 'esp-card-6'];
+            return classes[index % classes.length];
+        }
+
+        function getIconClass(categoria) {
+            switch(categoria) {
+                case 'CLÍNICA': return 'fas fa-heartbeat';
+                case 'QUIRÚRGICA': return 'fas fa-scalpel';
+                case 'DIAGNÓSTICA': return 'fas fa-microscope';
+                case 'BÁSICA': return 'fas fa-atom';
+                default: return 'fas fa-stethoscope';
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const filteredData = getFilteredEspecialidades();
+            
+            container.innerHTML = filteredData.map((especialidad, index) => `
+                <div class="${getCardClass(index)} text-white rounded-lg shadow-lg card-hover transition-all duration-300">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                    <i class="${getIconClass(especialidad.categoria)} text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold">${especialidad.nombre}</h3>
+                                    <p class="text-blue-100">Código: ${especialidad.cod_especialidad}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-medium">
+                                ${especialidad.categoria}
+                            </span>
+                        </div>
+                        
+                        <div class="flex space-x-2 no-print">
+                            <button onclick="editarEspecialidad(${getOriginalIndex(especialidad)})" 
+                                    class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Editar
+                            </button>
+                            <button onclick="eliminarEspecialidad(${getOriginalIndex(especialidad)})" 
+                                    class="flex-1 bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filteredData = getFilteredEspecialidades();
+            
+            tbody.innerHTML = filteredData.map(especialidad => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${especialidad.cod_especialidad}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${especialidad.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoriaColor(especialidad.categoria)}">
+                            <i class="${getIconClass(especialidad.categoria)} mr-1"></i>
+                            ${especialidad.categoria}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarEspecialidad(${getOriginalIndex(especialidad)})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarEspecialidad(${getOriginalIndex(especialidad)})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getCategoriaColor(categoria) {
+            switch(categoria) {
+                case 'CLÍNICA': return 'bg-blue-100 text-blue-800';
+                case 'QUIRÚRGICA': return 'bg-red-100 text-red-800';
+                case 'DIAGNÓSTICA': return 'bg-green-100 text-green-800';
+                case 'BÁSICA': return 'bg-purple-100 text-purple-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getOriginalIndex(especialidad) {
+            return especialidades.findIndex(e => e.cod_especialidad === especialidad.cod_especialidad);
+        }
+
+        function getFilteredEspecialidades() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoriaFiltro = document.getElementById('categoriaFiltro').value;
+            
+            return especialidades.filter(especialidad => {
+                const matchesSearch = !searchTerm || 
+                    especialidad.cod_especialidad.toLowerCase().includes(searchTerm) ||
+                    especialidad.nombre.toLowerCase().includes(searchTerm);
+                
+                const matchesCategoria = !categoriaFiltro || especialidad.categoria === categoriaFiltro;
+                
+                return matchesSearch && matchesCategoria;
+            });
+        }
+
+        function filterEspecialidades() {
+            renderEspecialidades();
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const viewCards = document.getElementById('viewCards');
+            const viewTable = document.getElementById('viewTable');
+            
+            if (view === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                viewCards.classList.remove('bg-gray-300', 'text-gray-700');
+                viewCards.classList.add('bg-blue-500', 'text-white');
+                viewTable.classList.remove('bg-blue-500', 'text-white');
+                viewTable.classList.add('bg-gray-300', 'text-gray-700');
+            } else {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                viewTable.classList.remove('bg-gray-300', 'text-gray-700');
+                viewTable.classList.add('bg-blue-500', 'text-white');
+                viewCards.classList.remove('bg-blue-500', 'text-white');
+                viewCards.classList.add('bg-gray-300', 'text-gray-700');
+            }
+            
+            renderEspecialidades();
+        }
+
+        function updateStatistics() {
+            const total = especialidades.length;
+            const clinicas = especialidades.filter(e => e.categoria === 'CLÍNICA').length;
+            const quirurgicas = especialidades.filter(e => e.categoria === 'QUIRÚRGICA').length;
+            const diagnosticas = especialidades.filter(e => e.categoria === 'DIAGNÓSTICA').length;
+            
+            document.getElementById('totalEspecialidades').textContent = total;
+            document.getElementById('totalClinicas').textContent = clinicas;
+            document.getElementById('totalQuirurgicas').textContent = quirurgicas;
+            document.getElementById('totalDiagnosticas').textContent = diagnosticas;
+        }
+
+        function agregarEspecialidad() {
+            editingIndex = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Nueva Especialidad';
+            document.getElementById('formEspecialidad').reset();
+            document.getElementById('modalEspecialidad').classList.remove('hidden');
+        }
+
+        function editarEspecialidad(index) {
+            editingIndex = index;
+            const especialidad = especialidades[index];
+            
+            document.getElementById('modalTitle').textContent = 'Editar Especialidad';
+            document.getElementById('modalCodigo').value = especialidad.cod_especialidad;
+            document.getElementById('modalNombre').value = especialidad.nombre;
+            document.getElementById('modalCategoria').value = especialidad.categoria;
+            
+            document.getElementById('modalEspecialidad').classList.remove('hidden');
+        }
+
+        function guardarEspecialidad(event) {
+            event.preventDefault();
+            
+            const formData = {
+                cod_especialidad: document.getElementById('modalCodigo').value.trim(),
+                nombre: document.getElementById('modalNombre').value.trim(),
+                categoria: document.getElementById('modalCategoria').value.trim()
+            };
+            
+            if (editingIndex !== null) {
+                // Edit existing
+                especialidades[editingIndex] = formData;
+            } else {
+                // Add new
+                if (especialidades.find(e => e.cod_especialidad === formData.cod_especialidad)) {
+                    alert('Ya existe una especialidad con ese código');
+                    return;
+                }
+                especialidades.push(formData);
+            }
+            
+            renderEspecialidades();
+            updateStatistics();
+            cerrarModal();
+        }
+
+        function eliminarEspecialidad(index) {
+            if (confirm('¿Está seguro de que desea eliminar esta especialidad?')) {
+                especialidades.splice(index, 1);
+                renderEspecialidades();
+                updateStatistics();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEspecialidad').classList.add('hidden');
+            editingIndex = null;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

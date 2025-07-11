@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios de Internación - Sistema Galeno</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .report-container {
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 29.7cm;
+            position: relative;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .internment-info {
+            background: #f8f9fa;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-header {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #3498db;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .info-header label {
+            color: white;
+        }
+
+        .info-header .value {
+            background: white;
+            color: #2c3e50;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .patient-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 8px 12px;
+            border-left: 4px solid #ff0000;
+            margin-bottom: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .patient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-field {
+            display: flex;
+            align-items: center;
+        }
+
+        .info-field label {
+            min-width: 100px;
+            font-weight: normal;
+            color: #555;
+            font-size: 10px;
+        }
+
+        .info-field .value {
+            font-weight: bold;
+            color: #2c3e50;
+            flex: 1;
+            padding: 3px 8px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .internment-details {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #c3e6c3;
+            margin-bottom: 20px;
+        }
+
+        .room-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .services-section {
+            background: white;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10px;
+        }
+
+        .services-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 6px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #34495e;
+            font-size: 10px;
+        }
+
+        .services-table td {
+            padding: 8px 6px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .services-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .services-table tr:hover {
+            background: #e8f4f8;
+        }
+
+        .services-table .service-desc {
+            text-align: left;
+            max-width: 200px;
+            font-weight: bold;
+            background: #f0f8ff;
+        }
+
+        .services-table .price {
+            text-align: right;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .service-details {
+            font-size: 9px;
+            color: #666;
+            padding: 5px;
+            background: #f9f9f9;
+        }
+
+        .totals-section {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .total-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+
+        .total-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 11px;
+        }
+
+        .total-item .amount {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .footer-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background: #f8f9fa;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .navigation h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .navigation button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .navigation button:hover {
+            background: #2980b9;
+        }
+
+        .print-button {
+            background: #27ae60 !important;
+        }
+
+        .print-button:hover {
+            background: #229954 !important;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .navigation {
+                display: none;
+            }
+            
+            .report-container {
+                border: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .patient-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .totals-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .services-table {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <h3>🏥 Navegación</h3>
+        <button onclick="loadExample(1)">🛏️ Ejemplo 1</button>
+        <button onclick="loadExample(2)">🛏️ Ejemplo 2</button>
+        <button onclick="loadExample(3)">🛏️ Ejemplo 3</button>
+        <button class="print-button" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+
+    <div class="report-container">
+        <div class="header">
+            <h1>🏥 Servicios de Internación</h1>
+        </div>
+
+        <div class="internment-info">
+            <div class="info-header">
+                <label>Ficha Clínica:</label>
+                <span class="value" id="fichaclinica">12345</span>
+                <label>Servicio Internación Nro.:</label>
+                <span class="value" id="nromov">INT-2024-001</span>
+                <label>Fecha:</label>
+                <span class="value" id="fec_ped">25/01/2024</span>
+            </div>
+
+            <div class="patient-section">
+                <div class="section-title">👤 Datos del Paciente</div>
+                <div class="patient-grid">
+                    <div class="info-field">
+                        <label>Tipo Doc:</label>
+                        <span class="value" id="tipdoc">CC</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Número:</label>
+                        <span class="value" id="nrodoc">12345678</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Título:</label>
+                        <span class="value" id="titulo">Sr.</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombres:</label>
+                        <span class="value" id="nombres">Juan Carlos</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Apellidos:</label>
+                        <span class="value" id="apellidos">García López</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Ap. Casada:</label>
+                        <span class="value" id="apecasada">N/A</span>
+                    </div>
+                    <div class="info-field">
+                        <label>F. Nacimiento:</label>
+                        <span class="value" id="fecnac">15/05/1985</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Género:</label>
+                        <span class="value" id="genero">M</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Teléfonos:</label>
+                        <span class="value" id="telefonos">300-123-4567</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="internment-details">
+                <div class="section-title">🛏️ Información de Internación</div>
+                <div class="room-info">
+                    <div class="info-field">
+                        <label>F. Internación:</label>
+                        <span class="value" id="fec_internacion">22/01/2024</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Habitación:</label>
+                        <span class="value" id="cod_habitacion">H-301</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Cama:</label>
+                        <span class="value" id="cod_cama">C-01</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Tipo Cama:</label>
+                        <span class="value" id="cod_tipo">PRIVADA</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Tipo Movimiento:</label>
+                        <span class="value" id="tipomov">INGRESO</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Descripción:</label>
+                        <span class="value" id="nomtipomov">Ingreso por Cirugía</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="services-section">
+            <div class="section-title">🔬 Servicios y Procedimientos</div>
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th>SERVICIO</th>
+                        <th>TIPO</th>
+                        <th>COD</th>
+                        <th>DOCTOR</th>
+                        <th>CANT</th>
+                        <th>ARANCEL U.</th>
+                        <th>TOT. ARANCEL</th>
+                        <th>HONORARIOS</th>
+                    </tr>
+                </thead>
+                <tbody id="services-tbody">
+                    <tr>
+                        <td class="service-desc" colspan="8">
+                            <strong>DESCRIPCION:</strong> Cirugía Laparoscópica de Vesícula Biliar
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>CIR001</td>
+                        <td>CIR</td>
+                        <td>LAP001</td>
+                        <td>DR001 - Carlos Rodríguez</td>
+                        <td>1</td>
+                        <td class="price">$2,500,000</td>
+                        <td class="price">$2,500,000</td>
+                        <td class="price">$800,000</td>
+                    </tr>
+                    <tr class="service-details">
+                        <td colspan="2"><strong>FECHA:</strong> 23/01/2024</td>
+                        <td colspan="6"><strong>OBSERVACIONES:</strong> Cirugía sin complicaciones, paciente estable</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="service-desc" colspan="8">
+                            <strong>DESCRIPCION:</strong> Habitación Privada con Baño
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>HAB001</td>
+                        <td>HAB</td>
+                        <td>PRIV001</td>
+                        <td>-</td>
+                        <td>3</td>
+                        <td class="price">$150,000</td>
+                        <td class="price">$450,000</td>
+                        <td class="price">$0</td>
+                    </tr>
+                    <tr class="service-details">
+                        <td colspan="2"><strong>FECHA:</strong> 22-24/01/2024</td>
+                        <td colspan="6"><strong>OBSERVACIONES:</strong> Estancia 3 días, habitación individual</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="service-desc" colspan="8">
+                            <strong>DESCRIPCION:</strong> Medicamentos y Suministros
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>MED001</td>
+                        <td>MED</td>
+                        <td>SUM001</td>
+                        <td>-</td>
+                        <td>1</td>
+                        <td class="price">$325,000</td>
+                        <td class="price">$325,000</td>
+                        <td class="price">$0</td>
+                    </tr>
+                    <tr class="service-details">
+                        <td colspan="2"><strong>FECHA:</strong> 22-25/01/2024</td>
+                        <td colspan="6"><strong>OBSERVACIONES:</strong> Antibióticos, analgésicos, material quirúrgico</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="totals-section">
+            <div class="total-item">
+                <label>TOTAL ARANCELES:</label>
+                <div class="amount">$<span id="total-arancel">3,275,000</span></div>
+            </div>
+            <div class="total-item">
+                <label>TOTAL HONORARIOS:</label>
+                <div class="amount">$<span id="total-honorarios">800,000</span></div>
+            </div>
+            <div class="total-item">
+                <label>GRAN TOTAL:</label>
+                <div class="amount">$<span id="gran-total">4,075,000</span></div>
+            </div>
+        </div>
+
+        <div class="footer-info">
+            <p>📋 ORDEN DE SERVICIO PARA USO INTERNO</p>
+            <p>💰 ESTOS PRECIOS NO INCLUYEN IVA</p>
+        </div>
+
+        <div class="page-footer">
+            <span id="datetime">25/01/2024 - 14:30</span>
+            <span>Sistema Galeno - Servicios de Internación</span>
+            <span>Página: 1</span>
+        </div>
+    </div>
+
+    <script>
+        const examples = {
+            1: {
+                fichaclinica: "12345",
+                nromov: "INT-2024-001",
+                fec_ped: "25/01/2024",
+                tipdoc: "CC",
+                nrodoc: "12345678",
+                titulo: "Sr.",
+                nombres: "Juan Carlos",
+                apellidos: "García López",
+                apecasada: "N/A",
+                fecnac: "15/05/1985",
+                genero: "M",
+                telefonos: "300-123-4567",
+                fec_internacion: "22/01/2024",
+                cod_habitacion: "H-301",
+                cod_cama: "C-01",
+                cod_tipo: "PRIVADA",
+                tipomov: "INGRESO",
+                nomtipomov: "Ingreso por Cirugía",
+                totalArancel: "3,275,000",
+                totalHonorarios: "800,000",
+                granTotal: "4,075,000",
+                services: [
+                    {
+                        descripcion: "Cirugía Laparoscópica de Vesícula Biliar",
+                        servicio: "CIR001",
+                        tipo: "CIR", 
+                        codigo: "LAP001",
+                        doctor: "DR001 - Carlos Rodríguez",
+                        cantidad: 1,
+                        arancel: 2500000,
+                        totalArancel: 2500000,
+                        honorarios: 800000,
+                        fecha: "23/01/2024",
+                        observaciones: "Cirugía sin complicaciones, paciente estable"
+                    },
+                    {
+                        descripcion: "Habitación Privada con Baño",
+                        servicio: "HAB001",
+                        tipo: "HAB",
+                        codigo: "PRIV001", 
+                        doctor: "-",
+                        cantidad: 3,
+                        arancel: 150000,
+                        totalArancel: 450000,
+                        honorarios: 0,
+                        fecha: "22-24/01/2024",
+                        observaciones: "Estancia 3 días, habitación individual"
+                    },
+                    {
+                        descripcion: "Medicamentos y Suministros",
+                        servicio: "MED001",
+                        tipo: "MED",
+                        codigo: "SUM001",
+                        doctor: "-",
+                        cantidad: 1,
+                        arancel: 325000,
+                        totalArancel: 325000,
+                        honorarios: 0,
+                        fecha: "22-25/01/2024",
+                        observaciones: "Antibióticos, analgésicos, material quirúrgico"
+                    }
+                ]
+            },
+            2: {
+                fichaclinica: "67890",
+                nromov: "INT-2024-002",
+                fec_ped: "26/01/2024",
+                tipdoc: "TI",
+                nrodoc: "98765432",
+                titulo: "Menor",
+                nombres: "Ana Sofía",
+                apellidos: "Martínez Ruiz",
+                apecasada: "N/A",
+                fecnac: "20/03/2010",
+                genero: "F",
+                telefonos: "310-555-7890",
+                fec_internacion: "25/01/2024",
+                cod_habitacion: "H-205",
+                cod_cama: "C-02",
+                cod_tipo: "PEDIATRICA",
+                tipomov: "URGENCIA",
+                nomtipomov: "Ingreso por Urgencias",
+                totalArancel: "1,280,000",
+                totalHonorarios: "450,000",
+                granTotal: "1,730,000",
+                services: [
+                    {
+                        descripcion: "Apendicectomía Laparoscópica Pediátrica",
+                        servicio: "CIR002",
+                        tipo: "CIR",
+                        codigo: "APEN001",
+                        doctor: "DR002 - Patricia González",
+                        cantidad: 1,
+                        arancel: 1800000,
+                        totalArancel: 1800000,
+                        honorarios: 450000,
+                        fecha: "25/01/2024", 
+                        observaciones: "Procedimiento exitoso, recuperación favorable"
+                    },
+                    {
+                        descripcion: "Habitación Pediátrica",
+                        servicio: "HAB002",
+                        tipo: "HAB",
+                        codigo: "PED001",
+                        doctor: "-",
+                        cantidad: 2,
+                        arancel: 120000,
+                        totalArancel: 240000,
+                        honorarios: 0,
+                        fecha: "25-26/01/2024",
+                        observaciones: "Habitación con acompañante, 2 días"
+                    },
+                    {
+                        descripcion: "Medicamentos Pediátricos",
+                        servicio: "MED002",
+                        tipo: "MED",
+                        codigo: "PEDMED001",
+                        doctor: "-",
+                        cantidad: 1,
+                        arancel: 180000,
+                        totalArancel: 180000,
+                        honorarios: 0,
+                        fecha: "25-26/01/2024",
+                        observaciones: "Medicamentos post-operatorios adaptados para edad"
+                    }
+                ]
+            },
+            3: {
+                fichaclinica: "54321",
+                nromov: "INT-2024-003",
+                fec_ped: "27/01/2024",
+                tipdoc: "CE",
+                nrodoc: "1234567890",
+                titulo: "Dr.",
+                nombres: "Luis Fernando",
+                apellidos: "Hernández Silva",
+                apecasada: "N/A",
+                fecnac: "10/12/1970",
+                genero: "M",
+                telefonos: "320-444-5555",
+                fec_internacion: "26/01/2024",
+                cod_habitacion: "UCI-01",
+                cod_cama: "UCI-A1",
+                cod_tipo: "UCI",
+                tipomov: "CRITICO",
+                nomtipomov: "Ingreso a UCI",
+                totalArancel: "8,450,000",
+                totalHonorarios: "1,200,000",
+                granTotal: "9,650,000",
+                services: [
+                    {
+                        descripcion: "Cateterismo Cardiaco de Urgencia",
+                        servicio: "CARD001",
+                        tipo: "CARD",
+                        codigo: "CATE001",
+                        doctor: "DR003 - Roberto Jiménez",
+                        cantidad: 1,
+                        arancel: 4500000,
+                        totalArancel: 4500000,
+                        honorarios: 1200000,
+                        fecha: "26/01/2024",
+                        observaciones: "Procedimiento de emergencia, arteria coronaria obstruida"
+                    },
+                    {
+                        descripcion: "UCI Cardiológica",
+                        servicio: "UCI001",
+                        tipo: "UCI",
+                        codigo: "UCICARD001",
+                        doctor: "-",
+                        cantidad: 2,
+                        arancel: 1500000,
+                        totalArancel: 3000000,
+                        honorarios: 0,
+                        fecha: "26-27/01/2024",
+                        observaciones: "Monitoreo continuo, 2 días en UCI"
+                    },
+                    {
+                        descripcion: "Medicamentos de Alto Costo",
+                        servicio: "MED003",
+                        tipo: "MED",
+                        codigo: "CARDMED001",
+                        doctor: "-",
+                        cantidad: 1,
+                        arancel: 950000,
+                        totalArancel: 950000,
+                        honorarios: 0,
+                        fecha: "26-27/01/2024",
+                        observaciones: "Anticoagulantes, inotrópicos, medicamentos especializados"
+                    }
+                ]
+            }
+        };
+
+        function loadExample(num) {
+            const data = examples[num];
+            
+            // Cargar datos básicos
+            Object.keys(data).forEach(key => {
+                const element = document.getElementById(key.replace('_', '-'));
+                if (element && key !== 'services') {
+                    element.textContent = data[key];
+                }
+            });
+
+            // Usar nombres de campos correctos
+            if (data.totalArancel) document.getElementById('total-arancel').textContent = data.totalArancel;
+            if (data.totalHonorarios) document.getElementById('total-honorarios').textContent = data.totalHonorarios;
+            if (data.granTotal) document.getElementById('gran-total').textContent = data.granTotal;
+
+            // Cargar servicios
+            const tbody = document.getElementById('services-tbody');
+            tbody.innerHTML = '';
+            
+            data.services.forEach(service => {
+                // Fila de descripción
+                const descRow = document.createElement('tr');
+                descRow.innerHTML = `
+                    <td class="service-desc" colspan="8">
+                        <strong>DESCRIPCION:</strong> ${service.descripcion}
+                    </td>
+                `;
+                tbody.appendChild(descRow);
+                
+                // Fila de datos
+                const dataRow = document.createElement('tr');
+                dataRow.innerHTML = `
+                    <td>${service.servicio}</td>
+                    <td>${service.tipo}</td>
+                    <td>${service.codigo}</td>
+                    <td>${service.doctor}</td>
+                    <td>${service.cantidad}</td>
+                    <td class="price">$${service.arancel.toLocaleString()}</td>
+                    <td class="price">$${service.totalArancel.toLocaleString()}</td>
+                    <td class="price">$${service.honorarios.toLocaleString()}</td>
+                `;
+                tbody.appendChild(dataRow);
+                
+                // Fila de detalles
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'service-details';
+                detailRow.innerHTML = `
+                    <td colspan="2"><strong>FECHA:</strong> ${service.fecha}</td>
+                    <td colspan="6"><strong>OBSERVACIONES:</strong> ${service.observaciones}</td>
+                `;
+                tbody.appendChild(detailRow);
+            });
+            
+            // Actualizar fecha/hora
+            const now = new Date();
+            document.getElementById('datetime').textContent = 
+                now.toLocaleDateString('es-CO') + ' - ' + now.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        // Cargar primer ejemplo al inicio
+        loadExample(1);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        loadExample(1);
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        loadExample(2);
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        loadExample(3);
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        window.print();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

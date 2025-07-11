@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Clínica - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+        <!-- Header con Toolbar -->
+        <div class="flex flex-wrap gap-2 mb-6 p-4 bg-gray-50 rounded-lg border">
+            <button id="btnAgregar" onclick="agregar()" class="toolbar-btn bg-green-500 hover:bg-green-600 text-white" title="Agregar nueva ficha">
+                <i class="fas fa-plus mr-1"></i>
+                Agregar
+            </button>
+            <button id="btnModificar" onclick="modificar()" class="toolbar-btn bg-blue-500 hover:bg-blue-600 text-white" title="Modificar ficha actual">
+                <i class="fas fa-edit mr-1"></i>
+                Modificar
+            </button>
+            <button id="btnActualizar" onclick="actualizar()" class="toolbar-btn bg-purple-500 hover:bg-purple-600 text-white" title="Actualizar datos">
+                <i class="fas fa-sync-alt mr-1"></i>
+                Actualizar
+            </button>
+            <button id="btnGrabar" onclick="grabar()" class="toolbar-btn bg-green-600 hover:bg-green-700 text-white" title="Grabar cambios">
+                <i class="fas fa-save mr-1"></i>
+                Grabar
+            </button>
+            <button id="btnCancelar" onclick="cancelar()" class="toolbar-btn bg-yellow-500 hover:bg-yellow-600 text-white" title="Cancelar cambios">
+                <i class="fas fa-times mr-1"></i>
+                Cancelar
+            </button>
+            <button onclick="cerrar()" class="toolbar-btn bg-red-500 hover:bg-red-600 text-white" title="Cerrar ventana">
+                <i class="fas fa-door-open mr-1"></i>
+                Cerrar
+            </button>
+        </div>
+
+        <!-- Título Principal -->
+        <div class="text-center mb-6">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-file-medical text-blue-600 text-3xl mr-3"></i>
+                <h1 class="text-3xl font-bold text-gray-800">FICHA CLÍNICA</h1>
+            </div>
+        </div>
+
+        <!-- Formulario Principal -->
+        <div class="space-y-6">
+            <!-- Marco de Ficha Clínica -->
+            <div class="border-2 border-gray-300 rounded-lg p-6 bg-gray-50">
+                <div class="space-y-4">
+                    <!-- Número de Ficha Clínica -->
+                    <div class="text-center">
+                        <label class="block text-sm font-bold text-red-600 mb-2">Ficha Clínica</label>
+                        <input type="text" id="txtFichaClinica" 
+                               class="w-64 px-4 py-3 text-center text-xl font-bold text-red-600 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100" 
+                               readonly placeholder="FC-000000">
+                    </div>
+
+                    <!-- Fecha de Carga -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-red-600 mb-2">Fecha de Carga</label>
+                            <input type="text" id="txtFechaCarga" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100" 
+                                   readonly>
+                        </div>
+                        
+                        <!-- Vigente -->
+                        <div class="flex items-center space-x-3 mt-6">
+                            <label class="text-sm font-bold text-red-600">Vigente</label>
+                            <input type="checkbox" id="chkVigente" 
+                                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Observación -->
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-2">Observación</label>
+                        <textarea id="txtObservacion" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                                  rows="4" 
+                                  placeholder="Ingrese observaciones sobre la ficha clínica..."
+                                  readonly></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Paciente (solo lectura) -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-blue-800 mb-3">
+                    <i class="fas fa-user mr-2"></i>
+                    Información del Paciente
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-700">Tipo de Documento:</span> 
+                        <span class="text-gray-900" id="displayTipoDoc">DNI</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Número de Documento:</span> 
+                        <span class="text-gray-900" id="displayNroDoc">12345678</span>
+                    </div>
+                    <div class="md:col-span-2">
+                        <span class="font-medium text-gray-700">Nombre Completo:</span> 
+                        <span class="text-gray-900" id="displayNombre">Juan Pérez García</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navegación de Registros -->
+            <div class="flex justify-center items-center space-x-4 bg-gray-50 p-4 rounded-lg">
+                <button onclick="primerRegistro()" class="nav-btn" title="Primer registro">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button onclick="registroAnterior()" class="nav-btn" title="Registro anterior">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <span class="px-4 py-2 bg-white rounded border">
+                    Registro <span id="currentRecord">1</span> de <span id="totalRecords">1</span>
+                </span>
+                <button onclick="registroSiguiente()" class="nav-btn" title="Siguiente registro">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button onclick="ultimoRegistro()" class="nav-btn" title="Último registro">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+
+            <!-- Estado de la Aplicación -->
+            <div class="text-center">
+                <div id="statusMessage" class="text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                    Listo para trabajar
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .toolbar-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .nav-btn {
+            background-color: #e5e7eb;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-btn:hover {
+            background-color: #d1d5db;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let currentMode = 'view'; // 'view', 'edit', 'add'
+        let fichaData = {
+            fichaClinica: '',
+            fechaCarga: '',
+            observacion: '',
+            vigente: false,
+            tipoDoc: '',
+            nroDoc: ''
+        };
+
+        // Datos de ejemplo
+        const fichas = [
+            {
+                fichaClinica: 'FC-000001',
+                fechaCarga: '11/01/2025 10:30:00',
+                observacion: 'Primera consulta del paciente. Sin antecedentes relevantes.',
+                vigente: true,
+                tipoDoc: 'DNI',
+                nroDoc: '12345678',
+                nombreCompleto: 'Juan Pérez García'
+            }
+        ];
+
+        let currentIndex = 0;
+
+        function inicializar() {
+            // Cargar datos del paciente desde parámetros URL o localStorage
+            const params = new URLSearchParams(window.location.search);
+            const tipoDoc = params.get('tipoDoc') || localStorage.getItem('selected_tipoDoc') || 'DNI';
+            const nroDoc = params.get('nroDoc') || localStorage.getItem('selected_nroDoc') || '12345678';
+            
+            // Actualizar información del paciente
+            document.getElementById('displayTipoDoc').textContent = tipoDoc;
+            document.getElementById('displayNroDoc').textContent = nroDoc;
+            
+            // Buscar ficha existente
+            buscarFicha(tipoDoc, nroDoc);
+            
+            // Configurar modo inicial
+            configurarModo('view');
+        }
+
+        function buscarFicha(tipoDoc, nroDoc) {
+            const ficha = fichas.find(f => f.tipoDoc === tipoDoc && f.nroDoc === nroDoc);
+            
+            if (ficha) {
+                // Ficha encontrada
+                fichaData = { ...ficha };
+                mostrarFicha();
+                document.getElementById('btnAgregar').disabled = true;
+                updateStatus('Ficha clínica encontrada');
+            } else {
+                // No existe ficha
+                limpiarFormulario();
+                document.getElementById('btnAgregar').disabled = false;
+                document.getElementById('btnModificar').disabled = true;
+                document.getElementById('btnGrabar').disabled = true;
+                document.getElementById('btnActualizar').disabled = true;
+                updateStatus('No existe ficha clínica para este paciente');
+            }
+        }
+
+        function mostrarFicha() {
+            document.getElementById('txtFichaClinica').value = fichaData.fichaClinica;
+            document.getElementById('txtFechaCarga').value = fichaData.fechaCarga;
+            document.getElementById('txtObservacion').value = fichaData.observacion;
+            document.getElementById('chkVigente').checked = fichaData.vigente;
+            document.getElementById('displayNombre').textContent = fichaData.nombreCompleto || 'No especificado';
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('txtFichaClinica').value = '';
+            document.getElementById('txtFechaCarga').value = '';
+            document.getElementById('txtObservacion').value = '';
+            document.getElementById('chkVigente').checked = false;
+        }
+
+        function generarCodigoFicha() {
+            const numero = (fichas.length + 1).toString().padStart(6, '0');
+            return `FC-${numero}`;
+        }
+
+        function agregar() {
+            currentMode = 'add';
+            
+            // Generar nuevo código
+            document.getElementById('txtFichaClinica').value = generarCodigoFicha();
+            document.getElementById('txtFechaCarga').value = new Date().toLocaleString('es-ES');
+            document.getElementById('txtObservacion').value = '';
+            document.getElementById('txtObservacion').readOnly = false;
+            document.getElementById('chkVigente').checked = true;
+            document.getElementById('chkVigente').disabled = false;
+            
+            // Configurar botones
+            document.getElementById('btnAgregar').disabled = true;
+            document.getElementById('btnModificar').disabled = false;
+            document.getElementById('btnGrabar').disabled = false;
+            document.getElementById('btnActualizar').disabled = false;
+            
+            document.getElementById('txtObservacion').focus();
+            updateStatus('Modo agregar - Complete los datos y presione Grabar');
+        }
+
+        function modificar() {
+            currentMode = 'edit';
+            
+            document.getElementById('txtObservacion').readOnly = false;
+            document.getElementById('chkVigente').disabled = false;
+            
+            updateStatus('Modo edición - Modifique los datos y presione Grabar');
+        }
+
+        function actualizar() {
+            // Simular actualización de datos
+            const tipoDoc = document.getElementById('displayTipoDoc').textContent;
+            const nroDoc = document.getElementById('displayNroDoc').textContent;
+            
+            buscarFicha(tipoDoc, nroDoc);
+            updateStatus('Datos actualizados desde la base de datos');
+        }
+
+        function grabar() {
+            if (!validarDatos()) {
+                return;
+            }
+
+            // Recoger datos del formulario
+            const nuevaFicha = {
+                fichaClinica: document.getElementById('txtFichaClinica').value,
+                fechaCarga: document.getElementById('txtFechaCarga').value,
+                observacion: document.getElementById('txtObservacion').value,
+                vigente: document.getElementById('chkVigente').checked,
+                tipoDoc: document.getElementById('displayTipoDoc').textContent,
+                nroDoc: document.getElementById('displayNroDoc').textContent,
+                nombreCompleto: document.getElementById('displayNombre').textContent
+            };
+
+            if (currentMode === 'add') {
+                // Agregar nueva ficha
+                fichas.push(nuevaFicha);
+                updateStatus('Ficha clínica creada exitosamente');
+            } else if (currentMode === 'edit') {
+                // Actualizar ficha existente
+                const index = fichas.findIndex(f => 
+                    f.tipoDoc === nuevaFicha.tipoDoc && f.nroDoc === nuevaFicha.nroDoc
+                );
+                if (index !== -1) {
+                    fichas[index] = nuevaFicha;
+                }
+                updateStatus('Ficha clínica actualizada exitosamente');
+            }
+
+            fichaData = { ...nuevaFicha };
+            configurarModo('view');
+        }
+
+        function cancelar() {
+            if (currentMode === 'add' || currentMode === 'edit') {
+                if (confirm('¿Está seguro de cancelar los cambios?')) {
+                    if (currentMode === 'add') {
+                        limpiarFormulario();
+                        buscarFicha(
+                            document.getElementById('displayTipoDoc').textContent,
+                            document.getElementById('displayNroDoc').textContent
+                        );
+                    } else {
+                        mostrarFicha();
+                    }
+                    configurarModo('view');
+                    updateStatus('Operación cancelada');
+                }
+            }
+        }
+
+        function cerrar() {
+            if (currentMode !== 'view') {
+                if (!confirm('Hay cambios sin guardar. ¿Está seguro de cerrar?')) {
+                    return;
+                }
+            }
+            
+            // Volver a la pantalla anterior o cerrar
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+
+        function configurarModo(modo) {
+            currentMode = modo;
+            
+            const readOnly = modo === 'view';
+            document.getElementById('txtObservacion').readOnly = readOnly;
+            document.getElementById('chkVigente').disabled = readOnly;
+            
+            if (modo === 'view') {
+                document.getElementById('btnModificar').disabled = false;
+                document.getElementById('btnGrabar').disabled = true;
+            }
+        }
+
+        function validarDatos() {
+            const observacion = document.getElementById('txtObservacion').value.trim();
+            
+            if (observacion === '') {
+                alert('Por favor ingrese una observación');
+                document.getElementById('txtObservacion').focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
+
+        // Funciones de navegación (placeholder)
+        function primerRegistro() {
+            updateStatus('Primer registro');
+        }
+
+        function registroAnterior() {
+            updateStatus('Registro anterior');
+        }
+
+        function registroSiguiente() {
+            updateStatus('Siguiente registro');
+        }
+
+        function ultimoRegistro() {
+            updateStatus('Último registro');
+        }
+
+        // Manejo de teclas
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cancelar();
+            } else if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                grabar();
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

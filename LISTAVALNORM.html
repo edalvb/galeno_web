@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Valores Normales de Laboratorio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-table { width: 100% !important; font-size: 11px !important; }
+            .print-header { text-align: center !important; margin-bottom: 20px !important; }
+        }
+        .rango-normal { background: linear-gradient(135deg, #10b981, #059669); }
+        .rango-critico { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .edad-neonato { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .edad-pediatrico { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .edad-adulto { background: linear-gradient(135deg, #10b981, #059669); }
+        .edad-geriatrico { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .sexo-masculino { border-left: 4px solid #3b82f6; }
+        .sexo-femenino { border-left: 4px solid #ec4899; }
+        .sexo-ambos { border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-chart-line text-3xl text-green-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Valores Normales de Laboratorio</h1>
+                        <p class="text-sm text-gray-600">Gestión de rangos de referencia por edad y sexo</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 no-print">
+                    <button onclick="agregarValorNormal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Valor
+                    </button>
+                    <button onclick="imprimirLista()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Examen</label>
+                    <input type="text" id="buscarExamen" placeholder="Código o nombre del examen..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
+                    <select id="filtroSexo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">Todos</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                        <option value="A">Ambos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grupo Etario</label>
+                    <select id="filtroGrupoEtario" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">Todos los grupos</option>
+                        <option value="Neonato">Neonato (0-28 días)</option>
+                        <option value="Pediátrico">Pediátrico (1-17 años)</option>
+                        <option value="Adulto">Adulto (18-64 años)</option>
+                        <option value="Geriátrico">Geriátrico (65+ años)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Especialidad</label>
+                    <select id="filtroEspecialidad" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">Todas las especialidades</option>
+                        <option value="Hematología">Hematología</option>
+                        <option value="Química Clínica">Química Clínica</option>
+                        <option value="Microbiología">Microbiología</option>
+                        <option value="Inmunología">Inmunología</option>
+                        <option value="Hormonas">Hormonas</option>
+                        <option value="Cardiología">Cardiología</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('grupos')" id="btnGrupos" 
+                                class="flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                            <i class="fas fa-users mr-1"></i>Grupos
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="totalNeonatos">0</div>
+                    <div class="text-xs text-purple-800">Neonatos</div>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalPediatricos">0</div>
+                    <div class="text-xs text-blue-800">Pediátricos</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="totalAdultos">0</div>
+                    <div class="text-xs text-green-800">Adultos</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="totalGeriatricos">0</div>
+                    <div class="text-xs text-yellow-800">Geriátricos</div>
+                </div>
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalMasculino">0</div>
+                    <div class="text-xs text-blue-800">Masculino</div>
+                </div>
+                <div class="text-center p-3 bg-pink-50 rounded-lg">
+                    <div class="text-2xl font-bold text-pink-600" id="totalFemenino">0</div>
+                    <div class="text-xs text-pink-800">Femenino</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Grupos -->
+    <div id="vistaGrupos" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="contenedorGrupos" class="space-y-6">
+            <!-- Los grupos se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 print-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Examen</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sexo</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edad Min</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edad Max</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Límite Inf</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Límite Sup</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crítico Inf</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crítico Sup</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contenedorTablaValores" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalle/Edición -->
+    <div id="modalValorNormal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex items-center mb-6">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-chart-line text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Configuración de Valores Normales</h3>
+                            <p class="text-sm text-gray-500">Definición de rangos de referencia por edad y sexo</p>
+                        </div>
+                    </div>
+                    
+                    <form id="formValorNormal" class="space-y-6">
+                        <!-- Información del Examen -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Información del Examen</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Código de Servicio</label>
+                                    <input type="text" id="modalCodServicio" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nombre del Servicio</label>
+                                    <input type="text" id="modalNomServicio" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Especialidad</label>
+                                    <select id="modalEspecialidad" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                        <option value="Hematología">Hematología</option>
+                                        <option value="Química Clínica">Química Clínica</option>
+                                        <option value="Microbiología">Microbiología</option>
+                                        <option value="Inmunología">Inmunología</option>
+                                        <option value="Hormonas">Hormonas</option>
+                                        <option value="Cardiología">Cardiología</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Unidad</label>
+                                    <input type="text" id="modalUnidad" placeholder="mg/dL, mmol/L, etc." class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Población Objetivo -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Población Objetivo</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Sexo</label>
+                                    <select id="modalSexo" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Femenino</option>
+                                        <option value="A">Ambos</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Edad Mínima (años)</label>
+                                    <input type="number" min="0" max="120" id="modalEdadInf" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Edad Máxima (años)</label>
+                                    <input type="number" min="0" max="120" id="modalEdadSup" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rangos de Valores -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Rangos de Valores</h4>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-green-50 p-4 rounded-lg">
+                                        <h5 class="font-medium text-green-800 mb-3">Valores Normales</h5>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-green-700">Límite Inferior</label>
+                                                <input type="number" step="0.01" id="modalLimInf" class="mt-1 block w-full border border-green-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-green-700">Límite Superior</label>
+                                                <input type="number" step="0.01" id="modalLimSup" class="mt-1 block w-full border border-green-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-red-50 p-4 rounded-lg">
+                                        <h5 class="font-medium text-red-800 mb-3">Valores Críticos</h5>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-sm font-medium text-red-700">Crítico Inferior</label>
+                                                <input type="number" step="0.01" id="modalLimInfN" class="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-red-700">Crítico Superior</label>
+                                                <input type="number" step="0.01" id="modalLimSupN" class="mt-1 block w-full border border-red-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Vista Previa del Rango -->
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h5 class="font-medium text-gray-800 mb-3">Vista Previa del Rango</h5>
+                                    <div id="vistaPrevia" class="text-sm text-gray-600">
+                                        Configure los valores para ver la vista previa
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="guardarValorNormal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de valores normales de laboratorio
+        let valoresNormales = [
+            {
+                id: 1,
+                codServicio: "HGB001",
+                nomServicio: "Hemoglobina",
+                sexo: "M",
+                edadInf: 18,
+                edadSup: 64,
+                limInf: 14.0,
+                limSup: 17.5,
+                limInfN: 7.0,
+                limSupN: 20.0,
+                especialidad: "Hematología",
+                unidad: "g/dL"
+            },
+            {
+                id: 2,
+                codServicio: "HGB002",
+                nomServicio: "Hemoglobina",
+                sexo: "F",
+                edadInf: 18,
+                edadSup: 64,
+                limInf: 12.0,
+                limSup: 15.5,
+                limInfN: 7.0,
+                limSupN: 18.0,
+                especialidad: "Hematología",
+                unidad: "g/dL"
+            },
+            {
+                id: 3,
+                codServicio: "GLU001",
+                nomServicio: "Glucosa en Ayunas",
+                sexo: "A",
+                edadInf: 18,
+                edadSup: 120,
+                limInf: 70.0,
+                limSup: 110.0,
+                limInfN: 40.0,
+                limSupN: 400.0,
+                especialidad: "Química Clínica",
+                unidad: "mg/dL"
+            },
+            {
+                id: 4,
+                codServicio: "CREA001",
+                nomServicio: "Creatinina",
+                sexo: "M",
+                edadInf: 18,
+                edadSup: 64,
+                limInf: 0.7,
+                limSup: 1.3,
+                limInfN: 0.2,
+                limSupN: 10.0,
+                especialidad: "Química Clínica",
+                unidad: "mg/dL"
+            },
+            {
+                id: 5,
+                codServicio: "CREA002",
+                nomServicio: "Creatinina",
+                sexo: "F",
+                edadInf: 18,
+                edadSup: 64,
+                limInf: 0.6,
+                limSup: 1.1,
+                limInfN: 0.2,
+                limSupN: 10.0,
+                especialidad: "Química Clínica",
+                unidad: "mg/dL"
+            },
+            {
+                id: 6,
+                codServicio: "TSH001",
+                nomServicio: "Hormona Estimulante de Tiroides",
+                sexo: "A",
+                edadInf: 18,
+                edadSup: 120,
+                limInf: 0.4,
+                limSup: 4.5,
+                limInfN: 0.1,
+                limSupN: 100.0,
+                especialidad: "Hormonas",
+                unidad: "mIU/L"
+            },
+            {
+                id: 7,
+                codServicio: "HGB003",
+                nomServicio: "Hemoglobina",
+                sexo: "A",
+                edadInf: 1,
+                edadSup: 17,
+                limInf: 11.0,
+                limSup: 14.0,
+                limInfN: 6.0,
+                limSupN: 18.0,
+                especialidad: "Hematología",
+                unidad: "g/dL"
+            },
+            {
+                id: 8,
+                codServicio: "ALT001",
+                nomServicio: "Alanina Aminotransferasa",
+                sexo: "A",
+                edadInf: 18,
+                edadSup: 120,
+                limInf: 7.0,
+                limSup: 56.0,
+                limInfN: 3.0,
+                limSupN: 500.0,
+                especialidad: "Química Clínica",
+                unidad: "U/L"
+            }
+        ];
+
+        let vistaActual = 'grupos';
+        let valoresFiltrados = [...valoresNormales];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVista();
+            configurarFiltros();
+            actualizarEstadisticas();
+            configurarVistaPrevia();
+        });
+
+        function configurarFiltros() {
+            const buscar = document.getElementById('buscarExamen');
+            const filtroSexo = document.getElementById('filtroSexo');
+            const filtroGrupoEtario = document.getElementById('filtroGrupoEtario');
+            const filtroEspecialidad = document.getElementById('filtroEspecialidad');
+
+            [buscar, filtroSexo, filtroGrupoEtario, filtroEspecialidad].forEach(elemento => {
+                elemento.addEventListener('input', aplicarFiltros);
+            });
+        }
+
+        function configurarVistaPrevia() {
+            const campos = ['modalLimInf', 'modalLimSup', 'modalLimInfN', 'modalLimSupN', 'modalUnidad'];
+            campos.forEach(campo => {
+                document.getElementById(campo).addEventListener('input', actualizarVistaPrevia);
+            });
+        }
+
+        function actualizarVistaPrevia() {
+            const limInf = document.getElementById('modalLimInf').value;
+            const limSup = document.getElementById('modalLimSup').value;
+            const limInfN = document.getElementById('modalLimInfN').value;
+            const limSupN = document.getElementById('modalLimSupN').value;
+            const unidad = document.getElementById('modalUnidad').value;
+
+            if (limInf && limSup) {
+                const preview = `
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                            <span>Crítico: ${limInfN || '0'} ${unidad}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                            <span>Normal: ${limInf} - ${limSup} ${unidad}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                            <span>Crítico: ${limSupN || '999'} ${unidad}</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('vistaPrevia').innerHTML = preview;
+            }
+        }
+
+        function aplicarFiltros() {
+            const textoBusqueda = document.getElementById('buscarExamen').value.toLowerCase();
+            const sexoSeleccionado = document.getElementById('filtroSexo').value;
+            const grupoEtarioSeleccionado = document.getElementById('filtroGrupoEtario').value;
+            const especialidadSeleccionada = document.getElementById('filtroEspecialidad').value;
+
+            valoresFiltrados = valoresNormales.filter(valor => {
+                const coincideTexto = 
+                    valor.codServicio.toLowerCase().includes(textoBusqueda) ||
+                    valor.nomServicio.toLowerCase().includes(textoBusqueda);
+
+                const coincideSexo = !sexoSeleccionado || valor.sexo === sexoSeleccionado;
+                const coincideEspecialidad = !especialidadSeleccionada || valor.especialidad === especialidadSeleccionada;
+                
+                let coincideGrupoEtario = true;
+                if (grupoEtarioSeleccionado) {
+                    const grupoValor = obtenerGrupoEtario(valor.edadInf, valor.edadSup);
+                    coincideGrupoEtario = grupoValor === grupoEtarioSeleccionado;
+                }
+
+                return coincideTexto && coincideSexo && coincideGrupoEtario && coincideEspecialidad;
+            });
+
+            actualizarVista();
+            actualizarEstadisticas();
+        }
+
+        function obtenerGrupoEtario(edadInf, edadSup) {
+            if (edadSup <= 0.077) return "Neonato"; // 28 días
+            if (edadSup <= 17) return "Pediátrico";
+            if (edadSup <= 64) return "Adulto";
+            return "Geriátrico";
+        }
+
+        function cambiarVista(nuevaVista) {
+            vistaActual = nuevaVista;
+            
+            const btnGrupos = document.getElementById('btnGrupos');
+            const btnTabla = document.getElementById('btnTabla');
+            const vistaGrupos = document.getElementById('vistaGrupos');
+            const vistaTabla = document.getElementById('vistaTabla');
+
+            if (nuevaVista === 'grupos') {
+                btnGrupos.className = 'flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors';
+                btnTabla.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaGrupos.classList.remove('hidden');
+                vistaTabla.classList.add('hidden');
+            } else {
+                btnTabla.className = 'flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors';
+                btnGrupos.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTabla.classList.remove('hidden');
+                vistaGrupos.classList.add('hidden');
+            }
+
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'grupos') {
+                mostrarGrupos();
+            } else {
+                mostrarTablaValores();
+            }
+        }
+
+        function obtenerClaseSexo(sexo) {
+            const clases = {
+                'M': 'sexo-masculino',
+                'F': 'sexo-femenino',
+                'A': 'sexo-ambos'
+            };
+            return clases[sexo] || 'sexo-ambos';
+        }
+
+        function obtenerTextoSexo(sexo) {
+            const textos = {
+                'M': 'Masculino',
+                'F': 'Femenino',
+                'A': 'Ambos'
+            };
+            return textos[sexo] || 'No especificado';
+        }
+
+        function obtenerIconoSexo(sexo) {
+            const iconos = {
+                'M': 'fas fa-mars text-blue-600',
+                'F': 'fas fa-venus text-pink-600',
+                'A': 'fas fa-venus-mars text-green-600'
+            };
+            return iconos[sexo] || 'fas fa-question text-gray-600';
+        }
+
+        function mostrarGrupos() {
+            const contenedor = document.getElementById('contenedorGrupos');
+            
+            // Agrupar por examen
+            const examenGrouped = valoresFiltrados.reduce((acc, valor) => {
+                const key = `${valor.codServicio}-${valor.nomServicio}`;
+                if (!acc[key]) {
+                    acc[key] = {
+                        codServicio: valor.codServicio,
+                        nomServicio: valor.nomServicio,
+                        especialidad: valor.especialidad,
+                        unidad: valor.unidad,
+                        valores: []
+                    };
+                }
+                acc[key].valores.push(valor);
+                return acc;
+            }, {});
+
+            if (Object.keys(examenGrouped).length === 0) {
+                contenedor.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-chart-line text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron valores</h3>
+                        <p class="text-gray-500">No hay valores que coincidan con los filtros seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = Object.entries(examenGrouped).map(([key, examen]) => `
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-vial text-2xl"></i>
+                                <div>
+                                    <h3 class="text-lg font-semibold">${examen.nomServicio}</h3>
+                                    <p class="text-sm opacity-90">Código: ${examen.codServicio} | ${examen.especialidad} | ${examen.valores.length} rango(s)</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm opacity-90">Unidad</div>
+                                <div class="font-semibold">${examen.unidad || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                            ${examen.valores.map(valor => `
+                                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow ${obtenerClaseSexo(valor.sexo)}">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="${obtenerIconoSexo(valor.sexo)}"></i>
+                                            <span class="font-semibold">${obtenerTextoSexo(valor.sexo)}</span>
+                                        </div>
+                                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                            ${valor.edadInf}-${valor.edadSup} años
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="bg-green-50 p-3 rounded">
+                                            <div class="text-sm font-medium text-green-800 mb-1">Rango Normal</div>
+                                            <div class="text-lg font-bold text-green-900">
+                                                ${valor.limInf} - ${valor.limSup} ${examen.unidad || ''}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-red-50 p-3 rounded">
+                                            <div class="text-sm font-medium text-red-800 mb-1">Valores Críticos</div>
+                                            <div class="text-sm text-red-900">
+                                                < ${valor.limInfN} o > ${valor.limSupN} ${examen.unidad || ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4 flex space-x-2">
+                                        <button onclick="verDetalleValor(${valor.id})" 
+                                                class="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors">
+                                            <i class="fas fa-eye mr-1"></i>Ver
+                                        </button>
+                                        <button onclick="editarValor(${valor.id})" 
+                                                class="flex-1 bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700 transition-colors">
+                                            <i class="fas fa-edit mr-1"></i>Editar
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarTablaValores() {
+            const contenedor = document.getElementById('contenedorTablaValores');
+            
+            if (valoresFiltrados.length === 0) {
+                contenedor.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="px-6 py-12 text-center">
+                            <i class="fas fa-chart-line text-4xl text-gray-300 mb-4"></i>
+                            <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron valores</div>
+                            <div class="text-gray-500">No hay valores que coincidan con los filtros seleccionados.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = valoresFiltrados.map(valor => `
+                <tr class="hover:bg-gray-50 ${obtenerClaseSexo(valor.sexo)}">
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${valor.codServicio}</td>
+                    <td class="px-4 py-4 text-sm text-gray-900">${valor.nomServicio}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex items-center">
+                            <i class="${obtenerIconoSexo(valor.sexo)} mr-2"></i>
+                            ${obtenerTextoSexo(valor.sexo)}
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${valor.edadInf}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${valor.edadSup}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-green-600">${valor.limInf}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-green-600">${valor.limSup}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-red-600">${valor.limInfN}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-red-600">${valor.limSupN}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="verDetalleValor(${valor.id})" class="text-green-600 hover:text-green-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editarValor(${valor.id})" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarEstadisticas() {
+            const estadisticas = valoresFiltrados.reduce((acc, valor) => {
+                const grupo = obtenerGrupoEtario(valor.edadInf, valor.edadSup);
+                if (grupo === 'Neonato') acc.neonatos++;
+                else if (grupo === 'Pediátrico') acc.pediatricos++;
+                else if (grupo === 'Adulto') acc.adultos++;
+                else if (grupo === 'Geriátrico') acc.geriatricos++;
+
+                if (valor.sexo === 'M') acc.masculino++;
+                else if (valor.sexo === 'F') acc.femenino++;
+
+                return acc;
+            }, {
+                neonatos: 0,
+                pediatricos: 0,
+                adultos: 0,
+                geriatricos: 0,
+                masculino: 0,
+                femenino: 0
+            });
+
+            document.getElementById('totalNeonatos').textContent = estadisticas.neonatos;
+            document.getElementById('totalPediatricos').textContent = estadisticas.pediatricos;
+            document.getElementById('totalAdultos').textContent = estadisticas.adultos;
+            document.getElementById('totalGeriatricos').textContent = estadisticas.geriatricos;
+            document.getElementById('totalMasculino').textContent = estadisticas.masculino;
+            document.getElementById('totalFemenino').textContent = estadisticas.femenino;
+        }
+
+        function verDetalleValor(id) {
+            const valor = valoresNormales.find(v => v.id === id);
+            if (valor) {
+                document.getElementById('modal-title').textContent = `${valor.nomServicio} - ${obtenerTextoSexo(valor.sexo)}`;
+                llenarFormulario(valor);
+                document.getElementById('modalValorNormal').classList.remove('hidden');
+            }
+        }
+
+        function editarValor(id) {
+            const valor = valoresNormales.find(v => v.id === id);
+            if (valor) {
+                document.getElementById('modal-title').textContent = `Editar: ${valor.nomServicio}`;
+                llenarFormulario(valor);
+                document.getElementById('modalValorNormal').classList.remove('hidden');
+            }
+        }
+
+        function agregarValorNormal() {
+            document.getElementById('modal-title').textContent = 'Nuevo Valor Normal';
+            document.getElementById('formValorNormal').reset();
+            document.getElementById('modalValorNormal').classList.remove('hidden');
+        }
+
+        function llenarFormulario(valor) {
+            document.getElementById('modalCodServicio').value = valor.codServicio;
+            document.getElementById('modalNomServicio').value = valor.nomServicio;
+            document.getElementById('modalEspecialidad').value = valor.especialidad || 'Química Clínica';
+            document.getElementById('modalUnidad').value = valor.unidad || '';
+            document.getElementById('modalSexo').value = valor.sexo;
+            document.getElementById('modalEdadInf').value = valor.edadInf;
+            document.getElementById('modalEdadSup').value = valor.edadSup;
+            document.getElementById('modalLimInf').value = valor.limInf;
+            document.getElementById('modalLimSup').value = valor.limSup;
+            document.getElementById('modalLimInfN').value = valor.limInfN;
+            document.getElementById('modalLimSupN').value = valor.limSupN;
+            actualizarVistaPrevia();
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalValorNormal').classList.add('hidden');
+        }
+
+        function guardarValorNormal() {
+            // Aquí iría la lógica para guardar los cambios
+            cerrarModal();
+            // Simular actualización
+            setTimeout(() => {
+                actualizarVista();
+                actualizarEstadisticas();
+            }, 100);
+        }
+
+        function imprimirLista() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const datos = valoresFiltrados.map(valor => ({
+                'Código': valor.codServicio,
+                'Examen': valor.nomServicio,
+                'Especialidad': valor.especialidad,
+                'Sexo': obtenerTextoSexo(valor.sexo),
+                'Edad Mínima': valor.edadInf,
+                'Edad Máxima': valor.edadSup,
+                'Límite Inferior': valor.limInf,
+                'Límite Superior': valor.limSup,
+                'Crítico Inferior': valor.limInfN,
+                'Crítico Superior': valor.limSupN,
+                'Unidad': valor.unidad || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Valores Normales');
+            XLSX.writeFile(workbook, 'valores_normales_laboratorio.xlsx');
+        }
+    </script>
+
+    <!-- Incluir XLSX para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

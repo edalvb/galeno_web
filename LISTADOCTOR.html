@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Lista de Doctores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-blue': '#2563eb',
+                        'medical-green': '#059669',
+                        'medical-red': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { print-color-adjust: exact; }
+            .print-header { display: block !important; }
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .doctor-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .especialista-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .general-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .internista-card {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg no-print">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-user-md text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Sistema MEG@SYS</h1>
+                        <p class="text-blue-100">Gestión de Doctores y Especialistas</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="window.history.back()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Print Header -->
+    <div class="print-header hidden">
+        <div class="text-center border-b-2 border-blue-600 pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-blue-800">LISTADO DE DOCTORES</h1>
+            <p class="text-gray-600">Sistema MEG@SYS - Reporte Generado el <span id="print-date"></span></p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por código, documento, nombres, apellidos..." 
+                               class="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <select id="tipoDocFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los Tipos</option>
+                        <option value="CC">Cédula de Ciudadanía</option>
+                        <option value="CE">Cédula de Extranjería</option>
+                        <option value="TI">Tarjeta de Identidad</option>
+                        <option value="PP">Pasaporte</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">Vista:</span>
+                    <button id="viewCards" onclick="toggleView('cards')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-th-large mr-1"></i>Tarjetas
+                    </button>
+                    <button id="viewTable" onclick="toggleView('table')" class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors">
+                        <i class="fas fa-table mr-1"></i>Tabla
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="stats-card text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm uppercase tracking-wide">Total Doctores</p>
+                        <p class="text-3xl font-bold" id="totalDoctores">0</p>
+                    </div>
+                    <i class="fas fa-user-md text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm uppercase tracking-wide">Especialistas</p>
+                        <p class="text-3xl font-bold" id="totalEspecialistas">0</p>
+                    </div>
+                    <i class="fas fa-heartbeat text-4xl text-green-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm uppercase tracking-wide">Generales</p>
+                        <p class="text-3xl font-bold" id="totalGenerales">0</p>
+                    </div>
+                    <i class="fas fa-stethoscope text-4xl text-purple-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm uppercase tracking-wide">Internistas</p>
+                        <p class="text-3xl font-bold" id="totalInternistas">0</p>
+                    </div>
+                    <i class="fas fa-user-nurse text-4xl text-orange-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Button -->
+        <div class="mb-6 no-print">
+            <button onclick="agregarDoctor()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors shadow-lg">
+                <i class="fas fa-plus mr-2"></i>Agregar Nuevo Doctor
+            </button>
+        </div>
+
+        <!-- Cards View -->
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Table View -->
+        <div id="tableContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Cod Dr</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tipo Doc</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">N° Doc</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Nombres</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Apellidos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Teléfonos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div id="modalDoctor" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold" id="modalTitle">Agregar Nuevo Doctor</h3>
+                </div>
+                <form id="formDoctor" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Código Doctor</label>
+                            <input type="text" id="modalCodDr" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo Documento</label>
+                            <select id="modalTipDoc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Seleccionar</option>
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="TI">Tarjeta de Identidad</option>
+                                <option value="PP">Pasaporte</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de Documento</label>
+                        <input type="text" id="modalNroDoc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombres</label>
+                        <input type="text" id="modalNombres" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos</label>
+                        <input type="text" id="modalApellidos" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfonos</label>
+                        <input type="text" id="modalTelefonos" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Ej: 300-123-4567, 601-234-5678">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let doctores = [
+            {
+                coddr: 'DR001',
+                tipdoc: 'CC',
+                nrodoc: '12345678',
+                nombres: 'CARLOS ALBERTO',
+                apellidos: 'GONZÁLEZ RODRÍGUEZ',
+                telefonos: '300-123-4567, 601-234-5678',
+                especialidad: 'CARDIOLOGÍA'
+            },
+            {
+                coddr: 'DR002',
+                tipdoc: 'CC',
+                nrodoc: '87654321',
+                nombres: 'MARÍA ELENA',
+                apellidos: 'MARTÍNEZ LÓPEZ',
+                telefonos: '310-987-6543',
+                especialidad: 'PEDIATRÍA'
+            },
+            {
+                coddr: 'DR003',
+                tipdoc: 'CC',
+                nrodoc: '11223344',
+                nombres: 'LUIS FERNANDO',
+                apellidos: 'PÉREZ SILVA',
+                telefonos: '320-555-1234, 601-555-5678',
+                especialidad: 'MEDICINA GENERAL'
+            },
+            {
+                coddr: 'DR004',
+                tipdoc: 'CE',
+                nrodoc: '55667788',
+                nombres: 'ANA PATRICIA',
+                apellidos: 'TORRES VARGAS',
+                telefonos: '315-444-7777',
+                especialidad: 'GINECOLOGÍA'
+            },
+            {
+                coddr: 'DR005',
+                tipdoc: 'CC',
+                nrodoc: '99887766',
+                nombres: 'JORGE EDUARDO',
+                apellidos: 'RAMÍREZ CASTRO',
+                telefonos: '300-666-8888',
+                especialidad: 'MEDICINA INTERNA'
+            },
+            {
+                coddr: 'DR006',
+                tipdoc: 'CC',
+                nrodoc: '44556677',
+                nombres: 'SANDRA MILENA',
+                apellidos: 'JIMÉNEZ MORALES',
+                telefonos: '310-999-0000, 601-777-8888',
+                especialidad: 'DERMATOLOGÍA'
+            }
+        ];
+
+        let currentView = 'cards';
+        let editingIndex = null;
+
+        function initializeApp() {
+            renderDoctores();
+            updateStatistics();
+            setupEventListeners();
+            updatePrintDate();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterDoctores);
+            document.getElementById('tipoDocFiltro').addEventListener('change', filterDoctores);
+            document.getElementById('formDoctor').addEventListener('submit', guardarDoctor);
+        }
+
+        function updatePrintDate() {
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function renderDoctores() {
+            if (currentView === 'cards') {
+                renderCards();
+            } else {
+                renderTable();
+            }
+        }
+
+        function getCardClass(especialidad) {
+            if (especialidad && especialidad.includes('GENERAL')) return 'general-card';
+            if (especialidad && especialidad.includes('INTERNA')) return 'internista-card';
+            return 'especialista-card';
+        }
+
+        function getIconClass(especialidad) {
+            if (especialidad && especialidad.includes('CARDIO')) return 'fas fa-heartbeat';
+            if (especialidad && especialidad.includes('PEDIATR')) return 'fas fa-baby';
+            if (especialidad && especialidad.includes('GINECO')) return 'fas fa-female';
+            if (especialidad && especialidad.includes('DERMATO')) return 'fas fa-hand-holding-medical';
+            if (especialidad && especialidad.includes('GENERAL')) return 'fas fa-stethoscope';
+            if (especialidad && especialidad.includes('INTERNA')) return 'fas fa-user-nurse';
+            return 'fas fa-user-md';
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const filteredData = getFilteredDoctores();
+            
+            container.innerHTML = filteredData.map((doctor, index) => `
+                <div class="${getCardClass(doctor.especialidad)} text-white rounded-lg shadow-lg card-hover transition-all duration-300">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
+                                    <i class="${getIconClass(doctor.especialidad)} text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold">${doctor.nombres}</h3>
+                                    <p class="text-blue-100">${doctor.apellidos}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-medium">
+                                ${doctor.coddr}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-id-card text-blue-200"></i>
+                                <span class="text-sm">${doctor.tipdoc}: ${doctor.nrodoc}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-phone text-blue-200"></i>
+                                <span class="text-sm">${doctor.telefonos}</span>
+                            </div>
+                            ${doctor.especialidad ? `
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-graduation-cap text-blue-200"></i>
+                                <span class="text-sm">${doctor.especialidad}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="flex space-x-2 no-print">
+                            <button onclick="editarDoctor(${index})" 
+                                    class="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Editar
+                            </button>
+                            <button onclick="eliminarDoctor(${index})" 
+                                    class="flex-1 bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filteredData = getFilteredDoctores();
+            
+            tbody.innerHTML = filteredData.map((doctor, index) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${doctor.coddr}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${doctor.tipdoc}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${doctor.nrodoc}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${doctor.nombres}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${doctor.apellidos}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${doctor.telefonos}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarDoctor(${index})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarDoctor(${index})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getFilteredDoctores() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tipoDocFiltro = document.getElementById('tipoDocFiltro').value;
+            
+            return doctores.filter(doctor => {
+                const matchesSearch = !searchTerm || 
+                    doctor.coddr.toLowerCase().includes(searchTerm) ||
+                    doctor.nrodoc.toLowerCase().includes(searchTerm) ||
+                    doctor.nombres.toLowerCase().includes(searchTerm) ||
+                    doctor.apellidos.toLowerCase().includes(searchTerm) ||
+                    doctor.telefonos.toLowerCase().includes(searchTerm);
+                
+                const matchesTipoDoc = !tipoDocFiltro || doctor.tipdoc === tipoDocFiltro;
+                
+                return matchesSearch && matchesTipoDoc;
+            });
+        }
+
+        function filterDoctores() {
+            renderDoctores();
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const viewCards = document.getElementById('viewCards');
+            const viewTable = document.getElementById('viewTable');
+            
+            if (view === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                viewCards.classList.remove('bg-gray-300', 'text-gray-700');
+                viewCards.classList.add('bg-blue-500', 'text-white');
+                viewTable.classList.remove('bg-blue-500', 'text-white');
+                viewTable.classList.add('bg-gray-300', 'text-gray-700');
+            } else {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                viewTable.classList.remove('bg-gray-300', 'text-gray-700');
+                viewTable.classList.add('bg-blue-500', 'text-white');
+                viewCards.classList.remove('bg-blue-500', 'text-white');
+                viewCards.classList.add('bg-gray-300', 'text-gray-700');
+            }
+            
+            renderDoctores();
+        }
+
+        function updateStatistics() {
+            const total = doctores.length;
+            const especialistas = doctores.filter(d => d.especialidad && !d.especialidad.includes('GENERAL') && !d.especialidad.includes('INTERNA')).length;
+            const generales = doctores.filter(d => d.especialidad && d.especialidad.includes('GENERAL')).length;
+            const internistas = doctores.filter(d => d.especialidad && d.especialidad.includes('INTERNA')).length;
+            
+            document.getElementById('totalDoctores').textContent = total;
+            document.getElementById('totalEspecialistas').textContent = especialistas;
+            document.getElementById('totalGenerales').textContent = generales;
+            document.getElementById('totalInternistas').textContent = internistas;
+        }
+
+        function agregarDoctor() {
+            editingIndex = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Nuevo Doctor';
+            document.getElementById('formDoctor').reset();
+            document.getElementById('modalDoctor').classList.remove('hidden');
+        }
+
+        function editarDoctor(index) {
+            editingIndex = index;
+            const doctor = doctores[index];
+            
+            document.getElementById('modalTitle').textContent = 'Editar Doctor';
+            document.getElementById('modalCodDr').value = doctor.coddr;
+            document.getElementById('modalTipDoc').value = doctor.tipdoc;
+            document.getElementById('modalNroDoc').value = doctor.nrodoc;
+            document.getElementById('modalNombres').value = doctor.nombres;
+            document.getElementById('modalApellidos').value = doctor.apellidos;
+            document.getElementById('modalTelefonos').value = doctor.telefonos;
+            
+            document.getElementById('modalDoctor').classList.remove('hidden');
+        }
+
+        function guardarDoctor(event) {
+            event.preventDefault();
+            
+            const formData = {
+                coddr: document.getElementById('modalCodDr').value.trim(),
+                tipdoc: document.getElementById('modalTipDoc').value.trim(),
+                nrodoc: document.getElementById('modalNroDoc').value.trim(),
+                nombres: document.getElementById('modalNombres').value.trim(),
+                apellidos: document.getElementById('modalApellidos').value.trim(),
+                telefonos: document.getElementById('modalTelefonos').value.trim(),
+                especialidad: determinarEspecialidad(document.getElementById('modalNombres').value.trim())
+            };
+            
+            if (editingIndex !== null) {
+                // Edit existing
+                doctores[editingIndex] = formData;
+            } else {
+                // Add new
+                if (doctores.find(d => d.coddr === formData.coddr)) {
+                    alert('Ya existe un doctor con ese código');
+                    return;
+                }
+                if (doctores.find(d => d.nrodoc === formData.nrodoc)) {
+                    alert('Ya existe un doctor con ese número de documento');
+                    return;
+                }
+                doctores.push(formData);
+            }
+            
+            renderDoctores();
+            updateStatistics();
+            cerrarModal();
+        }
+
+        function determinarEspecialidad(nombres) {
+            // This is a simple heuristic - in a real system this would be a separate field
+            return 'MEDICINA GENERAL'; // Default specialty
+        }
+
+        function eliminarDoctor(index) {
+            if (confirm('¿Está seguro de que desea eliminar este doctor?')) {
+                doctores.splice(index, 1);
+                renderDoctores();
+                updateStatistics();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalDoctor').classList.add('hidden');
+            editingIndex = null;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

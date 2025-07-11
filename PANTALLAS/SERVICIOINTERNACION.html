@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios Hospitalarios - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg mb-4 p-4">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-bed mr-3 text-purple-600"></i>
+                SERVICIOS HOSPITALARIOS
+            </h2>
+        </div>
+
+        <!-- Tab Container -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <!-- Tab Header -->
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex">
+                    <button id="tabInternaciones" class="tab-button active" onclick="cambiarTab('internaciones')">
+                        <i class="fas fa-hospital-user mr-2"></i>
+                        INTERNACIONES
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Header Information -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Fecha de Orden</label>
+                        <input type="date" id="fechaOrden" class="form-input" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Número de Orden</label>
+                        <input type="text" id="numeroOrden" class="form-input" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Ficha Clínica</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="fichaClinica" class="form-input flex-1" readonly>
+                            <button onclick="abrirFichaClinica()" class="btn-icon bg-blue-600 hover:bg-blue-700" title="Abrir Ficha Clínica">
+                                <i class="fas fa-file-medical"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Tipo y Nro de Documento</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="tipoDoc" class="form-input" readonly placeholder="Tipo">
+                            <input type="text" id="numeroDoc" class="form-input" readonly placeholder="Número">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Nombre del Paciente</label>
+                        <div id="nombrePaciente" class="p-2 bg-blue-100 rounded border text-gray-800 font-medium">
+                            Paciente no seleccionado
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Movement Type and Internment Date -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Tipo de Movimiento</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="tipoMovimiento" class="form-input flex-1" readonly>
+                            <div id="nombreTipoMov" class="p-2 bg-blue-100 rounded border text-gray-800 text-sm">
+                                Tipo de movimiento
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Fecha Internación</label>
+                        <input type="date" id="fechaInternacion" class="form-input" onchange="validarFechaInternacion()">
+                    </div>
+                </div>
+
+                <!-- Room and Bed Selection -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-yellow-50 p-4 rounded-lg">
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Tipo de Habitación</label>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="buscarTipoHabitacion()" class="btn-icon bg-purple-600 hover:bg-purple-700" title="Buscar Tipo">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <input type="text" id="tipoHabitacion" class="form-input flex-1" placeholder="Código tipo">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Código de Habitación</label>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="buscarHabitacion()" class="btn-icon bg-purple-600 hover:bg-purple-700" title="Buscar Habitación">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <input type="text" id="codigoHabitacion" class="form-input flex-1" placeholder="Código habitación">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-red-600 mb-1">Código de Cama</label>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="buscarCama()" class="btn-icon bg-purple-600 hover:bg-purple-700" title="Buscar Cama">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <input type="text" id="codigoCama" class="form-input flex-1" placeholder="Código cama">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Addition Buttons -->
+                <div class="mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <button onclick="agregarServiciosOrden()" class="btn-add bg-green-600 hover:bg-green-700">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Agregar Servicios de la Orden
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="agregarOtrosServicios()" class="btn-add bg-blue-600 hover:bg-blue-700">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Agregar Otros Servicios
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <button onclick="agregarMedicamentos()" class="btn-add bg-orange-600 hover:bg-orange-700">
+                                    <i class="fas fa-pills mr-2"></i>
+                                    Agregar Medicamentos
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="agregarInsumos()" class="btn-add bg-purple-600 hover:bg-purple-700">
+                                    <i class="fas fa-box mr-2"></i>
+                                    Agregar Insumos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Registration Button -->
+                <div class="mb-6 text-right">
+                    <button onclick="ingresarAltaPaciente()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Ingresar a la Alta del Paciente
+                    </button>
+                </div>
+
+                <!-- Services Grid -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-4 bg-gray-50 rounded-t-lg border-b">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            <i class="fas fa-list mr-2"></i>
+                            DETALLE DE SERVICIOS
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="tablaServicios">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="table-header">Código</th>
+                                    <th class="table-header">Tipo</th>
+                                    <th class="table-header">Cod. Servicio</th>
+                                    <th class="table-header">Nombre del Servicio</th>
+                                    <th class="table-header">Cantidad</th>
+                                    <th class="table-header">Arancel</th>
+                                    <th class="table-header">Costo</th>
+                                    <th class="table-header">Doctor</th>
+                                    <th class="table-header">Honorarios</th>
+                                    <th class="table-header">Observaciones</th>
+                                    <th class="table-header">Fecha</th>
+                                    <th class="table-header">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serviciosBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Las filas se agregarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- No Services Message -->
+                    <div id="noServicesMessage" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-info-circle text-4xl mb-4"></i>
+                        <p class="text-lg">No hay servicios agregados</p>
+                        <p class="text-sm">Use los botones superiores para agregar servicios</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="searchModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="modalTitle" class="text-lg font-semibold">Buscar</h3>
+                        <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50" id="modalTableHeader">
+                                <!-- Headers dinámicos -->
+                            </thead>
+                            <tbody id="modalTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Datos dinámicos -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <button onclick="cerrarModal()" class="btn-secondary">Cancelar</button>
+                        <button onclick="seleccionarModal()" class="btn-primary">Seleccionar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-input:read-only {
+            background-color: #f9fafb;
+            color: #6b7280;
+        }
+        
+        .btn-icon {
+            padding: 8px 10px;
+            border-radius: 6px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-add {
+            padding: 10px 16px;
+            border-radius: 6px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .table-header {
+            padding: 12px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table-cell {
+            padding: 8px 6px;
+            font-size: 14px;
+            color: #1f2937;
+        }
+        
+        .editable-cell {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            min-width: 80px;
+        }
+        
+        .editable-cell:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let serviciosData = [];
+        let currentPatient = null;
+        let currentOrder = null;
+        let selectedModalRow = null;
+        let modalCallback = null;
+        let isEditing = false;
+
+        // Datos de ejemplo
+        const tiposHabitacion = [
+            { codigo: 'PRIV', descripcion: 'Habitación Privada' },
+            { codigo: 'SEMI', descripcion: 'Habitación Semi-privada' },
+            { codigo: 'COMM', descripcion: 'Habitación Común' },
+            { codigo: 'UCI', descripcion: 'Unidad de Cuidados Intensivos' }
+        ];
+
+        const habitacionesData = [
+            { codigo: '101', tipo: 'PRIV', estado: 'LIBRE' },
+            { codigo: '102', tipo: 'PRIV', estado: 'OCUPADA' },
+            { codigo: '201', tipo: 'SEMI', estado: 'LIBRE' },
+            { codigo: '301', tipo: 'COMM', estado: 'LIBRE' }
+        ];
+
+        const camasData = [
+            { codigo: 'C101A', habitacion: '101', estado: 'LIBRE' },
+            { codigo: 'C101B', habitacion: '101', estado: 'LIBRE' },
+            { codigo: 'C102A', habitacion: '102', estado: 'OCUPADA' },
+            { codigo: 'C201A', habitacion: '201', estado: 'LIBRE' }
+        ];
+
+        function inicializar() {
+            cargarOrdenSeleccionada();
+            actualizarTablaServicios();
+            
+            // Manejar mensajes del toolbar
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'toolbar_command') {
+                    manejarComandoToolbar(event.data.command);
+                }
+            });
+        }
+
+        function cargarOrdenSeleccionada() {
+            // Simular carga de orden desde parámetros URL o datos predefinidos
+            const params = new URLSearchParams(window.location.search);
+            const fechaOrden = params.get('fecha') || '2025-07-11';
+            const numeroOrden = params.get('numero') || '2025001';
+            
+            document.getElementById('fechaOrden').value = fechaOrden;
+            document.getElementById('numeroOrden').value = numeroOrden;
+            document.getElementById('fichaClinica').value = '12345';
+            document.getElementById('tipoDoc').value = 'DNI';
+            document.getElementById('numeroDoc').value = '12345678';
+            document.getElementById('nombrePaciente').textContent = 'García, María Elena';
+            document.getElementById('tipoMovimiento').value = '1';
+            document.getElementById('nombreTipoMov').textContent = 'Internación Programada';
+        }
+
+        function cambiarTab(tab) {
+            // Activar tab
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+        }
+
+        function validarFechaInternacion() {
+            const fechaOrden = document.getElementById('fechaOrden').value;
+            const fechaInternacion = document.getElementById('fechaInternacion').value;
+            
+            if (fechaInternacion && fechaOrden && new Date(fechaInternacion) < new Date(fechaOrden)) {
+                alert('La fecha de internación no puede ser menor que la fecha de orden');
+                document.getElementById('fechaInternacion').value = '';
+            }
+        }
+
+        function buscarTipoHabitacion() {
+            mostrarModal('Buscar Tipo de Habitación', ['Código', 'Descripción'], tiposHabitacion.map(t => [t.codigo, t.descripcion]), function(row) {
+                document.getElementById('tipoHabitacion').value = row[0];
+                document.getElementById('codigoHabitacion').value = '';
+                document.getElementById('codigoCama').value = '';
+            });
+        }
+
+        function buscarHabitacion() {
+            const tipoSeleccionado = document.getElementById('tipoHabitacion').value;
+            if (!tipoSeleccionado) {
+                alert('Primero debe seleccionar un tipo de habitación');
+                return;
+            }
+            
+            const habitacionesFiltradas = habitacionesData
+                .filter(h => h.tipo === tipoSeleccionado && h.estado === 'LIBRE')
+                .map(h => [h.codigo, h.tipo, h.estado]);
+            
+            mostrarModal('Buscar Habitación', ['Código', 'Tipo', 'Estado'], habitacionesFiltradas, function(row) {
+                document.getElementById('codigoHabitacion').value = row[0];
+                document.getElementById('codigoCama').value = '';
+            });
+        }
+
+        function buscarCama() {
+            const habitacionSeleccionada = document.getElementById('codigoHabitacion').value;
+            if (!habitacionSeleccionada) {
+                alert('Primero debe seleccionar una habitación');
+                return;
+            }
+            
+            const camasFiltradas = camasData
+                .filter(c => c.habitacion === habitacionSeleccionada && c.estado === 'LIBRE')
+                .map(c => [c.codigo, c.habitacion, c.estado]);
+            
+            mostrarModal('Buscar Cama', ['Código', 'Habitación', 'Estado'], camasFiltradas, function(row) {
+                document.getElementById('codigoCama').value = row[0];
+            });
+        }
+
+        function agregarServiciosOrden() {
+            const serviciosOrden = [
+                { codigo: 'SER001', tipo: 'MED', codser: 'CONS001', nombre: 'Consulta Médica', arancel: 50000, costo: 30000 },
+                { codigo: 'SER002', tipo: 'LAB', codser: 'LAB001', nombre: 'Examen de Sangre', arancel: 25000, costo: 15000 },
+                { codigo: 'SER003', tipo: 'QUI', codser: 'QUI001', nombre: 'Cirugía Menor', arancel: 200000, costo: 120000 }
+            ];
+            
+            mostrarModal('Servicios de la Orden', ['Código', 'Tipo', 'Cod. Servicio', 'Nombre', 'Arancel', 'Costo'], 
+                serviciosOrden.map(s => [s.codigo, s.tipo, s.codser, s.nombre, s.arancel, s.costo]), 
+                function(row) {
+                    agregarServicioATabla({
+                        codigo: row[0],
+                        tipo: row[1],
+                        codser: row[2],
+                        nombre: row[3],
+                        cantidad: 1,
+                        arancel: parseFloat(row[4]),
+                        costo: parseFloat(row[5]),
+                        doctor: '',
+                        honorarios: 0,
+                        observaciones: '',
+                        fecha: new Date().toISOString().split('T')[0]
+                    });
+                });
+        }
+
+        function agregarOtrosServicios() {
+            const otrosServicios = [
+                { codigo: 'OS001', tipo: 'ENF', codser: 'ENF001', nombre: 'Atención de Enfermería', arancel: 15000, costo: 8000 },
+                { codigo: 'OS002', tipo: 'TER', codser: 'TER001', nombre: 'Terapia Física', arancel: 35000, costo: 20000 },
+                { codigo: 'OS003', tipo: 'RAD', codser: 'RAD001', nombre: 'Radiografía', arancel: 40000, costo: 25000 }
+            ];
+            
+            mostrarModal('Otros Servicios', ['Código', 'Tipo', 'Cod. Servicio', 'Nombre', 'Arancel', 'Costo'], 
+                otrosServicios.map(s => [s.codigo, s.tipo, s.codser, s.nombre, s.arancel, s.costo]), 
+                function(row) {
+                    agregarServicioATabla({
+                        codigo: row[0],
+                        tipo: row[1],
+                        codser: row[2],
+                        nombre: row[3],
+                        cantidad: 1,
+                        arancel: parseFloat(row[4]),
+                        costo: parseFloat(row[5]),
+                        doctor: '',
+                        honorarios: 0,
+                        observaciones: '',
+                        fecha: new Date().toISOString().split('T')[0]
+                    });
+                });
+        }
+
+        function agregarMedicamentos() {
+            const medicamentos = [
+                { codigo: 'MED001', tipo: 'ME', codser: 'ANALG001', nombre: 'Paracetamol 500mg', arancel: 2000, costo: 1200 },
+                { codigo: 'MED002', tipo: 'ME', codser: 'ANTIB001', nombre: 'Amoxicilina 500mg', arancel: 5000, costo: 3000 },
+                { codigo: 'MED003', tipo: 'ME', codser: 'ANTINF001', nombre: 'Ibuprofeno 400mg', arancel: 3000, costo: 1800 }
+            ];
+            
+            mostrarModal('Medicamentos', ['Código', 'Tipo', 'Cod. Medicamento', 'Nombre', 'Arancel', 'Costo'], 
+                medicamentos.map(m => [m.codigo, m.tipo, m.codser, m.nombre, m.arancel, m.costo]), 
+                function(row) {
+                    agregarServicioATabla({
+                        codigo: row[0],
+                        tipo: row[1],
+                        codser: row[2],
+                        nombre: row[3],
+                        cantidad: 1,
+                        arancel: parseFloat(row[4]),
+                        costo: parseFloat(row[5]),
+                        doctor: '',
+                        honorarios: 0,
+                        observaciones: '',
+                        fecha: new Date().toISOString().split('T')[0]
+                    });
+                });
+        }
+
+        function agregarInsumos() {
+            const insumos = [
+                { codigo: 'INS001', tipo: 'IN', codser: 'MAT001', nombre: 'Jeringa Desechable 5ml', arancel: 1500, costo: 800 },
+                { codigo: 'INS002', tipo: 'IN', codser: 'MAT002', nombre: 'Guantes de Látex (Par)', arancel: 1000, costo: 600 },
+                { codigo: 'INS003', tipo: 'IN', codser: 'MAT003', nombre: 'Gasa Estéril 10x10cm', arancel: 800, costo: 500 }
+            ];
+            
+            mostrarModal('Insumos', ['Código', 'Tipo', 'Cod. Insumo', 'Nombre', 'Arancel', 'Costo'], 
+                insumos.map(i => [i.codigo, i.tipo, i.codser, i.nombre, i.arancel, i.costo]), 
+                function(row) {
+                    agregarServicioATabla({
+                        codigo: row[0],
+                        tipo: row[1],
+                        codser: row[2],
+                        nombre: row[3],
+                        cantidad: 1,
+                        arancel: parseFloat(row[4]),
+                        costo: parseFloat(row[5]),
+                        doctor: '',
+                        honorarios: 0,
+                        observaciones: '',
+                        fecha: new Date().toISOString().split('T')[0]
+                    });
+                });
+        }
+
+        function agregarServicioATabla(servicio) {
+            // Verificar si el servicio ya existe
+            const existe = serviciosData.find(s => s.codigo === servicio.codigo);
+            if (existe) {
+                alert('El servicio que ha elegido ya existe en el detalle por favor elija otro');
+                return;
+            }
+            
+            serviciosData.push(servicio);
+            actualizarTablaServicios();
+        }
+
+        function actualizarTablaServicios() {
+            const tbody = document.getElementById('serviciosBody');
+            const noMessage = document.getElementById('noServicesMessage');
+            
+            if (serviciosData.length === 0) {
+                tbody.innerHTML = '';
+                noMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noMessage.classList.add('hidden');
+            
+            tbody.innerHTML = serviciosData.map((servicio, index) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="table-cell">${servicio.codigo}</td>
+                    <td class="table-cell">${servicio.tipo}</td>
+                    <td class="table-cell">${servicio.codser}</td>
+                    <td class="table-cell">${servicio.nombre}</td>
+                    <td class="table-cell">
+                        <input type="number" class="editable-cell" value="${servicio.cantidad}" 
+                               onchange="actualizarServicio(${index}, 'cantidad', this.value)" min="1">
+                    </td>
+                    <td class="table-cell">$${servicio.arancel.toLocaleString()}</td>
+                    <td class="table-cell">$${servicio.costo.toLocaleString()}</td>
+                    <td class="table-cell">
+                        <button onclick="seleccionarDoctor(${index})" class="btn-icon bg-blue-600 hover:bg-blue-700" title="Seleccionar Doctor">
+                            <i class="fas fa-user-md"></i>
+                        </button>
+                        <span class="ml-2 text-sm">${servicio.doctor}</span>
+                    </td>
+                    <td class="table-cell">
+                        <input type="number" class="editable-cell" value="${servicio.honorarios}" 
+                               onchange="actualizarServicio(${index}, 'honorarios', this.value)" min="0">
+                    </td>
+                    <td class="table-cell">
+                        <input type="text" class="editable-cell" value="${servicio.observaciones}" 
+                               onchange="actualizarServicio(${index}, 'observaciones', this.value)" 
+                               placeholder="Observaciones">
+                    </td>
+                    <td class="table-cell">${servicio.fecha}</td>
+                    <td class="table-cell">
+                        <button onclick="eliminarServicio(${index})" class="btn-icon bg-red-600 hover:bg-red-700" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarServicio(index, campo, valor) {
+            serviciosData[index][campo] = campo === 'cantidad' || campo === 'honorarios' ? parseFloat(valor) || 0 : valor;
+        }
+
+        function seleccionarDoctor(index) {
+            const doctores = [
+                { codigo: 'DR001', apellidos: 'García', nombres: 'Carlos', especialidad: 'Cirugía' },
+                { codigo: 'DR002', apellidos: 'López', nombres: 'Ana', especialidad: 'Medicina Interna' },
+                { codigo: 'DR003', apellidos: 'Martínez', nombres: 'José', especialidad: 'Pediatría' }
+            ];
+            
+            mostrarModal('Seleccionar Doctor', ['Código', 'Apellidos', 'Nombres', 'Especialidad'], 
+                doctores.map(d => [d.codigo, d.apellidos, d.nombres, d.especialidad]), 
+                function(row) {
+                    serviciosData[index].doctor = `${row[1]}, ${row[2]}`;
+                    actualizarTablaServicios();
+                });
+        }
+
+        function eliminarServicio(index) {
+            if (confirm('¿Está seguro de que desea eliminar este servicio?')) {
+                serviciosData.splice(index, 1);
+                actualizarTablaServicios();
+            }
+        }
+
+        function mostrarModal(titulo, headers, data, callback) {
+            document.getElementById('modalTitle').textContent = titulo;
+            
+            const headerRow = headers.map(h => `<th class="table-header">${h}</th>`).join('');
+            document.getElementById('modalTableHeader').innerHTML = `<tr>${headerRow}</tr>`;
+            
+            const bodyRows = data.map((row, index) => 
+                `<tr class="hover:bg-gray-50 cursor-pointer" onclick="seleccionarFilaModal(${index})">
+                    ${row.map(cell => `<td class="table-cell">${cell}</td>`).join('')}
+                </tr>`
+            ).join('');
+            document.getElementById('modalTableBody').innerHTML = bodyRows;
+            
+            modalCallback = callback;
+            selectedModalRow = null;
+            document.getElementById('searchModal').classList.remove('hidden');
+        }
+
+        function seleccionarFilaModal(index) {
+            // Deseleccionar filas anteriores
+            document.querySelectorAll('#modalTableBody tr').forEach(tr => tr.classList.remove('bg-blue-100'));
+            
+            // Seleccionar fila actual
+            const rows = document.querySelectorAll('#modalTableBody tr');
+            rows[index].classList.add('bg-blue-100');
+            selectedModalRow = index;
+        }
+
+        function seleccionarModal() {
+            if (selectedModalRow !== null && modalCallback) {
+                const rows = document.querySelectorAll('#modalTableBody tr');
+                const cells = rows[selectedModalRow].querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => cell.textContent);
+                modalCallback(rowData);
+                cerrarModal();
+            } else {
+                alert('Debe seleccionar una fila');
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('searchModal').classList.add('hidden');
+            selectedModalRow = null;
+            modalCallback = null;
+        }
+
+        function ingresarAltaPaciente() {
+            if (window.parent && window.parent.abrirAltaPaciente) {
+                window.parent.abrirAltaPaciente();
+            } else {
+                alert('Funcionalidad de alta de paciente disponible desde el menú principal');
+            }
+        }
+
+        function abrirFichaClinica() {
+            const fichaClinica = document.getElementById('fichaClinica').value;
+            if (fichaClinica) {
+                if (window.parent && window.parent.mostrarContenido) {
+                    window.parent.mostrarContenido('FICHACLINICA.html?ficha=' + fichaClinica, 'Ficha Clínica');
+                } else {
+                    window.open('FICHACLINICA.html?ficha=' + fichaClinica, '_blank');
+                }
+            }
+        }
+
+        function manejarComandoToolbar(comando) {
+            switch(comando) {
+                case 'save':
+                    guardarInternacion();
+                    break;
+                case 'add':
+                    nuevaInternacion();
+                    break;
+                case 'edit':
+                    editarInternacion();
+                    break;
+                case 'delete':
+                    eliminarInternacion();
+                    break;
+                case 'cancel':
+                    cancelarInternacion();
+                    break;
+                case 'refresh':
+                    actualizarVista();
+                    break;
+                case 'search':
+                    buscarInternacion();
+                    break;
+                case 'first':
+                case 'previous':
+                case 'next':
+                case 'last':
+                    navegarRegistros(comando);
+                    break;
+            }
+        }
+
+        function guardarInternacion() {
+            const fechaInternacion = document.getElementById('fechaInternacion').value;
+            const tipoHabitacion = document.getElementById('tipoHabitacion').value;
+            const codigoHabitacion = document.getElementById('codigoHabitacion').value;
+            const codigoCama = document.getElementById('codigoCama').value;
+            
+            if (!fechaInternacion) {
+                alert('Debe ingresar la fecha de internación');
+                return;
+            }
+            
+            if (!tipoHabitacion || !codigoHabitacion || !codigoCama) {
+                alert('Debe completar los datos de habitación y cama');
+                return;
+            }
+            
+            if (serviciosData.length === 0) {
+                alert('Debe agregar al menos un servicio');
+                return;
+            }
+            
+            // Simular guardado
+            alert('Internación guardada exitosamente');
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: 'Internación guardada correctamente'
+                }, '*');
+            }
+        }
+
+        function nuevaInternacion() {
+            if (confirm('¿Desea crear una nueva internación? Se perderán los cambios no guardados.')) {
+                // Limpiar formulario
+                document.getElementById('fechaInternacion').value = '';
+                document.getElementById('tipoHabitacion').value = '';
+                document.getElementById('codigoHabitacion').value = '';
+                document.getElementById('codigoCama').value = '';
+                serviciosData = [];
+                actualizarTablaServicios();
+                
+                if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'status_update',
+                        message: 'Nueva internación creada'
+                    }, '*');
+                }
+            }
+        }
+
+        function editarInternacion() {
+            isEditing = true;
+            document.getElementById('fechaInternacion').readOnly = false;
+            
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: 'Modo edición activado'
+                }, '*');
+            }
+        }
+
+        function eliminarInternacion() {
+            if (confirm('¿Está seguro de que desea eliminar esta internación?')) {
+                // Simular eliminación
+                nuevaInternacion();
+                
+                if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'status_update',
+                        message: 'Internación eliminada'
+                    }, '*');
+                }
+            }
+        }
+
+        function cancelarInternacion() {
+            if (isEditing) {
+                if (confirm('¿Desea cancelar los cambios?')) {
+                    isEditing = false;
+                    document.getElementById('fechaInternacion').readOnly = true;
+                    cargarOrdenSeleccionada();
+                    
+                    if (window.parent) {
+                        window.parent.postMessage({
+                            type: 'status_update',
+                            message: 'Cambios cancelados'
+                        }, '*');
+                    }
+                }
+            }
+        }
+
+        function actualizarVista() {
+            cargarOrdenSeleccionada();
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: 'Vista actualizada'
+                }, '*');
+            }
+        }
+
+        function buscarInternacion() {
+            // Funcionalidad de búsqueda
+            mostrarModal('Buscar Internación', ['Fecha', 'Nro. Orden', 'Paciente', 'Habitación'], [
+                ['2025-07-10', '2025001', 'García, María', '101'],
+                ['2025-07-11', '2025002', 'López, Juan', '102'],
+                ['2025-07-12', '2025003', 'Martínez, Ana', '201']
+            ], function(row) {
+                document.getElementById('fechaOrden').value = row[0];
+                document.getElementById('numeroOrden').value = row[1];
+                document.getElementById('nombrePaciente').textContent = row[2];
+                document.getElementById('codigoHabitacion').value = row[3];
+            });
+        }
+
+        function navegarRegistros(direccion) {
+            // Simular navegación entre registros
+            const mensajes = {
+                'first': 'Primer registro',
+                'previous': 'Registro anterior',
+                'next': 'Registro siguiente',
+                'last': 'Último registro'
+            };
+            
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: mensajes[direccion]
+                }, '*');
+            }
+        }
+
+        // Manejo de teclas
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (document.getElementById('searchModal').classList.contains('hidden')) {
+                    if (window.parent) {
+                        window.parent.postMessage({
+                            type: 'close_window'
+                        }, '*');
+                    }
+                } else {
+                    cerrarModal();
+                }
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

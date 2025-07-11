@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RECETAS E INDICACIONES</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .prescription-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+            min-height: 600px;
+        }
+        .doctor-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .doctor-name {
+            font-family: 'Bookman Old Style', serif;
+            font-size: 20px;
+            font-weight: 600;
+            font-style: italic;
+            color: #8b0000;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .doctor-specialty {
+            font-family: 'Bookman Old Style', serif;
+            font-size: 14px;
+            font-weight: 600;
+            font-style: italic;
+            color: #8b0000;
+            margin-bottom: 15px;
+        }
+        .patient-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .info-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        .info-field {
+            display: flex;
+            gap: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .info-value {
+            color: #666;
+        }
+        .prescription-content {
+            display: flex;
+            gap: 30px;
+            min-height: 400px;
+            margin-bottom: 30px;
+        }
+        .prescription-section,
+        .indication-section {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .prescription-text,
+        .indication-text {
+            font-size: 12px;
+            line-height: 1.6;
+            min-height: 350px;
+            background-color: #fafafa;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .prescription-section {
+            background-color: #f8fff8;
+        }
+        .indication-section {
+            background-color: #fff8f8;
+        }
+        .divider-line {
+            width: 2px;
+            background-color: #ddd;
+            margin: 0 15px;
+        }
+        .doctor-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .signature-area {
+            margin-top: 60px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 2px solid #333;
+            width: 300px;
+            margin: 0 auto 10px;
+        }
+        .signature-text {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .prescription-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="prescription-container">
+        <!-- Información del Doctor -->
+        <div class="doctor-header">
+            <div class="doctor-name" id="doctor-name">DR. CARLOS ENRIQUE MÉNDEZ GARCÍA</div>
+            <div class="doctor-specialty" id="doctor-specialty">MEDICINA INTERNA - CARDIOLOGÍA</div>
+        </div>
+
+        <!-- Información del Paciente -->
+        <div class="patient-info">
+            <div class="info-row">
+                <div class="info-field">
+                    <span class="info-label">FECHA:</span>
+                    <span class="info-value" id="fecha-pedido">11/07/2025</span>
+                </div>
+                <div class="info-field">
+                    <span class="info-label">MOVIMIENTO:</span>
+                    <span class="info-value" id="numero-movimiento">MOV-2025-001</span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-field">
+                    <span class="info-label">ASEGURADORA:</span>
+                    <span class="info-value" id="aseguradora">EPS</span>
+                </div>
+                <div class="info-field">
+                    <span class="info-label">ID SEGURO:</span>
+                    <span class="info-value" id="id-seguro">SEG123456</span>
+                </div>
+                <div class="info-field">
+                    <span class="info-label">DOC:</span>
+                    <span class="info-value" id="numero-documento">1234567890</span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-field">
+                    <span class="info-label">NOMBRE:</span>
+                    <span class="info-value" id="nombre-paciente">MARÍA ELENA RODRÍGUEZ LÓPEZ</span>
+                </div>
+                <div class="info-field">
+                    <span class="info-label">EDAD:</span>
+                    <span class="info-value" id="edad-paciente">45</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido de Receta e Indicaciones -->
+        <div class="prescription-content">
+            <!-- Sección de Recetario -->
+            <div class="prescription-section">
+                <div class="section-title">RECETARIO:</div>
+                <div class="prescription-text" id="prescription-text">1. ENALAPRIL 10mg
+   Tomar 1 tableta cada 12 horas
+   Por vía oral
+   Por 30 días
+
+2. ATORVASTATINA 20mg
+   Tomar 1 tableta en la noche
+   Por vía oral
+   Por 30 días
+
+3. METFORMINA 500mg
+   Tomar 1 tableta cada 8 horas
+   Con las comidas
+   Por 30 días
+
+4. ASPIRINA 100mg
+   Tomar 1 tableta en la mañana
+   En ayunas
+   Por 30 días
+
+5. OMEPRAZOL 20mg
+   Tomar 1 cápsula en la mañana
+   30 minutos antes del desayuno
+   Por 15 días</div>
+            </div>
+
+            <!-- Línea divisoria -->
+            <div class="divider-line"></div>
+
+            <!-- Sección de Indicaciones -->
+            <div class="indication-section">
+                <div class="section-title">INDICACIÓN:</div>
+                <div class="indication-text" id="indication-text">INDICACIONES GENERALES:
+
+• Dieta baja en sodio (menos de 2g/día)
+• Dieta baja en grasas saturadas
+• Ejercicio moderado 30 min/día
+• Control de peso
+• No fumar
+• Limitar alcohol
+
+CONTROLES:
+
+• Control médico en 15 días
+• Exámenes de laboratorio en 30 días:
+  - Glicemia en ayunas
+  - Perfil lipídico
+  - Creatinina
+  - Electrolitos
+
+SIGNOS DE ALARMA:
+
+• Dolor en el pecho
+• Dificultad para respirar
+• Palpitaciones
+• Mareos severos
+• Náuseas persistentes
+
+En caso de presentar estos síntomas,
+acudir inmediatamente al servicio
+de urgencias.</div>
+            </div>
+        </div>
+
+        <!-- Pie del Doctor -->
+        <div class="doctor-footer">
+            <div class="contact-info">
+                <div>
+                    <span class="info-label">DIRECCIÓN:</span>
+                    <span class="info-value" id="direccion">CALLE 50 # 25-30 CONSULTORIO 203</span>
+                </div>
+                <div>
+                    <span class="info-label">TELÉFONO:</span>
+                    <span class="info-value" id="telefono">(604) 456-7890</span>
+                </div>
+            </div>
+            <div class="contact-info" style="margin-top: 10px;">
+                <div>
+                    <span class="info-label">E-MAIL:</span>
+                    <span class="info-value" id="email">dr.mendez@galenomedicina.com</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Firma -->
+        <div class="signature-area">
+            <div class="signature-line"></div>
+            <div class="signature-text">FIRMA Y SELLO DEL MÉDICO</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>RECETA: <span id="receta-numero">REC-2025-001</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+            document.getElementById('fecha-pedido').textContent = dateStr;
+        }
+
+        // Datos de ejemplo de recetas
+        const recetasEjemplo = [
+            {
+                doctor: "DR. CARLOS ENRIQUE MÉNDEZ GARCÍA",
+                especialidad: "MEDICINA INTERNA - CARDIOLOGÍA",
+                paciente: "MARÍA ELENA RODRÍGUEZ LÓPEZ",
+                edad: 45,
+                documento: "1234567890",
+                aseguradora: "EPS SALUD TOTAL",
+                idSeguro: "SEG123456",
+                movimiento: "MOV-2025-001",
+                recetario: `1. ENALAPRIL 10mg
+   Tomar 1 tableta cada 12 horas
+   Por vía oral
+   Por 30 días
+
+2. ATORVASTATINA 20mg
+   Tomar 1 tableta en la noche
+   Por vía oral
+   Por 30 días
+
+3. METFORMINA 500mg
+   Tomar 1 tableta cada 8 horas
+   Con las comidas
+   Por 30 días`,
+                indicacion: `INDICACIONES GENERALES:
+
+• Dieta baja en sodio
+• Ejercicio moderado diario
+• Control de peso
+• No fumar
+
+CONTROLES:
+• Control médico en 15 días
+• Exámenes en 30 días
+
+SIGNOS DE ALARMA:
+• Dolor en el pecho
+• Dificultad respiratoria`,
+                direccion: "CALLE 50 # 25-30 CONSULTORIO 203",
+                telefono: "(604) 456-7890",
+                email: "dr.mendez@galenomedicina.com"
+            },
+            {
+                doctor: "DRA. ANA PATRICIA FERNÁNDEZ GÓMEZ",
+                especialidad: "PEDIATRÍA",
+                paciente: "CARLOS ANDRÉS JIMÉNEZ MORA",
+                edad: 8,
+                documento: "9876543210",
+                aseguradora: "SURA EPS",
+                idSeguro: "SEG654321",
+                movimiento: "MOV-2025-002",
+                recetario: `1. AMOXICILINA 250mg/5ml
+   Tomar 5ml cada 8 horas
+   Por vía oral
+   Por 7 días
+
+2. ACETAMINOFÉN 160mg/5ml
+   Tomar 5ml cada 6 horas
+   Solo si hay fiebre
+   Por 3 días`,
+                indicacion: `INDICACIONES GENERALES:
+
+• Reposo relativo
+• Abundantes líquidos
+• Dieta blanda
+• Tomar medicamentos con alimentos
+
+CONTROLES:
+• Control en 3 días si persiste fiebre
+• Control en 7 días para evaluar evolución
+
+SIGNOS DE ALARMA:
+• Fiebre mayor a 39°C
+• Dificultad para respirar
+• Rechazo total de alimentos`,
+                direccion: "CARRERA 45 # 78-12 PISO 4",
+                telefono: "(604) 321-6547",
+                email: "dra.fernandez@pediatriagaleno.com"
+            }
+        ];
+
+        let recetaActual = 0;
+
+        // Cargar datos de la receta
+        function loadReceta(index = 0) {
+            const receta = recetasEjemplo[index];
+            
+            document.getElementById('doctor-name').textContent = receta.doctor;
+            document.getElementById('doctor-specialty').textContent = receta.especialidad;
+            document.getElementById('nombre-paciente').textContent = receta.paciente;
+            document.getElementById('edad-paciente').textContent = receta.edad;
+            document.getElementById('numero-documento').textContent = receta.documento;
+            document.getElementById('aseguradora').textContent = receta.aseguradora;
+            document.getElementById('id-seguro').textContent = receta.idSeguro;
+            document.getElementById('numero-movimiento').textContent = receta.movimiento;
+            document.getElementById('prescription-text').textContent = receta.recetario;
+            document.getElementById('indication-text').textContent = receta.indicacion;
+            document.getElementById('direccion').textContent = receta.direccion;
+            document.getElementById('telefono').textContent = receta.telefono;
+            document.getElementById('email').textContent = receta.email;
+            
+            document.getElementById('receta-numero').textContent = `REC-2025-${String(index + 1).padStart(3, '0')}`;
+        }
+
+        // Función para cambiar de receta
+        function nextReceta() {
+            recetaActual = (recetaActual + 1) % recetasEjemplo.length;
+            loadReceta(recetaActual);
+        }
+
+        function prevReceta() {
+            recetaActual = (recetaActual - 1 + recetasEjemplo.length) % recetasEjemplo.length;
+            loadReceta(recetaActual);
+        }
+
+        // Función de impresión
+        function printPrescription() {
+            window.print();
+        }
+
+        // Función para nueva receta
+        function newPrescription() {
+            document.getElementById('prescription-text').textContent = '';
+            document.getElementById('indication-text').textContent = '';
+            alert('Nueva receta lista para completar');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadReceta(0);
+            
+            // Agregar eventos de teclado
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'p') {
+                    e.preventDefault();
+                    printPrescription();
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    newPrescription();
+                }
+                if (e.key === 'ArrowRight') {
+                    nextReceta();
+                }
+                if (e.key === 'ArrowLeft') {
+                    prevReceta();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

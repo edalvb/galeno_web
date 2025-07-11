@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE INSUMOS USADOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .cod-column {
+            width: 100px;
+            text-align: center;
+        }
+        .servicio-column {
+            width: 150px;
+        }
+        .insumo-column {
+            width: 100px;
+            text-align: center;
+        }
+        .nombre-column {
+            width: 200px;
+        }
+        .cantidad-column {
+            width: 100px;
+            text-align: right;
+        }
+        .unimed-column {
+            width: 80px;
+            text-align: center;
+        }
+        .fecha-column {
+            width: 120px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .cantidad-alta {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .cantidad-media {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        .cantidad-baja {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .fecha-reciente {
+            background-color: #e8f5e8;
+        }
+        .fecha-antigua {
+            background-color: #fafafa;
+            color: #666;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE INSUMOS USADOS</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PAGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="cod-column">CODANAL</th>
+                    <th class="servicio-column">SERVICIO</th>
+                    <th class="insumo-column">CODINSUMO</th>
+                    <th class="nombre-column">NOMBRE</th>
+                    <th class="cantidad-column">CANTIDAD</th>
+                    <th class="unimed-column">UNIMED</th>
+                    <th class="fecha-column">FEC_MOV</th>
+                </tr>
+            </thead>
+            <tbody id="insumos-data">
+                <tr>
+                    <td colspan="7" class="no-data">
+                        Cargando datos de insumos usados...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>PAGINA: <span id="footer-page">1</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de insumos usados
+        const insumosUsados = [
+            {
+                codAnal: "HEM001",
+                servicio: "HEMOGRAMA COMPLETO",
+                codInsumo: "JER005",
+                nombre: "JERINGA 5ML",
+                cantidad: 2,
+                uniMed: "UND",
+                fechaMov: "2024-01-15"
+            },
+            {
+                codAnal: "QUI002",
+                servicio: "QUÍMICA SANGUÍNEA",
+                codInsumo: "TUB001",
+                nombre: "TUBO TAPA ROJA",
+                cantidad: 1,
+                uniMed: "UND",
+                fechaMov: "2024-01-15"
+            },
+            {
+                codAnal: "URI001",
+                servicio: "EXAMEN DE ORINA",
+                codInsumo: "REC001",
+                nombre: "RECIPIENTE ORINA",
+                cantidad: 1,
+                uniMed: "UND",
+                fechaMov: "2024-01-14"
+            },
+            {
+                codAnal: "COA001",
+                servicio: "COAGULACIÓN",
+                codInsumo: "TUB002",
+                nombre: "TUBO TAPA AZUL",
+                cantidad: 1,
+                uniMed: "UND",
+                fechaMov: "2024-01-14"
+            },
+            {
+                codAnal: "GLU001",
+                servicio: "GLUCOSA",
+                codInsumo: "TIR001",
+                nombre: "TIRA REACTIVA",
+                cantidad: 1,
+                uniMed: "UND",
+                fechaMov: "2024-01-13"
+            },
+            {
+                codAnal: "COL001",
+                servicio: "COLESTEROL",
+                codInsumo: "REA001",
+                nombre: "REACTIVO COLESTEROL",
+                cantidad: 200,
+                uniMed: "UL",
+                fechaMov: "2024-01-13"
+            },
+            {
+                codAnal: "PRO001",
+                servicio: "PROTEÍNAS TOTALES",
+                codInsumo: "REA002",
+                nombre: "REACTIVO PROTEÍNAS",
+                cantidad: 150,
+                uniMed: "UL",
+                fechaMov: "2024-01-12"
+            },
+            {
+                codAnal: "CRE001",
+                servicio: "CREATININA",
+                codInsumo: "REA003",
+                nombre: "REACTIVO CREATININA",
+                cantidad: 100,
+                uniMed: "UL",
+                fechaMov: "2024-01-12"
+            },
+            {
+                codAnal: "BIL001",
+                servicio: "BILIRRUBINAS",
+                codInsumo: "REA004",
+                nombre: "REACTIVO BILIRRUBINA",
+                cantidad: 180,
+                uniMed: "UL",
+                fechaMov: "2024-01-11"
+            },
+            {
+                codAnal: "ALB001",
+                servicio: "ALBÚMINA",
+                codInsumo: "REA005",
+                nombre: "REACTIVO ALBÚMINA",
+                cantidad: 120,
+                uniMed: "UL",
+                fechaMov: "2024-01-11"
+            },
+            {
+                codAnal: "TRI001",
+                servicio: "TRIGLICÉRIDOS",
+                codInsumo: "REA006",
+                nombre: "REACTIVO TRIGLICÉRIDOS",
+                cantidad: 160,
+                uniMed: "UL",
+                fechaMov: "2024-01-10"
+            },
+            {
+                codAnal: "URE001",
+                servicio: "UREA",
+                codInsumo: "REA007",
+                nombre: "REACTIVO UREA",
+                cantidad: 140,
+                uniMed: "UL",
+                fechaMov: "2024-01-10"
+            },
+            {
+                codAnal: "ALT001",
+                servicio: "ALT (TGP)",
+                codInsumo: "REA008",
+                nombre: "REACTIVO ALT",
+                cantidad: 90,
+                uniMed: "UL",
+                fechaMov: "2024-01-09"
+            },
+            {
+                codAnal: "AST001",
+                servicio: "AST (TGO)",
+                codInsumo: "REA009",
+                nombre: "REACTIVO AST",
+                cantidad: 85,
+                uniMed: "UL",
+                fechaMov: "2024-01-09"
+            },
+            {
+                codAnal: "TSH001",
+                servicio: "TSH",
+                codInsumo: "KIT001",
+                nombre: "KIT TSH",
+                cantidad: 1,
+                uniMed: "UND",
+                fechaMov: "2024-01-08"
+            }
+        ];
+
+        // Formatear cantidad con estilos según el valor
+        function formatCantidad(cantidad, unimed) {
+            let className = '';
+            
+            if (unimed === 'UL') {
+                // Para microlitros
+                if (cantidad >= 150) {
+                    className = 'cantidad-alta';
+                } else if (cantidad >= 100) {
+                    className = 'cantidad-media';
+                } else {
+                    className = 'cantidad-baja';
+                }
+            } else {
+                // Para unidades
+                if (cantidad >= 3) {
+                    className = 'cantidad-alta';
+                } else if (cantidad >= 2) {
+                    className = 'cantidad-media';
+                } else {
+                    className = 'cantidad-baja';
+                }
+            }
+            
+            return `<span class="${className}">${cantidad}</span>`;
+        }
+
+        // Formatear fecha con estilos según antigüedad
+        function formatFecha(fechaStr) {
+            const fecha = new Date(fechaStr);
+            const hoy = new Date();
+            const diffTime = Math.abs(hoy - fecha);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let className = '';
+            if (diffDays <= 2) {
+                className = 'fecha-reciente';
+            } else if (diffDays > 5) {
+                className = 'fecha-antigua';
+            }
+            
+            const fechaFormateada = fecha.toLocaleDateString('es-ES');
+            return `<span class="${className}">${fechaFormateada}</span>`;
+        }
+
+        // Cargar datos de insumos usados
+        function loadInsumosUsados() {
+            const tbody = document.getElementById('insumos-data');
+            
+            if (insumosUsados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay datos de insumos usados disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = insumosUsados.map(insumo => `
+                <tr>
+                    <td class="cod-column">${insumo.codAnal}</td>
+                    <td class="servicio-column">${insumo.servicio}</td>
+                    <td class="insumo-column">${insumo.codInsumo}</td>
+                    <td class="nombre-column">${insumo.nombre}</td>
+                    <td class="cantidad-column">${formatCantidad(insumo.cantidad, insumo.uniMed)}</td>
+                    <td class="unimed-column">${insumo.uniMed}</td>
+                    <td class="fecha-column">${formatFecha(insumo.fechaMov)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadInsumosUsados();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

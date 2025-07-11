@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESULTADO DE ANÁLISIS - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-break { page-break-after: always; }
+            body { font-size: 12px; }
+            .container { max-width: none; margin: 0; padding: 10px; }
+            .resultado-card { border: 2px solid #000; margin-bottom: 30px; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .resultado-card:hover { 
+            transform: translateY(-2px); 
+            transition: all 0.3s ease; 
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .lab-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+        .valor-normal { color: #059669; font-weight: bold; }
+        .valor-alto { color: #dc2626; font-weight: bold; }
+        .valor-bajo { color: #d97706; font-weight: bold; }
+        .resultado-table th {
+            background-color: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .resultado-table td {
+            border-bottom: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-blue-600 no-print">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-flask text-3xl text-blue-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">RESULTADO DE ANÁLISIS</h1>
+                        <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="fechaHora" class="text-sm text-gray-600"></span>
+                    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-print"></i>
+                        <span>Imprimir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters Panel -->
+    <div class="container mx-auto px-6 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-filter mr-2 text-blue-600"></i>
+                Filtros de Búsqueda
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nº Movimiento:</label>
+                    <input type="text" id="filtroMovimiento" placeholder="Número de movimiento..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Paciente:</label>
+                    <input type="text" id="filtroPaciente" placeholder="Nombre del paciente..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nº Documento:</label>
+                    <input type="text" id="filtroDocumento" placeholder="Número de documento..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Estado:</label>
+                    <select id="filtroEstado" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos</option>
+                        <option value="normal">Valores Normales</option>
+                        <option value="alterado">Valores Alterados</option>
+                        <option value="pendiente">Pendientes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-4">
+                <button onclick="limpiarFiltros()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                    <i class="fas fa-eraser"></i>
+                    <span>Limpiar Filtros</span>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <button onclick="nuevoAnalisis()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-plus"></i>
+                        <span>Nuevo Análisis</span>
+                    </button>
+                    <button onclick="exportarResultados()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                        <i class="fas fa-file-export"></i>
+                        <span>Exportar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Análisis</p>
+                        <p id="totalAnalisis" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <i class="fas fa-vials text-2xl text-blue-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Valores Normales</p>
+                        <p id="valoresNormales" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <i class="fas fa-check-circle text-2xl text-green-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Valores Alterados</p>
+                        <p id="valoresAlterados" class="text-2xl font-bold text-red-600">0</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Resultados Filtrados</p>
+                        <p id="resultadosFiltrados" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <i class="fas fa-filter text-2xl text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados Container -->
+    <div class="container mx-auto px-6 pb-6">
+        <div id="resultadosContainer" class="space-y-6">
+            <!-- Los resultados se cargarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Print Header (only visible when printing) -->
+    <div class="hidden print:block">
+        <div class="text-center mb-8">
+            <h1 class="text-xl font-bold mb-2">RESULTADO DE ANÁLISIS</h1>
+            <p class="text-sm text-gray-600">Sistema Integral de Gestión Médica - MEG@SYS</p>
+            <p class="text-sm text-gray-600">Fecha de impresión: <span id="fechaImpresion"></span> - Página: <span id="paginaImpresion">%p</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de resultados de análisis
+        let resultadosData = [
+            {
+                fec_ped: "2025-01-15",
+                nromov: "LAB-001",
+                nombres: "MARÍA ELENA",
+                apellidos: "GONZÁLEZ TORRES",
+                descripcion: "F",
+                nrodoc: "12345678",
+                analisis: [
+                    {
+                        codigo: "HEM001",
+                        nomservicio: "HEMOGRAMA COMPLETO",
+                        nomanalc: "Hemoglobina",
+                        resultado: "12.5",
+                        unimed: "g/dL",
+                        lim_inf: "12.0",
+                        lim_sup: "15.5"
+                    },
+                    {
+                        codigo: "HEM002",
+                        nomservicio: "HEMOGRAMA COMPLETO",
+                        nomanalc: "Hematocrito",
+                        resultado: "38.2",
+                        unimed: "%",
+                        lim_inf: "36.0",
+                        lim_sup: "46.0"
+                    },
+                    {
+                        codigo: "HEM003",
+                        nomservicio: "HEMOGRAMA COMPLETO",
+                        nomanalc: "Leucocitos",
+                        resultado: "6500",
+                        unimed: "/μL",
+                        lim_inf: "4000",
+                        lim_sup: "11000"
+                    },
+                    {
+                        codigo: "GLU001",
+                        nomservicio: "QUÍMICA SANGUÍNEA",
+                        nomanalc: "Glucosa",
+                        resultado: "95",
+                        unimed: "mg/dL",
+                        lim_inf: "70",
+                        lim_sup: "100"
+                    }
+                ]
+            },
+            {
+                fec_ped: "2025-01-14",
+                nromov: "LAB-002",
+                nombres: "JUAN CARLOS",
+                apellidos: "MARTÍNEZ SILVA",
+                descripcion: "M",
+                nrodoc: "87654321",
+                analisis: [
+                    {
+                        codigo: "LIP001",
+                        nomservicio: "PERFIL LIPÍDICO",
+                        nomanalc: "Colesterol Total",
+                        resultado: "245",
+                        unimed: "mg/dL",
+                        lim_inf: "0",
+                        lim_sup: "200"
+                    },
+                    {
+                        codigo: "LIP002",
+                        nomservicio: "PERFIL LIPÍDICO",
+                        nomanalc: "HDL Colesterol",
+                        resultado: "38",
+                        unimed: "mg/dL",
+                        lim_inf: "40",
+                        lim_sup: "100"
+                    },
+                    {
+                        codigo: "LIP003",
+                        nomservicio: "PERFIL LIPÍDICO",
+                        nomanalc: "LDL Colesterol",
+                        resultado: "165",
+                        unimed: "mg/dL",
+                        lim_inf: "0",
+                        lim_sup: "130"
+                    },
+                    {
+                        codigo: "LIP004",
+                        nomservicio: "PERFIL LIPÍDICO",
+                        nomanalc: "Triglicéridos",
+                        resultado: "210",
+                        unimed: "mg/dL",
+                        lim_inf: "0",
+                        lim_sup: "150"
+                    }
+                ]
+            },
+            {
+                fec_ped: "2025-01-12",
+                nromov: "LAB-003",
+                nombres: "ANA LUCÍA",
+                apellidos: "FERNÁNDEZ CASTRO",
+                descripcion: "F",
+                nrodoc: "11223344",
+                analisis: [
+                    {
+                        codigo: "ORI001",
+                        nomservicio: "EXAMEN DE ORINA",
+                        nomanalc: "Densidad",
+                        resultado: "1.020",
+                        unimed: "",
+                        lim_inf: "1.003",
+                        lim_sup: "1.030"
+                    },
+                    {
+                        codigo: "ORI002",
+                        nomservicio: "EXAMEN DE ORINA",
+                        nomanalc: "Proteínas",
+                        resultado: "Negativo",
+                        unimed: "",
+                        lim_inf: "Negativo",
+                        lim_sup: "Negativo"
+                    },
+                    {
+                        codigo: "ORI003",
+                        nomservicio: "EXAMEN DE ORINA",
+                        nomanalc: "Glucosa",
+                        resultado: "Negativo",
+                        unimed: "",
+                        lim_inf: "Negativo",
+                        lim_sup: "Negativo"
+                    },
+                    {
+                        codigo: "ORI004",
+                        nomservicio: "EXAMEN DE ORINA",
+                        nomanalc: "Leucocitos",
+                        resultado: "15-20",
+                        unimed: "/campo",
+                        lim_inf: "0",
+                        lim_sup: "5"
+                    }
+                ]
+            },
+            {
+                fec_ped: "2025-01-10",
+                nromov: "LAB-004",
+                nombres: "ROBERTO DANIEL",
+                apellidos: "HERRERA MENDOZA",
+                descripcion: "M",
+                nrodoc: "55667788",
+                analisis: [
+                    {
+                        codigo: "CAR001",
+                        nomservicio: "MARCADORES CARDÍACOS",
+                        nomanalc: "Troponina I",
+                        resultado: "0.02",
+                        unimed: "ng/mL",
+                        lim_inf: "0",
+                        lim_sup: "0.04"
+                    },
+                    {
+                        codigo: "CAR002",
+                        nomservicio: "MARCADORES CARDÍACOS",
+                        nomanalc: "CK-MB",
+                        resultado: "3.2",
+                        unimed: "ng/mL",
+                        lim_inf: "0",
+                        lim_sup: "6.3"
+                    },
+                    {
+                        codigo: "QUI001",
+                        nomservicio: "QUÍMICA SANGUÍNEA",
+                        nomanalc: "Creatinina",
+                        resultado: "1.1",
+                        unimed: "mg/dL",
+                        lim_inf: "0.7",
+                        lim_sup: "1.3"
+                    },
+                    {
+                        codigo: "QUI002",
+                        nomservicio: "QUÍMICA SANGUÍNEA",
+                        nomanalc: "Urea",
+                        resultado: "35",
+                        unimed: "mg/dL",
+                        lim_inf: "15",
+                        lim_sup: "50"
+                    }
+                ]
+            }
+        ];
+
+        let resultadosFiltrados = [...resultadosData];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializar();
+            cargarResultados();
+            configurarFiltros();
+        });
+
+        function inicializar() {
+            actualizarFechaHora();
+            setInterval(actualizarFechaHora, 1000);
+            document.getElementById('fechaImpresion').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function actualizarFechaHora() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES');
+            document.getElementById('fechaHora').textContent = `${fecha} ${hora}`;
+        }
+
+        function evaluarResultado(resultado, limInf, limSup) {
+            if (!resultado || resultado === 'Negativo' || resultado === 'Positivo') {
+                return 'texto';
+            }
+            
+            const valor = parseFloat(resultado.replace(/[^0-9.-]/g, ''));
+            const inferior = parseFloat(limInf);
+            const superior = parseFloat(limSup);
+            
+            if (isNaN(valor) || isNaN(inferior) || isNaN(superior)) {
+                return 'texto';
+            }
+            
+            if (valor < inferior) return 'bajo';
+            if (valor > superior) return 'alto';
+            return 'normal';
+        }
+
+        function obtenerClaseValor(estado) {
+            switch(estado) {
+                case 'alto': return 'valor-alto';
+                case 'bajo': return 'valor-bajo';
+                case 'normal': return 'valor-normal';
+                default: return '';
+            }
+        }
+
+        function cargarResultados() {
+            const container = document.getElementById('resultadosContainer');
+            container.innerHTML = '';
+
+            resultadosFiltrados.forEach((resultado, index) => {
+                const resultadoCard = document.createElement('div');
+                resultadoCard.className = 'resultado-card bg-white rounded-lg shadow-md overflow-hidden fade-in';
+                
+                resultadoCard.innerHTML = `
+                    <div class="lab-header text-white p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <i class="fas fa-microscope text-3xl"></i>
+                                <div>
+                                    <h2 class="text-xl font-bold">RESULTADO DE ANÁLISIS</h2>
+                                    <p class="text-sm text-blue-100">Sistema Integral de Gestión Médica - MEG@SYS</p>
+                                </div>
+                            </div>
+                            <div class="w-16 h-16 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-flask text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Información del Paciente -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 italic uppercase">FECHA DE PEDIDO</label>
+                                <p class="text-lg font-semibold text-gray-800">${new Date(resultado.fec_ped).toLocaleDateString('es-ES')}</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 italic uppercase">NÚMERO DE MOVIMIENTO</label>
+                                <p class="text-lg font-semibold text-gray-800">${resultado.nromov}</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 italic uppercase">NOMBRE DEL PACIENTE</label>
+                                <p class="text-lg font-semibold text-gray-800">${resultado.nombres} ${resultado.apellidos}</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 italic uppercase">SEXO</label>
+                                    <p class="text-lg font-semibold text-gray-800">${resultado.descripcion}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 italic uppercase">NÚMERO DE DOCUMENTO</label>
+                                    <p class="text-lg font-semibold text-gray-800">${resultado.nrodoc}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabla de Resultados -->
+                        <div class="overflow-x-auto">
+                            <table class="resultado-table w-full table-auto">
+                                <thead>
+                                    <tr>
+                                        <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase">CÓDIGO</th>
+                                        <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase">NOMBRE DEL ANÁLISIS</th>
+                                        <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase">NOMENCLATURA</th>
+                                        <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase">RESULTADOS</th>
+                                        <th class="px-2 py-3 text-left text-xs font-bold text-gray-700 uppercase">RANGO DE REFERENCIA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${resultado.analisis.map(analisis => {
+                                        const estado = evaluarResultado(analisis.resultado, analisis.lim_inf, analisis.lim_sup);
+                                        const claseValor = obtenerClaseValor(estado);
+                                        return `
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-2 py-3 text-sm text-gray-900">${analisis.codigo}</td>
+                                                <td class="px-2 py-3 text-sm text-gray-900">${analisis.nomservicio}</td>
+                                                <td class="px-2 py-3 text-sm text-gray-900">${analisis.nomanalc}</td>
+                                                <td class="px-2 py-3 text-sm ${claseValor}">
+                                                    ${analisis.resultado} ${analisis.unimed}
+                                                    ${estado === 'alto' ? '<i class="fas fa-arrow-up ml-1"></i>' : ''}
+                                                    ${estado === 'bajo' ? '<i class="fas fa-arrow-down ml-1"></i>' : ''}
+                                                    ${estado === 'normal' ? '<i class="fas fa-check ml-1"></i>' : ''}
+                                                </td>
+                                                <td class="px-2 py-3 text-sm text-gray-600">
+                                                    ${analisis.lim_inf} - ${analisis.lim_sup} ${analisis.unimed}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Footer info -->
+                        <div class="mt-6 pt-4 border-t border-gray-200 text-center text-sm text-gray-600">
+                            <p>Fecha: ${new Date(resultado.fec_ped).toLocaleDateString('es-ES')} - 
+                               Hora: ${new Date().toLocaleTimeString('es-ES')} - 
+                               Página: <span class="no-print">1</span><span class="hidden print:inline">%p</span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Acciones -->
+                    <div class="bg-gray-50 p-4 flex justify-between items-center no-print">
+                        <div class="flex space-x-2">
+                            <button onclick="editarResultado('${resultado.nromov}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-edit"></i>
+                                <span>Editar</span>
+                            </button>
+                            <button onclick="duplicarResultado('${resultado.nromov}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-copy"></i>
+                                <span>Duplicar</span>
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="imprimirResultado('${resultado.nromov}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-print"></i>
+                                <span>Imprimir</span>
+                            </button>
+                            <button onclick="enviarResultado('${resultado.nromov}')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded flex items-center space-x-1">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Enviar</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(resultadoCard);
+            });
+
+            actualizarEstadisticas();
+        }
+
+        function configurarFiltros() {
+            ['filtroMovimiento', 'filtroPaciente', 'filtroDocumento', 'filtroEstado'].forEach(id => {
+                document.getElementById(id).addEventListener('input', aplicarFiltros);
+                document.getElementById(id).addEventListener('change', aplicarFiltros);
+            });
+        }
+
+        function aplicarFiltros() {
+            const filtroMovimiento = document.getElementById('filtroMovimiento').value.toLowerCase();
+            const filtroPaciente = document.getElementById('filtroPaciente').value.toLowerCase();
+            const filtroDocumento = document.getElementById('filtroDocumento').value.toLowerCase();
+            const filtroEstado = document.getElementById('filtroEstado').value;
+
+            resultadosFiltrados = resultadosData.filter(resultado => {
+                const cumpleMovimiento = resultado.nromov.toLowerCase().includes(filtroMovimiento);
+                const cumplePaciente = (resultado.nombres + ' ' + resultado.apellidos).toLowerCase().includes(filtroPaciente);
+                const cumpleDocumento = resultado.nrodoc.toLowerCase().includes(filtroDocumento);
+                
+                let cumpleEstado = true;
+                if (filtroEstado === 'normal' || filtroEstado === 'alterado') {
+                    const tieneAlterados = resultado.analisis.some(analisis => {
+                        const estado = evaluarResultado(analisis.resultado, analisis.lim_inf, analisis.lim_sup);
+                        return estado === 'alto' || estado === 'bajo';
+                    });
+                    cumpleEstado = filtroEstado === 'alterado' ? tieneAlterados : !tieneAlterados;
+                }
+
+                return cumpleMovimiento && cumplePaciente && cumpleDocumento && cumpleEstado;
+            });
+
+            cargarResultados();
+        }
+
+        function limpiarFiltros() {
+            ['filtroMovimiento', 'filtroPaciente', 'filtroDocumento', 'filtroEstado'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            resultadosFiltrados = [...resultadosData];
+            cargarResultados();
+        }
+
+        function actualizarEstadisticas() {
+            let totalAnalisis = 0;
+            let valoresNormales = 0;
+            let valoresAlterados = 0;
+
+            resultadosData.forEach(resultado => {
+                resultado.analisis.forEach(analisis => {
+                    totalAnalisis++;
+                    const estado = evaluarResultado(analisis.resultado, analisis.lim_inf, analisis.lim_sup);
+                    if (estado === 'normal') {
+                        valoresNormales++;
+                    } else if (estado === 'alto' || estado === 'bajo') {
+                        valoresAlterados++;
+                    }
+                });
+            });
+
+            document.getElementById('totalAnalisis').textContent = totalAnalisis;
+            document.getElementById('valoresNormales').textContent = valoresNormales;
+            document.getElementById('valoresAlterados').textContent = valoresAlterados;
+            document.getElementById('resultadosFiltrados').textContent = resultadosFiltrados.length;
+        }
+
+        // Funciones de acciones
+        function editarResultado(nromov) {
+            alert(`Editando resultado del análisis: ${nromov}`);
+        }
+
+        function duplicarResultado(nromov) {
+            const resultado = resultadosData.find(r => r.nromov === nromov);
+            if (resultado && confirm(`¿Desea duplicar el resultado de ${resultado.nombres} ${resultado.apellidos}?`)) {
+                alert('Funcionalidad de duplicar resultado en desarrollo');
+            }
+        }
+
+        function imprimirResultado(nromov) {
+            const resultado = resultadosData.find(r => r.nromov === nromov);
+            if (resultado) {
+                // Crear ventana de impresión personalizada
+                const ventanaImpresion = window.open('', '_blank');
+                ventanaImpresion.document.write(`
+                    <html>
+                        <head>
+                            <title>Resultado ${nromov}</title>
+                            <style>
+                                body { 
+                                    font-family: Arial, sans-serif; 
+                                    margin: 20px; 
+                                    line-height: 1.4;
+                                }
+                                .header { 
+                                    text-align: center; 
+                                    border-bottom: 3px solid #1e40af; 
+                                    padding-bottom: 20px; 
+                                    margin-bottom: 30px; 
+                                }
+                                .patient-info { 
+                                    background: #f8f9fa; 
+                                    padding: 15px; 
+                                    border-radius: 5px; 
+                                    margin-bottom: 30px; 
+                                    display: grid;
+                                    grid-template-columns: repeat(2, 1fr);
+                                    gap: 15px;
+                                }
+                                .results-table { 
+                                    width: 100%; 
+                                    border-collapse: collapse; 
+                                    margin-bottom: 30px; 
+                                }
+                                .results-table th, .results-table td { 
+                                    border: 1px solid #000; 
+                                    padding: 8px; 
+                                    text-align: left; 
+                                }
+                                .results-table th { 
+                                    background: #f0f0f0; 
+                                    font-weight: bold; 
+                                }
+                                .valor-normal { color: #059669; font-weight: bold; }
+                                .valor-alto { color: #dc2626; font-weight: bold; }
+                                .valor-bajo { color: #d97706; font-weight: bold; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h1>RESULTADO DE ANÁLISIS</h1>
+                                <h2>Sistema Integral de Gestión Médica - MEG@SYS</h2>
+                            </div>
+                            
+                            <div class="patient-info">
+                                <div><strong>FECHA DE PEDIDO:</strong> ${new Date(resultado.fec_ped).toLocaleDateString('es-ES')}</div>
+                                <div><strong>NÚMERO DE MOVIMIENTO:</strong> ${resultado.nromov}</div>
+                                <div><strong>NOMBRE DEL PACIENTE:</strong> ${resultado.nombres} ${resultado.apellidos}</div>
+                                <div><strong>SEXO:</strong> ${resultado.descripcion} | <strong>DOCUMENTO:</strong> ${resultado.nrodoc}</div>
+                            </div>
+                            
+                            <table class="results-table">
+                                <thead>
+                                    <tr>
+                                        <th>CÓDIGO</th>
+                                        <th>NOMBRE DEL ANÁLISIS</th>
+                                        <th>NOMENCLATURA</th>
+                                        <th>RESULTADOS</th>
+                                        <th>RANGO DE REFERENCIA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${resultado.analisis.map(analisis => {
+                                        const estado = evaluarResultado(analisis.resultado, analisis.lim_inf, analisis.lim_sup);
+                                        const claseValor = obtenerClaseValor(estado);
+                                        return `
+                                            <tr>
+                                                <td>${analisis.codigo}</td>
+                                                <td>${analisis.nomservicio}</td>
+                                                <td>${analisis.nomanalc}</td>
+                                                <td class="${claseValor}">${analisis.resultado} ${analisis.unimed}</td>
+                                                <td>${analisis.lim_inf} - ${analisis.lim_sup} ${analisis.unimed}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                            
+                            <div style="text-align: center; margin-top: 50px; font-size: 12px;">
+                                Impreso el ${new Date().toLocaleDateString('es-ES')} - ${new Date().toLocaleTimeString('es-ES')}
+                            </div>
+                        </body>
+                    </html>
+                `);
+                ventanaImpresion.document.close();
+                ventanaImpresion.print();
+            }
+        }
+
+        function enviarResultado(nromov) {
+            const resultado = resultadosData.find(r => r.nromov === nromov);
+            if (resultado) {
+                alert(`Enviando resultado de ${resultado.nombres} ${resultado.apellidos} por email...`);
+            }
+        }
+
+        function nuevoAnalisis() {
+            alert('Abriendo formulario para nuevo análisis...');
+        }
+
+        function exportarResultados() {
+            // Crear contenido para exportar
+            let contenido = 'Movimiento,Fecha,Paciente,Documento,Sexo,Código,Servicio,Análisis,Resultado,Unidad,Límite Inf,Límite Sup,Estado\n';
+            
+            resultadosFiltrados.forEach(resultado => {
+                resultado.analisis.forEach(analisis => {
+                    const estado = evaluarResultado(analisis.resultado, analisis.lim_inf, analisis.lim_sup);
+                    contenido += `"${resultado.nromov}","${resultado.fec_ped}","${resultado.nombres} ${resultado.apellidos}","${resultado.nrodoc}","${resultado.descripcion}","${analisis.codigo}","${analisis.nomservicio}","${analisis.nomanalc}","${analisis.resultado}","${analisis.unimed}","${analisis.lim_inf}","${analisis.lim_sup}","${estado}"\n`;
+                });
+            });
+
+            // Descargar archivo
+            const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `resultados_analisis_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Manejo de mensajes del sistema padre
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'refresh':
+                        location.reload();
+                        break;
+                    case 'search':
+                        document.getElementById('filtroPaciente').focus();
+                        break;
+                    case 'add':
+                        nuevoAnalisis();
+                        break;
+                }
+            }
+        });
+
+        // Notificar al sistema padre sobre el estado
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'status_update',
+                message: 'Resultados de análisis cargados correctamente'
+            }, '*');
+            
+            window.parent.postMessage({
+                type: 'record_info',
+                info: `Total: ${resultadosData.length} resultados de análisis`
+            }, '*');
+        }
+    </script>
+</body>
+</html>

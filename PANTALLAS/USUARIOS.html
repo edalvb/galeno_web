@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permisos del Usuario - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg mb-4 p-4">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-user-shield mr-3 text-indigo-600"></i>
+                PERMISOS DEL USUARIO
+            </h2>
+        </div>
+
+        <!-- User Selection -->
+        <div class="bg-white rounded-lg shadow-lg mb-6 p-6">
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-user mr-2"></i>
+                    Usuario del Sistema:
+                </label>
+                <select id="userSelect" class="form-input max-w-md" onchange="cargarPermisosUsuario()">
+                    <option value="">Seleccione el usuario</option>
+                    <option value="1">García, María Elena - Administrador</option>
+                    <option value="2">López, Juan Carlos - Doctor</option>
+                    <option value="3">Rodríguez, Ana Sofía - Enfermera</option>
+                    <option value="4">Martínez, José Miguel - Recepcionista</option>
+                    <option value="5">Hernández, Laura Patricia - Laboratorista</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Permissions Management -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Available Permissions -->
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="p-4 bg-gray-50 rounded-t-lg border-b">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-list mr-2"></i>
+                        Permisos Disponibles
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <div class="space-y-2 max-h-80 overflow-y-auto border rounded-lg p-3" id="availablePermissions">
+                        <!-- Los permisos disponibles se cargarán aquí -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Permissions -->
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="p-4 bg-gray-50 rounded-t-lg border-b">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        Permisos del Usuario
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <div class="space-y-2 max-h-80 overflow-y-auto border rounded-lg p-3" id="userPermissions">
+                        <!-- Los permisos del usuario se cargarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <!-- Add One Permission -->
+                <button id="btnAddOne" onclick="addOnePermission()" class="btn-action bg-green-600 hover:bg-green-700" disabled>
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    <div>
+                        <div class="font-semibold">Agregar</div>
+                        <div class="text-xs">Seleccionado</div>
+                    </div>
+                </button>
+
+                <!-- Add All Permissions -->
+                <button id="btnAddAll" onclick="addAllPermissions()" class="btn-action bg-blue-600 hover:bg-blue-700" disabled>
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    <i class="fas fa-arrow-right -ml-3"></i>
+                    <div>
+                        <div class="font-semibold">Agregar</div>
+                        <div class="text-xs">Todos</div>
+                    </div>
+                </button>
+
+                <!-- Remove One Permission -->
+                <button id="btnRemoveOne" onclick="removeOnePermission()" class="btn-action bg-orange-600 hover:bg-orange-700" disabled>
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <div>
+                        <div class="font-semibold">Quitar</div>
+                        <div class="text-xs">Seleccionado</div>
+                    </div>
+                </button>
+
+                <!-- Remove All Permissions -->
+                <button id="btnRemoveAll" onclick="removeAllPermissions()" class="btn-action bg-red-600 hover:bg-red-700" disabled>
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <i class="fas fa-arrow-left -ml-3"></i>
+                    <div>
+                        <div class="font-semibold">Quitar</div>
+                        <div class="text-xs">Todos</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Final Action Buttons -->
+            <div class="flex justify-end space-x-4">
+                <button onclick="abrirPermisoABM()" class="btn-secondary">
+                    <i class="fas fa-cogs mr-2"></i>
+                    Permiso de ABM
+                </button>
+                <button onclick="grabarPermisos()" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>
+                    Grabar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <style>
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            transform: translateY(-1px);
+        }
+        
+        .btn-action {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            color: white;
+        }
+        
+        .btn-action:disabled {
+            background-color: #d1d5db !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-action:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .permission-item {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+        }
+        
+        .permission-item:hover {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        
+        .permission-item.selected {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        
+        .permission-item.granted {
+            background-color: #f0fdf4;
+            border-color: #16a34a;
+            color: #15803d;
+        }
+        
+        .permission-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        
+        .message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .message.success {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .message.error {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+    </style>
+
+    <script>
+        // Variables globales
+        let allPermissions = [];
+        let availablePermissions = [];
+        let userPermissions = [];
+        let selectedAvailable = null;
+        let selectedUser = null;
+        let currentUserId = null;
+
+        // Datos de ejemplo de permisos del sistema
+        const permissionsData = [
+            { id: 'USUARIOS', name: 'Gestión de Usuarios', icon: 'fas fa-users', category: 'Administración' },
+            { id: 'PACIENTES', name: 'Gestión de Pacientes', icon: 'fas fa-user-injured', category: 'Clínico' },
+            { id: 'DOCTORES', name: 'Gestión de Doctores', icon: 'fas fa-user-md', category: 'Personal' },
+            { id: 'ESPECIALIDADES', name: 'Gestión de Especialidades', icon: 'fas fa-stethoscope', category: 'Configuración' },
+            { id: 'INSTITUTOS', name: 'Gestión de Institutos', icon: 'fas fa-building', category: 'Configuración' },
+            { id: 'AREAS', name: 'Gestión de Áreas', icon: 'fas fa-sitemap', category: 'Configuración' },
+            { id: 'INSUMOS', name: 'Gestión de Insumos', icon: 'fas fa-boxes', category: 'Inventario' },
+            { id: 'MATERIALES', name: 'Gestión de Materiales', icon: 'fas fa-box', category: 'Inventario' },
+            { id: 'SERVICIOS', name: 'Gestión de Servicios', icon: 'fas fa-cogs', category: 'Servicios' },
+            { id: 'ORDENES', name: 'Órdenes de Servicio', icon: 'fas fa-clipboard-list', category: 'Operaciones' },
+            { id: 'LIQUIDACIONES', name: 'Liquidaciones', icon: 'fas fa-calculator', category: 'Finanzas' },
+            { id: 'FACTURACION', name: 'Facturación', icon: 'fas fa-file-invoice-dollar', category: 'Finanzas' },
+            { id: 'HISTORIAS', name: 'Historias Clínicas', icon: 'fas fa-file-medical', category: 'Clínico' },
+            { id: 'INTERNACION', name: 'Servicios de Internación', icon: 'fas fa-bed', category: 'Hospitalización' },
+            { id: 'REPORTES', name: 'Reportes y Estadísticas', icon: 'fas fa-chart-bar', category: 'Reportes' },
+            { id: 'CONFIGURACION', name: 'Configuración del Sistema', icon: 'fas fa-wrench', category: 'Administración' }
+        ];
+
+        // Permisos por usuario (simulado)
+        const userPermissionsData = {
+            '1': ['USUARIOS', 'PACIENTES', 'DOCTORES', 'ESPECIALIDADES', 'INSTITUTOS', 'AREAS', 'INSUMOS', 'MATERIALES', 'SERVICIOS', 'ORDENES', 'LIQUIDACIONES', 'FACTURACION', 'HISTORIAS', 'INTERNACION', 'REPORTES', 'CONFIGURACION'],
+            '2': ['PACIENTES', 'HISTORIAS', 'ORDENES', 'INTERNACION', 'REPORTES'],
+            '3': ['PACIENTES', 'HISTORIAS', 'INSUMOS', 'MATERIALES', 'INTERNACION'],
+            '4': ['PACIENTES', 'ORDENES', 'FACTURACION'],
+            '5': ['PACIENTES', 'ORDENES', 'REPORTES']
+        };
+
+        function inicializar() {
+            allPermissions = [...permissionsData];
+            cargarPermisosDisponibles();
+            
+            // Manejar mensajes del toolbar
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'toolbar_command') {
+                    manejarComandoToolbar(event.data.command);
+                }
+            });
+        }
+
+        function cargarPermisosDisponibles() {
+            availablePermissions = [...allPermissions];
+            userPermissions = [];
+            renderPermissions();
+            updateButtons();
+        }
+
+        function cargarPermisosUsuario() {
+            const userId = document.getElementById('userSelect').value;
+            currentUserId = userId;
+            
+            if (!userId) {
+                cargarPermisosDisponibles();
+                return;
+            }
+            
+            const userPerms = userPermissionsData[userId] || [];
+            
+            // Separar permisos disponibles y del usuario
+            userPermissions = allPermissions.filter(p => userPerms.includes(p.id));
+            availablePermissions = allPermissions.filter(p => !userPerms.includes(p.id));
+            
+            renderPermissions();
+            updateButtons();
+            
+            mostrarMensaje('Permisos del usuario cargados correctamente', 'success');
+        }
+
+        function renderPermissions() {
+            renderAvailablePermissions();
+            renderUserPermissions();
+        }
+
+        function renderAvailablePermissions() {
+            const container = document.getElementById('availablePermissions');
+            
+            if (availablePermissions.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center py-4">No hay permisos disponibles</div>';
+                return;
+            }
+            
+            container.innerHTML = availablePermissions.map(permission => `
+                <div class="permission-item ${selectedAvailable === permission.id ? 'selected' : ''}" 
+                     onclick="selectAvailablePermission('${permission.id}')">
+                    <div class="flex items-center flex-1">
+                        <i class="${permission.icon} permission-icon"></i>
+                        <div>
+                            <div class="font-medium">${permission.name}</div>
+                            <div class="text-xs text-gray-500">${permission.category}</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-400"></i>
+                </div>
+            `).join('');
+        }
+
+        function renderUserPermissions() {
+            const container = document.getElementById('userPermissions');
+            
+            if (userPermissions.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center py-4">El usuario no tiene permisos asignados</div>';
+                return;
+            }
+            
+            container.innerHTML = userPermissions.map(permission => `
+                <div class="permission-item granted ${selectedUser === permission.id ? 'selected' : ''}" 
+                     onclick="selectUserPermission('${permission.id}')">
+                    <div class="flex items-center flex-1">
+                        <i class="${permission.icon} permission-icon"></i>
+                        <div>
+                            <div class="font-medium">${permission.name}</div>
+                            <div class="text-xs text-gray-500">${permission.category}</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-shield-alt text-green-600"></i>
+                </div>
+            `).join('');
+        }
+
+        function selectAvailablePermission(permissionId) {
+            selectedAvailable = selectedAvailable === permissionId ? null : permissionId;
+            renderAvailablePermissions();
+            updateButtons();
+        }
+
+        function selectUserPermission(permissionId) {
+            selectedUser = selectedUser === permissionId ? null : permissionId;
+            renderUserPermissions();
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const hasAvailable = availablePermissions.length > 0;
+            const hasUser = userPermissions.length > 0;
+            const hasSelectedAvailable = selectedAvailable !== null;
+            const hasSelectedUser = selectedUser !== null;
+            
+            document.getElementById('btnAddOne').disabled = !hasSelectedAvailable;
+            document.getElementById('btnAddAll').disabled = !hasAvailable;
+            document.getElementById('btnRemoveOne').disabled = !hasSelectedUser;
+            document.getElementById('btnRemoveAll').disabled = !hasUser;
+        }
+
+        function addOnePermission() {
+            if (!selectedAvailable) return;
+            
+            const permission = availablePermissions.find(p => p.id === selectedAvailable);
+            if (permission) {
+                userPermissions.push(permission);
+                availablePermissions = availablePermissions.filter(p => p.id !== selectedAvailable);
+                selectedAvailable = null;
+                
+                renderPermissions();
+                updateButtons();
+                mostrarMensaje(`Permiso "${permission.name}" agregado`, 'success');
+            }
+        }
+
+        function addAllPermissions() {
+            if (availablePermissions.length === 0) return;
+            
+            userPermissions = [...userPermissions, ...availablePermissions];
+            const count = availablePermissions.length;
+            availablePermissions = [];
+            selectedAvailable = null;
+            
+            renderPermissions();
+            updateButtons();
+            mostrarMensaje(`${count} permisos agregados`, 'success');
+        }
+
+        function removeOnePermission() {
+            if (!selectedUser) return;
+            
+            const permission = userPermissions.find(p => p.id === selectedUser);
+            if (permission) {
+                availablePermissions.push(permission);
+                userPermissions = userPermissions.filter(p => p.id !== selectedUser);
+                selectedUser = null;
+                
+                renderPermissions();
+                updateButtons();
+                mostrarMensaje(`Permiso "${permission.name}" removido`, 'success');
+            }
+        }
+
+        function removeAllPermissions() {
+            if (userPermissions.length === 0) return;
+            
+            availablePermissions = [...availablePermissions, ...userPermissions];
+            const count = userPermissions.length;
+            userPermissions = [];
+            selectedUser = null;
+            
+            renderPermissions();
+            updateButtons();
+            mostrarMensaje(`${count} permisos removidos`, 'success');
+        }
+
+        function grabarPermisos() {
+            if (!currentUserId) {
+                mostrarMensaje('Debe seleccionar un usuario', 'error');
+                return;
+            }
+            
+            // Simular guardado en base de datos
+            const userPermissionIds = userPermissions.map(p => p.id);
+            userPermissionsData[currentUserId] = userPermissionIds;
+            
+            mostrarMensaje('Permisos guardados exitosamente', 'success');
+            
+            if (window.parent) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: `Permisos del usuario actualizados - ${userPermissions.length} permisos asignados`
+                }, '*');
+            }
+        }
+
+        function abrirPermisoABM() {
+            if (!currentUserId) {
+                mostrarMensaje('Debe seleccionar un usuario', 'error');
+                return;
+            }
+            
+            if (window.parent && window.parent.mostrarContenido) {
+                window.parent.mostrarContenido('frmPermisoABM.html?usuario=' + currentUserId, 'Permiso de ABM');
+            } else {
+                window.open('frmPermisoABM.html?usuario=' + currentUserId, '_blank');
+            }
+        }
+
+        function mostrarMensaje(texto, tipo) {
+            const container = document.getElementById('messageContainer');
+            const messageId = 'msg_' + Date.now();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = `message ${tipo}`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${texto}</span>
+                    <button onclick="cerrarMensaje('${messageId}')" class="ml-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            // Auto-cerrar después de 5 segundos
+            setTimeout(() => {
+                cerrarMensaje(messageId);
+            }, 5000);
+        }
+
+        function cerrarMensaje(messageId) {
+            const message = document.getElementById(messageId);
+            if (message) {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.remove();
+                }, 300);
+            }
+        }
+
+        function manejarComandoToolbar(comando) {
+            switch(comando) {
+                case 'save':
+                    grabarPermisos();
+                    break;
+                case 'refresh':
+                    cargarPermisosUsuario();
+                    break;
+                case 'cancel':
+                    if (confirm('¿Desea cancelar los cambios?')) {
+                        cargarPermisosUsuario();
+                    }
+                    break;
+            }
+        }
+
+        // Manejar teclas
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'close_window'
+                    }, '*');
+                }
+            }
+            
+            // Teclas de acceso rápido
+            if (event.ctrlKey) {
+                switch(event.key) {
+                    case 's':
+                        event.preventDefault();
+                        grabarPermisos();
+                        break;
+                    case 'r':
+                        event.preventDefault();
+                        cargarPermisosUsuario();
+                        break;
+                }
+            }
+            
+            // Flechas para navegación
+            if (event.key === 'ArrowRight' && selectedAvailable) {
+                addOnePermission();
+            } else if (event.key === 'ArrowLeft' && selectedUser) {
+                removeOnePermission();
+            }
+        });
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', inicializar);
+    </script>
+</body>
+</html>

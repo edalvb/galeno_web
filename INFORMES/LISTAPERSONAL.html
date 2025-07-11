@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE PERSONAL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .tipo-column {
+            width: 120px;
+            text-align: center;
+        }
+        .apellidos-column {
+            width: 180px;
+        }
+        .nombres-column {
+            width: 150px;
+        }
+        .documento-column {
+            width: 130px;
+            text-align: center;
+        }
+        .cargo-column {
+            width: 120px;
+            text-align: center;
+        }
+        .telefono-column {
+            width: 120px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .tipo-medico {
+            background-color: #e8f5e8;
+            color: #2d6a2d;
+        }
+        .tipo-enfermero {
+            background-color: #e8f0ff;
+            color: #1e40af;
+        }
+        .tipo-administrativo {
+            background-color: #fff3e8;
+            color: #b45309;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE PERSONAL</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PAGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="tipo-column">TIPOPERSONA</th>
+                    <th class="apellidos-column">APELLIDOS</th>
+                    <th class="nombres-column">NOMBRES</th>
+                    <th class="documento-column">Nº DOC</th>
+                    <th class="cargo-column">CARGO</th>
+                    <th class="telefono-column">TELEFONOS</th>
+                </tr>
+            </thead>
+            <tbody id="personal-data">
+                <tr>
+                    <td colspan="6" class="no-data">
+                        Cargando datos del personal...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>PAGINA: <span id="footer-page">1</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo del personal médico
+        const personal = [
+            {
+                tipo: "MÉDICO",
+                apellidos: "GARCÍA LÓPEZ",
+                nombres: "CARLOS ANDRÉS",
+                documento: "12345678",
+                cargo: "CARDIÓLOGO",
+                telefono: "3101234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "RODRÍGUEZ PÉREZ",
+                nombres: "MARÍA ELENA",
+                documento: "23456789",
+                cargo: "PEDIATRA",
+                telefono: "3201234567"
+            },
+            {
+                tipo: "ENFERMERO",
+                apellidos: "MARTÍNEZ SILVA",
+                nombres: "JUAN PABLO",
+                documento: "34567890",
+                cargo: "ENFERMERO JEFE",
+                telefono: "3301234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "FERNÁNDEZ GÓMEZ",
+                nombres: "ANA LUCÍA",
+                documento: "45678901",
+                cargo: "GINECÓLOGA",
+                telefono: "3401234567"
+            },
+            {
+                tipo: "ENFERMERO",
+                apellidos: "TORRES MORALES",
+                nombres: "LUIS FERNANDO",
+                documento: "56789012",
+                cargo: "ENFERMERO",
+                telefono: "3501234567"
+            },
+            {
+                tipo: "ADMIN",
+                apellidos: "RAMÍREZ CASTRO",
+                nombres: "SANDRA PATRICIA",
+                documento: "67890123",
+                cargo: "SECRETARIA",
+                telefono: "3601234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "VARGAS HERRERA",
+                nombres: "DIEGO ALEJANDRO",
+                documento: "78901234",
+                cargo: "NEURÓLOGO",
+                telefono: "3701234567"
+            },
+            {
+                tipo: "ENFERMERO",
+                apellidos: "JIMÉNEZ ROJAS",
+                nombres: "CATALINA",
+                documento: "89012345",
+                cargo: "ENFERMERA",
+                telefono: "3801234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "SALAZAR MENDOZA",
+                nombres: "RICARDO JOSÉ",
+                documento: "90123456",
+                cargo: "ORTOPEDISTA",
+                telefono: "3901234567"
+            },
+            {
+                tipo: "ADMIN",
+                apellidos: "CORREA VÁSQUEZ",
+                nombres: "MÓNICA ALEJANDRA",
+                documento: "01234567",
+                cargo: "CONTADORA",
+                telefono: "3001234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "GUTIERREZ LEÓN",
+                nombres: "FERNANDO MIGUEL",
+                documento: "11223344",
+                cargo: "DERMATÓLOGO",
+                telefono: "3111234567"
+            },
+            {
+                tipo: "ENFERMERO",
+                apellidos: "MORENO CRUZ",
+                nombres: "BEATRIZ ELENA",
+                documento: "22334455",
+                cargo: "ENFERMERA UCI",
+                telefono: "3211234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "OSPINA RUIZ",
+                nombres: "ANDRÉS FELIPE",
+                documento: "33445566",
+                cargo: "URÓLOGO",
+                telefono: "3311234567"
+            },
+            {
+                tipo: "ADMIN",
+                apellidos: "VALENCIA TORRES",
+                nombres: "GLORIA INÉS",
+                documento: "44556677",
+                cargo: "RECEPCIONISTA",
+                telefono: "3411234567"
+            },
+            {
+                tipo: "MÉDICO",
+                apellidos: "DELGADO CAMPOS",
+                nombres: "PATRICIA SOFIA",
+                documento: "55667788",
+                cargo: "OFTALMÓLOGA",
+                telefono: "3511234567"
+            }
+        ];
+
+        // Función para obtener la clase CSS según el tipo de personal
+        function getTipoClass(tipo) {
+            switch(tipo) {
+                case 'MÉDICO': return 'tipo-medico';
+                case 'ENFERMERO': return 'tipo-enfermero';
+                case 'ADMIN': return 'tipo-administrativo';
+                default: return '';
+            }
+        }
+
+        // Cargar datos del personal
+        function loadPersonal() {
+            const tbody = document.getElementById('personal-data');
+            
+            if (personal.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">No hay datos de personal disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = personal.map(persona => `
+                <tr>
+                    <td class="tipo-column ${getTipoClass(persona.tipo)}">${persona.tipo}</td>
+                    <td class="apellidos-column">${persona.apellidos}</td>
+                    <td class="nombres-column">${persona.nombres}</td>
+                    <td class="documento-column">${persona.documento}</td>
+                    <td class="cargo-column">${persona.cargo}</td>
+                    <td class="telefono-column">${persona.telefono}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadPersonal();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

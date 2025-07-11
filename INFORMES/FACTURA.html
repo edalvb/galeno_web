@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACTURA - MEG@SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-area { box-shadow: none !important; }
+            .invoice-container { max-width: none !important; margin: 0 !important; }
+        }
+        
+        .invoice-container {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            max-width: 21cm;
+            margin: 0 auto;
+        }
+        
+        .invoice-header {
+            border: 2px solid #374151;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .invoice-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .invoice-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #1f2937;
+            border-bottom: 2px solid #374151;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .client-info {
+            border: 1px solid #d1d5db;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9fafb;
+        }
+        
+        .client-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .client-label {
+            font-weight: bold;
+            min-width: 150px;
+            color: #374151;
+        }
+        
+        .client-value {
+            flex: 1;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 2px;
+        }
+        
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border: 2px solid #374151;
+        }
+        
+        .services-table th {
+            background-color: #374151;
+            color: white;
+            padding: 10px 5px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #374151;
+            font-size: 10px;
+        }
+        
+        .services-table td {
+            border: 1px solid #374151;
+            padding: 8px 5px;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .services-table .text-left {
+            text-align: left;
+        }
+        
+        .services-table .text-right {
+            text-align: right;
+        }
+        
+        .totals-section {
+            border: 2px solid #374151;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f9fafb;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+        
+        .total-label {
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .total-value {
+            font-weight: bold;
+            text-align: right;
+            min-width: 120px;
+        }
+        
+        .final-total {
+            border-top: 2px solid #374151;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .currency {
+            text-align: right;
+        }
+        
+        .item-number {
+            width: 40px;
+            text-align: center;
+        }
+        
+        .date-column {
+            width: 80px;
+            text-align: center;
+        }
+        
+        .service-column {
+            min-width: 200px;
+            text-align: left;
+        }
+        
+        .quantity-column {
+            width: 80px;
+            text-align: center;
+        }
+        
+        .amount-column {
+            width: 100px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Toolbar (No Print) -->
+    <div class="no-print bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button onclick="window.history.back()" class="flex items-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver
+                </button>
+                <h1 class="text-xl font-semibold text-gray-800">Factura Médica</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="nuevaFactura()" class="flex items-center px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nueva
+                </button>
+                <button onclick="buscarFactura()" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Buscar
+                </button>
+                <button onclick="exportToPDF()" class="flex items-center px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    PDF
+                </button>
+                <button onclick="window.print()" class="flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-print mr-2"></i>
+                    Imprimir
+                </button>
+                <button onclick="enviarEmail()" class="flex items-center px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors">
+                    <i class="fas fa-envelope mr-2"></i>
+                    Email
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Panel (No Print) -->
+    <div class="no-print container mx-auto px-6 py-4">
+        <div id="searchPanel" class="hidden bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Buscar Factura</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Número de Factura</label>
+                    <input type="text" id="searchNroFac" placeholder="Ej: FAC-001234" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Paciente</label>
+                    <input type="text" id="searchPaciente" placeholder="Nombre del paciente..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
+                    <input type="date" id="searchFechaDesde" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
+                    <input type="date" id="searchFechaHasta" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button onclick="realizarBusqueda()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>
+                    Buscar
+                </button>
+                <button onclick="limpiarBusqueda()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-eraser mr-2"></i>
+                    Limpiar
+                </button>
+                <button onclick="cerrarBusqueda()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Content -->
+    <div class="container mx-auto p-6 print-area">
+        <div class="invoice-container bg-white shadow-lg rounded-lg overflow-hidden">
+            
+            <!-- Invoice Header -->
+            <div class="invoice-header">
+                <div class="invoice-title">FACTURA</div>
+                
+                <div class="invoice-header-row">
+                    <div class="flex items-center">
+                        <span class="client-label">FECHA:</span>
+                        <span id="invoiceDate" class="ml-2 font-mono">25/06/2025</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="client-label">TIPO Y Nº FACTURA:</span>
+                        <span id="invoiceType" class="ml-2 font-mono">A</span>
+                        <span id="invoiceNumber" class="ml-2 font-mono font-bold">001234</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Information -->
+            <div class="client-info">
+                <div class="client-row">
+                    <span class="client-label">NOMBRES Y APELLIDOS:</span>
+                    <div class="flex space-x-4 flex-1">
+                        <span id="clientNames" class="client-value">JUAN CARLOS</span>
+                        <span id="clientLastNames" class="client-value">PÉREZ GARCÍA</span>
+                    </div>
+                </div>
+                <div class="client-row">
+                    <span class="client-label">DIRECCIÓN:</span>
+                    <span id="clientAddress" class="client-value">Av. Principal 123, Centro, Ciudad</span>
+                </div>
+                <div class="client-row">
+                    <span class="client-label">TELÉFONOS:</span>
+                    <span id="clientPhones" class="client-value">0981-234567 / 021-234567</span>
+                </div>
+            </div>
+
+            <!-- Services Table -->
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th class="item-number">ITEM</th>
+                        <th class="date-column">FECHA</th>
+                        <th class="service-column">SERVICIO</th>
+                        <th class="quantity-column">CANTIDAD</th>
+                        <th class="amount-column">P. UNIT.</th>
+                        <th class="amount-column">EXENTA</th>
+                        <th class="amount-column">GRABADA</th>
+                    </tr>
+                </thead>
+                <tbody id="servicesTableBody">
+                    <!-- Los servicios se cargarán dinámicamente -->
+                </tbody>
+            </table>
+
+            <!-- Totals Section -->
+            <div class="totals-section">
+                <h4 class="text-lg font-bold mb-4 text-gray-800">SUB TOTALES</h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <!-- Espacio para información adicional -->
+                    </div>
+                    <div>
+                        <div class="total-row">
+                            <span class="total-label">Total Exento:</span>
+                            <span id="totalExento" class="total-value currency">$0</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Total Gravado:</span>
+                            <span id="totalGravado" class="total-value currency">$0</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Descuento:</span>
+                            <span id="descuento" class="total-value currency">$0</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">IVA (10%):</span>
+                            <span id="iva" class="total-value currency">$0</span>
+                        </div>
+                        <div class="total-row final-total">
+                            <span class="total-label">TOTAL:</span>
+                            <span id="total" class="total-value currency text-xl">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg">
+            <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+            <p class="mt-2 text-gray-600">Cargando factura...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentInvoice = {};
+
+        // Initialize the invoice
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInvoiceData();
+        });
+
+        // Mock data for demo - En un sistema real vendría de la base de datos
+        function generateMockInvoice() {
+            return {
+                fecha: '25/06/2025',
+                tipoFactura: 'A',
+                numeroFactura: '001234',
+                nombres: 'JUAN CARLOS',
+                apellidos: 'PÉREZ GARCÍA',
+                direccion: 'Av. Principal 123, Centro, Ciudad',
+                telefonos: '0981-234567 / 021-234567',
+                servicios: [
+                    {
+                        item: 1,
+                        fecha: '25/06/25',
+                        servicio: 'Consulta Médica General',
+                        cantidad: 1,
+                        precioUnitario: 80000,
+                        exenta: 0,
+                        grabada: 80000
+                    },
+                    {
+                        item: 2,
+                        fecha: '25/06/25',
+                        servicio: 'Electrocardiograma',
+                        cantidad: 1,
+                        precioUnitario: 45000,
+                        exenta: 0,
+                        grabada: 45000
+                    },
+                    {
+                        item: 3,
+                        fecha: '25/06/25',
+                        servicio: 'Análisis de Sangre Completo',
+                        cantidad: 1,
+                        precioUnitario: 75000,
+                        exenta: 0,
+                        grabada: 75000
+                    },
+                    {
+                        item: 4,
+                        fecha: '25/06/25',
+                        servicio: 'Radiografía de Tórax',
+                        cantidad: 1,
+                        precioUnitario: 95000,
+                        exenta: 0,
+                        grabada: 95000
+                    }
+                ],
+                descuentoPorcentaje: 5
+            };
+        }
+
+        function loadInvoiceData() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            // Simular carga de datos
+            setTimeout(() => {
+                currentInvoice = generateMockInvoice();
+                renderInvoice();
+                document.getElementById('loadingState').classList.add('hidden');
+            }, 1000);
+        }
+
+        function renderInvoice() {
+            // Header information
+            document.getElementById('invoiceDate').textContent = currentInvoice.fecha;
+            document.getElementById('invoiceType').textContent = currentInvoice.tipoFactura;
+            document.getElementById('invoiceNumber').textContent = currentInvoice.numeroFactura;
+            
+            // Client information
+            document.getElementById('clientNames').textContent = currentInvoice.nombres;
+            document.getElementById('clientLastNames').textContent = currentInvoice.apellidos;
+            document.getElementById('clientAddress').textContent = currentInvoice.direccion;
+            document.getElementById('clientPhones').textContent = currentInvoice.telefonos;
+            
+            // Services table
+            const tbody = document.getElementById('servicesTableBody');
+            tbody.innerHTML = '';
+            
+            currentInvoice.servicios.forEach(servicio => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="item-number">${servicio.item}</td>
+                    <td class="date-column">${servicio.fecha}</td>
+                    <td class="service-column text-left">${servicio.servicio}</td>
+                    <td class="quantity-column">${servicio.cantidad}</td>
+                    <td class="amount-column currency">$${servicio.precioUnitario.toLocaleString('es-ES')}</td>
+                    <td class="amount-column currency">$${servicio.exenta.toLocaleString('es-ES')}</td>
+                    <td class="amount-column currency">$${servicio.grabada.toLocaleString('es-ES')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Calculate and display totals
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const totalExento = currentInvoice.servicios.reduce((sum, s) => sum + s.exenta, 0);
+            const totalGravado = currentInvoice.servicios.reduce((sum, s) => sum + s.grabada, 0);
+            const subtotal = totalExento + totalGravado;
+            const descuento = Math.round(subtotal * (currentInvoice.descuentoPorcentaje / 100));
+            const baseImponible = subtotal - descuento;
+            const iva = Math.round(baseImponible * 0.10);
+            const total = baseImponible + iva;
+            
+            document.getElementById('totalExento').textContent = '$' + totalExento.toLocaleString('es-ES');
+            document.getElementById('totalGravado').textContent = '$' + totalGravado.toLocaleString('es-ES');
+            document.getElementById('descuento').textContent = '$' + descuento.toLocaleString('es-ES');
+            document.getElementById('iva').textContent = '$' + iva.toLocaleString('es-ES');
+            document.getElementById('total').textContent = '$' + total.toLocaleString('es-ES');
+        }
+
+        function nuevaFactura() {
+            if (confirm('¿Desea crear una nueva factura? Los datos actuales se perderán.')) {
+                // En un sistema real, esto abriría un formulario para nueva factura
+                alert('Funcionalidad de nueva factura pendiente de implementación');
+            }
+        }
+
+        function buscarFactura() {
+            const panel = document.getElementById('searchPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function cerrarBusqueda() {
+            document.getElementById('searchPanel').classList.add('hidden');
+        }
+
+        function realizarBusqueda() {
+            const nroFac = document.getElementById('searchNroFac').value;
+            const paciente = document.getElementById('searchPaciente').value;
+            const fechaDesde = document.getElementById('searchFechaDesde').value;
+            const fechaHasta = document.getElementById('searchFechaHasta').value;
+            
+            // En un sistema real, esto haría una consulta a la base de datos
+            alert(`Buscando facturas con los criterios:\nNúmero: ${nroFac}\nPaciente: ${paciente}\nDesde: ${fechaDesde}\nHasta: ${fechaHasta}`);
+        }
+
+        function limpiarBusqueda() {
+            document.getElementById('searchNroFac').value = '';
+            document.getElementById('searchPaciente').value = '';
+            document.getElementById('searchFechaDesde').value = '';
+            document.getElementById('searchFechaHasta').value = '';
+        }
+
+        function exportToPDF() {
+            // En un sistema real, esto generaría un PDF
+            alert('Funcionalidad de exportación a PDF pendiente de implementación');
+        }
+
+        function enviarEmail() {
+            // En un sistema real, esto abriría un diálogo para envío por email
+            alert('Funcionalidad de envío por email pendiente de implementación');
+        }
+
+        // Handle toolbar commands from parent frame
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'toolbar_command') {
+                switch(event.data.command) {
+                    case 'refresh':
+                        loadInvoiceData();
+                        break;
+                    case 'print':
+                        window.print();
+                        break;
+                    case 'search':
+                        buscarFactura();
+                        break;
+                    case 'add':
+                        nuevaFactura();
+                        break;
+                }
+            }
+        });
+
+        // Send status updates to parent frame
+        function updateParentStatus(message) {
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'status_update',
+                    message: message
+                }, '*');
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey) {
+                switch(event.key) {
+                    case 'p':
+                        event.preventDefault();
+                        window.print();
+                        break;
+                    case 'f':
+                        event.preventDefault();
+                        buscarFactura();
+                        break;
+                    case 'n':
+                        event.preventDefault();
+                        nuevaFactura();
+                        break;
+                }
+            }
+        });
+
+        // Initialize on load
+        updateParentStatus('Factura cargada correctamente');
+    </script>
+</body>
+</html>

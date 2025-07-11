@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE PERFILES</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .header .subtitle {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            font-style: italic;
+            color: #666;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .codigo-column {
+            width: 120px;
+            text-align: center;
+        }
+        .nombre-column {
+            width: auto;
+        }
+        .tiempo-column {
+            width: 120px;
+            text-align: center;
+        }
+        .costo-column {
+            width: 120px;
+            text-align: right;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .footer .sistema-info {
+            font-style: italic;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .precio {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="subtitle">
+            <span>INSTITUTO DE PREVISION SOCIAL</span>
+            <span>LABORATORIO DE ANALISIS CLINICOS</span>
+        </div>
+        <h1>LISTADO DE PERFILES</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>Página: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="codigo-column">CODIGO</th>
+                    <th class="nombre-column">NOMBRE</th>
+                    <th class="tiempo-column">TIMEENTN</th>
+                    <th class="tiempo-column">TIMEENTU</th>
+                    <th class="costo-column">PRE_COSTO</th>
+                </tr>
+            </thead>
+            <tbody id="perfiles-data">
+                <tr>
+                    <td colspan="5" class="no-data">
+                        Cargando datos de perfiles...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <div class="sistema-info">SISTEMA DE GESTION DE LABORATORIO DE ANALISIS CLINICOS    SGLAC V 1.0</div>
+        <div>
+            <span id="footer-date"></span>
+            <span id="footer-time"></span>
+            <span>Página: <span id="footer-page">1</span></span>
+        </div>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de perfiles de laboratorio
+        const perfiles = [
+            {
+                codigo: "001",
+                nombre: "PERFIL LIPÍDICO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "16:00",
+                costo: 45000
+            },
+            {
+                codigo: "002", 
+                nombre: "PERFIL HEPÁTICO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "18:00",
+                costo: 55000
+            },
+            {
+                codigo: "003",
+                nombre: "PERFIL RENAL",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "16:00",
+                costo: 38000
+            },
+            {
+                codigo: "004",
+                nombre: "PERFIL TIROIDEO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "24:00",
+                costo: 85000
+            },
+            {
+                codigo: "005",
+                nombre: "PERFIL CARDÍACO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "12:00",
+                costo: 95000
+            },
+            {
+                codigo: "006",
+                nombre: "PERFIL DIABÉTICO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "16:00",
+                costo: 42000
+            },
+            {
+                codigo: "007",
+                nombre: "PERFIL HORMONAL FEMENINO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "24:00",
+                costo: 120000
+            },
+            {
+                codigo: "008",
+                nombre: "PERFIL HORMONAL MASCULINO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "24:00",
+                costo: 110000
+            },
+            {
+                codigo: "009",
+                nombre: "PERFIL PRENATAL",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "48:00",
+                costo: 75000
+            },
+            {
+                codigo: "010",
+                nombre: "PERFIL ONCOLÓGICO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "72:00",
+                costo: 180000
+            },
+            {
+                codigo: "011",
+                nombre: "PERFIL INFECCIOSO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "24:00",
+                costo: 65000
+            },
+            {
+                codigo: "012",
+                nombre: "PERFIL AUTOINMUNE",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "72:00",
+                costo: 150000
+            },
+            {
+                codigo: "013",
+                nombre: "PERFIL NUTRICIONAL",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "24:00",
+                costo: 58000
+            },
+            {
+                codigo: "014",
+                nombre: "PERFIL PEDIÁTRICO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "16:00",
+                costo: 48000
+            },
+            {
+                codigo: "015",
+                nombre: "PERFIL GERIÁTRICO",
+                tiempoEntrada: "08:00",
+                tiempoEntrega: "24:00",
+                costo: 72000
+            }
+        ];
+
+        // Formatear precio en pesos colombianos
+        function formatPrice(price) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            }).format(price);
+        }
+
+        // Cargar datos de perfiles
+        function loadPerfiles() {
+            const tbody = document.getElementById('perfiles-data');
+            
+            if (perfiles.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No hay datos de perfiles disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = perfiles.map(perfil => `
+                <tr>
+                    <td class="codigo-column">${perfil.codigo}</td>
+                    <td class="nombre-column">${perfil.nombre}</td>
+                    <td class="tiempo-column">${perfil.tiempoEntrada}</td>
+                    <td class="tiempo-column">${perfil.tiempoEntrega}</td>
+                    <td class="costo-column precio">${formatPrice(perfil.costo)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadPerfiles();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

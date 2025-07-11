@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORDEN DE SERVICIO</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .form-section {
+            margin-bottom: 25px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .form-field {
+            flex: 1;
+            min-width: 200px;
+        }
+        .form-field label {
+            display: block;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            background-color: #f9f9f9;
+        }
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .services-table th,
+        .services-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 11px;
+        }
+        .services-table th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+            color: #333;
+        }
+        .services-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .price-column {
+            text-align: right;
+            font-weight: bold;
+        }
+        .total-section {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: right;
+        }
+        .total-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        .total-label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+        .total-value {
+            font-weight: bold;
+            min-width: 100px;
+            text-align: right;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-bottom: 5px;
+            padding-top: 5px;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .form-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ORDEN DE SERVICIO</h1>
+    </div>
+
+    <div class="form-container">
+        <!-- Información del Paciente -->
+        <div class="form-section">
+            <div class="section-title">INFORMACIÓN DEL PACIENTE</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="fichaclinica">FICHA CLÍNICA:</label>
+                    <input type="text" id="fichaclinica" value="FC-2024-001">
+                </div>
+                <div class="form-field">
+                    <label for="nombres">NOMBRES:</label>
+                    <input type="text" id="nombres" value="JUAN CARLOS">
+                </div>
+                <div class="form-field">
+                    <label for="apellidos">APELLIDOS:</label>
+                    <input type="text" id="apellidos" value="GARCÍA LÓPEZ">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="tipdoc">TIPO DOCUMENTO:</label>
+                    <select id="tipdoc">
+                        <option value="CC" selected>CÉDULA CIUDADANÍA</option>
+                        <option value="TI">TARJETA IDENTIDAD</option>
+                        <option value="CE">CÉDULA EXTRANJERÍA</option>
+                        <option value="PA">PASAPORTE</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="nrodoc">NÚMERO DOCUMENTO:</label>
+                    <input type="text" id="nrodoc" value="1234567890">
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Médica -->
+        <div class="form-section">
+            <div class="section-title">INFORMACIÓN MÉDICA</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="coddr">CÓDIGO DOCTOR:</label>
+                    <input type="text" id="coddr" value="DOC001">
+                </div>
+                <div class="form-field">
+                    <label for="especialidad">ESPECIALIDAD:</label>
+                    <input type="text" id="especialidad" value="ESP001">
+                </div>
+                <div class="form-field">
+                    <label for="nombre_doctor">NOMBRE DOCTOR:</label>
+                    <input type="text" id="nombre_doctor" value="DR. CARLOS MÉNDEZ">
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Seguro -->
+        <div class="form-section">
+            <div class="section-title">INFORMACIÓN DEL SEGURO</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="cod_empresa">CÓDIGO EMPRESA:</label>
+                    <input type="text" id="cod_empresa" value="EPS001">
+                </div>
+                <div class="form-field">
+                    <label for="nombre_empresa">NOMBRE EMPRESA:</label>
+                    <input type="text" id="nombre_empresa" value="SALUD TOTAL EPS">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="nro_seguro">NÚMERO SEGURO:</label>
+                    <input type="text" id="nro_seguro" value="SEG123456789">
+                </div>
+                <div class="form-field">
+                    <label for="ide_asegurado">ID ASEGURADO:</label>
+                    <input type="text" id="ide_asegurado" value="ASE001">
+                </div>
+                <div class="form-field">
+                    <label for="tipo_seguro">TIPO SEGURO:</label>
+                    <select id="tipo_seguro">
+                        <option value="POS" selected>POS</option>
+                        <option value="NO POS">NO POS</option>
+                        <option value="PARTICULAR">PARTICULAR</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Facturación -->
+        <div class="form-section">
+            <div class="section-title">INFORMACIÓN DE FACTURACIÓN</div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="tipomov">TIPO MOVIMIENTO:</label>
+                    <select id="tipomov">
+                        <option value="CON" selected>CONSULTA</option>
+                        <option value="LAB">LABORATORIO</option>
+                        <option value="RAD">RADIOLOGÍA</option>
+                        <option value="PRO">PROCEDIMIENTO</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="codins">CÓDIGO INSTITUTO:</label>
+                    <input type="text" id="codins" value="INS001">
+                </div>
+                <div class="form-field">
+                    <label for="instituto">INSTITUTO:</label>
+                    <input type="text" id="instituto" value="LABORATORIO CLÍNICO GALENO">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="fec_fac">FECHA FACTURA:</label>
+                    <input type="date" id="fec_fac">
+                </div>
+                <div class="form-field">
+                    <label for="nro_fac">NÚMERO FACTURA:</label>
+                    <input type="text" id="nro_fac" value="FAC-2024-001">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="cod_usuario">CÓDIGO USUARIO:</label>
+                    <input type="text" id="cod_usuario" value="USR001">
+                </div>
+                <div class="form-field">
+                    <label for="nombre_usuario">NOMBRE USUARIO:</label>
+                    <input type="text" id="nombre_usuario" value="RECEPCIONISTA MARÍA">
+                </div>
+                <div class="form-field">
+                    <label for="cod_sanatorial">CÓDIGO SANATORIAL:</label>
+                    <input type="text" id="cod_sanatorial" value="SAN001">
+                </div>
+            </div>
+        </div>
+
+        <!-- Servicios Solicitados -->
+        <div class="form-section">
+            <div class="section-title">SERVICIOS SOLICITADOS</div>
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th>CÓDIGO SERVICIO</th>
+                        <th>TIPO SERVICIO</th>
+                        <th>CÓDIGO SER</th>
+                        <th>NOMBRE SERVICIO</th>
+                        <th>CANTIDAD</th>
+                        <th>PRECIO COSTO</th>
+                        <th>PRECIO VENTA</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody id="services-table-body">
+                    <tr>
+                        <td>HEM001</td>
+                        <td>LAB</td>
+                        <td>HEMOG</td>
+                        <td>HEMOGRAMA COMPLETO</td>
+                        <td>1</td>
+                        <td class="price-column">$15,000</td>
+                        <td class="price-column">$25,000</td>
+                        <td class="price-column">$25,000</td>
+                    </tr>
+                    <tr>
+                        <td>QUI001</td>
+                        <td>LAB</td>
+                        <td>QUIM</td>
+                        <td>QUÍMICA SANGUÍNEA BÁSICA</td>
+                        <td>1</td>
+                        <td class="price-column">$20,000</td>
+                        <td class="price-column">$35,000</td>
+                        <td class="price-column">$35,000</td>
+                    </tr>
+                    <tr>
+                        <td>URI001</td>
+                        <td>LAB</td>
+                        <td>ORINA</td>
+                        <td>PARCIAL DE ORINA</td>
+                        <td>1</td>
+                        <td class="price-column">$8,000</td>
+                        <td class="price-column">$15,000</td>
+                        <td class="price-column">$15,000</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <div class="total-row">
+                    <div class="total-label">SUBTOTAL:</div>
+                    <div class="total-value" id="subtotal">$75,000</div>
+                </div>
+                <div class="total-row">
+                    <div class="total-label">IVA (0%):</div>
+                    <div class="total-value" id="iva">$0</div>
+                </div>
+                <div class="total-row">
+                    <div class="total-label">TOTAL A PAGAR:</div>
+                    <div class="total-value" id="total">$75,000</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Firmas -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div>FIRMA PACIENTE</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div>FIRMA MÉDICO</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div>FIRMA AUTORIZADA</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>ORDEN: <span id="orden-numero">ORD-2024-001</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+            
+            // Configurar fecha de factura
+            document.getElementById('fec_fac').value = now.toISOString().split('T')[0];
+        }
+
+        // Función para agregar nuevo servicio
+        function addService() {
+            const tbody = document.getElementById('services-table-body');
+            const newRow = tbody.insertRow();
+            
+            newRow.innerHTML = `
+                <td><input type="text" style="width:100%; border:none; background:transparent;"></td>
+                <td><select style="width:100%; border:none; background:transparent;">
+                    <option value="LAB">LAB</option>
+                    <option value="RAD">RAD</option>
+                    <option value="CON">CON</option>
+                    <option value="PRO">PRO</option>
+                </select></td>
+                <td><input type="text" style="width:100%; border:none; background:transparent;"></td>
+                <td><input type="text" style="width:100%; border:none; background:transparent;"></td>
+                <td><input type="number" style="width:100%; border:none; background:transparent;" value="1"></td>
+                <td class="price-column"><input type="text" style="width:100%; border:none; background:transparent; text-align:right;"></td>
+                <td class="price-column"><input type="text" style="width:100%; border:none; background:transparent; text-align:right;"></td>
+                <td class="price-column">$0</td>
+            `;
+        }
+
+        // Función para calcular totales
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#services-table-body tr');
+            let subtotal = 0;
+            
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if (cells.length >= 8) {
+                    const cantidad = parseInt(cells[4].textContent || cells[4].querySelector('input')?.value || '0');
+                    const precio = parseFloat((cells[6].textContent || cells[6].querySelector('input')?.value || '0').replace(/[$,]/g, ''));
+                    const total = cantidad * precio;
+                    
+                    cells[7].textContent = `$${total.toLocaleString()}`;
+                    subtotal += total;
+                }
+            });
+            
+            const iva = subtotal * 0; // 0% IVA para servicios médicos
+            const total = subtotal + iva;
+            
+            document.getElementById('subtotal').textContent = `$${subtotal.toLocaleString()}`;
+            document.getElementById('iva').textContent = `$${iva.toLocaleString()}`;
+            document.getElementById('total').textContent = `$${total.toLocaleString()}`;
+        }
+
+        // Función de impresión
+        function printOrder() {
+            window.print();
+        }
+
+        // Función para guardar orden
+        function saveOrder() {
+            alert('Orden guardada exitosamente');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            calculateTotals();
+            
+            // Agregar eventos de teclado
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'p') {
+                    e.preventDefault();
+                    printOrder();
+                }
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveOrder();
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    addService();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

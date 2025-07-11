@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orden de Servicio - Sistema Galeno</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .report-container {
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 29.7cm;
+            position: relative;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-decoration: underline;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .order-section {
+            background: #fff;
+            border: 1px solid #ff0000;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .order-header {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .order-header label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .order-header .value {
+            font-weight: bold;
+            color: #c0392b;
+            padding: 3px 8px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .patient-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 8px 12px;
+            border-left: 4px solid #ff0000;
+            margin-bottom: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-field {
+            display: flex;
+            align-items: center;
+        }
+
+        .info-field label {
+            min-width: 120px;
+            font-weight: normal;
+            color: #555;
+        }
+
+        .info-field .value {
+            font-weight: bold;
+            color: #2c3e50;
+            flex: 1;
+            padding: 3px 8px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .doctor-section {
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .insurance-section {
+            margin-bottom: 20px;
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .responsible-section {
+            margin-bottom: 20px;
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #c3e6c3;
+        }
+
+        .institute-section {
+            margin-bottom: 20px;
+            background: #e6f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #b3d9ff;
+        }
+
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11px;
+        }
+
+        .services-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #34495e;
+        }
+
+        .services-table td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .services-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .services-table tr:hover {
+            background: #e8f4f8;
+        }
+
+        .services-table .service-desc {
+            text-align: left;
+            max-width: 250px;
+        }
+
+        .services-table .price {
+            text-align: right;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .urgent-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .normal-badge {
+            background: #95a5a6;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .total-section {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        .total-section .total-amount {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .footer-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background: #f8f9fa;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .navigation h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .navigation button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .navigation button:hover {
+            background: #2980b9;
+        }
+
+        .print-button {
+            background: #27ae60 !important;
+        }
+
+        .print-button:hover {
+            background: #229954 !important;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .navigation {
+                display: none;
+            }
+            
+            .report-container {
+                border: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .patient-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .order-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .services-table {
+                font-size: 10px;
+            }
+            
+            .services-table th,
+            .services-table td {
+                padding: 6px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <h3>🏥 Navegación</h3>
+        <button onclick="loadExample(1)">📋 Ejemplo 1</button>
+        <button onclick="loadExample(2)">📋 Ejemplo 2</button>
+        <button onclick="loadExample(3)">📋 Ejemplo 3</button>
+        <button class="print-button" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+
+    <div class="report-container">
+        <div class="header">
+            <h1>🏥 Orden de Servicios</h1>
+        </div>
+
+        <div class="order-section">
+            <div class="order-header">
+                <label>FICHACLINICA:</label>
+                <span class="value" id="fichaclinica">12345</span>
+                <label>Fecha:</label>
+                <span class="value" id="fec_ped">25/01/2024</span>
+                <label>NRO DE ORDEN DE SERVICIO:</label>
+                <span class="value" id="nromov">OS-2024-001</span>
+            </div>
+
+            <div class="patient-section">
+                <div class="section-title">📋 Datos del Paciente</div>
+                <div class="patient-info">
+                    <div class="info-field">
+                        <label>Tipo Doc:</label>
+                        <span class="value" id="tipdoc">CC</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Número:</label>
+                        <span class="value" id="nrodoc">12345678</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Título:</label>
+                        <span class="value" id="titulo">Sr.</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombres:</label>
+                        <span class="value" id="nombres">Juan Carlos</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Apellidos:</label>
+                        <span class="value" id="apellidos">García López</span>
+                    </div>
+                    <div class="info-field">
+                        <label>F. Nacimiento:</label>
+                        <span class="value" id="fecnac">15/05/1985</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Género:</label>
+                        <span class="value" id="genero">M</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Teléfonos:</label>
+                        <span class="value" id="telefonos">300-123-4567</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doctor-section">
+                <div class="section-title">👨‍⚕️ Información del Doctor</div>
+                <div class="patient-info">
+                    <div class="info-field">
+                        <label>Código:</label>
+                        <span class="value" id="coddr">DR001</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombres:</label>
+                        <span class="value" id="nomdoc">Carlos</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Apellidos:</label>
+                        <span class="value" id="apedoc">Rodríguez</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Especialidad:</label>
+                        <span class="value" id="cod_especialidad">001</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombre Esp.:</label>
+                        <span class="value" id="nombre">Cardiología</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insurance-section">
+                <div class="section-title">🛡️ Información del Seguro</div>
+                <div class="patient-info">
+                    <div class="info-field">
+                        <label>Código:</label>
+                        <span class="value" id="cod_empresa">EPS001</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombre:</label>
+                        <span class="value" id="nomempr">EPS Salud Total</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nro. Seguro:</label>
+                        <span class="value" id="nro_seguro">SEG123456</span>
+                    </div>
+                    <div class="info-field">
+                        <label>ID Asegurado:</label>
+                        <span class="value" id="ide_asegurado">ASG789</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Tipo Seguro:</label>
+                        <span class="value" id="tipo_seguro">CONTRIBUTIVO</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="responsible-section">
+                <div class="section-title">👤 Responsable Económico</div>
+                <div class="patient-info">
+                    <div class="info-field">
+                        <label>Tipo Doc:</label>
+                        <span class="value" id="respecotipdoc">CC</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Número:</label>
+                        <span class="value" id="respeconrodoc">87654321</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Título:</label>
+                        <span class="value" id="restitul">Sra.</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombres:</label>
+                        <span class="value" id="resnom">María</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Apellidos:</label>
+                        <span class="value" id="resape">García</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Teléfonos:</label>
+                        <span class="value" id="restel">300-987-6543</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="institute-section">
+                <div class="section-title">🏥 Instituto</div>
+                <div class="patient-info">
+                    <div class="info-field">
+                        <label>Código:</label>
+                        <span class="value" id="codins">INS001</span>
+                    </div>
+                    <div class="info-field">
+                        <label>Nombre:</label>
+                        <span class="value" id="instituto">Hospital Central</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">🔬 Servicios Ordenados</div>
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Tipo</th>
+                        <th>URG</th>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Cant</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody id="services-tbody">
+                    <tr>
+                        <td>LAB001</td>
+                        <td>LAB</td>
+                        <td><span class="normal-badge">NO</span></td>
+                        <td>HEM001</td>
+                        <td class="service-desc">Hemograma Completo</td>
+                        <td>1</td>
+                        <td class="price">$25,000</td>
+                    </tr>
+                    <tr>
+                        <td>RAD001</td>
+                        <td>RAD</td>
+                        <td><span class="urgent-badge">SI</span></td>
+                        <td>RXT001</td>
+                        <td class="service-desc">Radiografía de Tórax</td>
+                        <td>1</td>
+                        <td class="price">$45,000</td>
+                    </tr>
+                    <tr>
+                        <td>CONS001</td>
+                        <td>CONS</td>
+                        <td><span class="normal-badge">NO</span></td>
+                        <td>CARD001</td>
+                        <td class="service-desc">Consulta Cardiología</td>
+                        <td>1</td>
+                        <td class="price">$80,000</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <div class="total-amount">
+                    TOTAL: $<span id="total">150,000</span>
+                </div>
+            </div>
+
+            <div class="footer-info">
+                <p>📋 ORDEN DE SERVICIO PARA USO INTERNO</p>
+                <p>💰 ESTOS PRECIOS NO INCLUYEN IVA</p>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span id="datetime">25/01/2024 - 14:30</span>
+            <span>Sistema Galeno - Orden de Servicios</span>
+            <span>Página: 1</span>
+        </div>
+    </div>
+
+    <script>
+        const examples = {
+            1: {
+                fichaclinica: "12345",
+                fec_ped: "25/01/2024",
+                nromov: "OS-2024-001",
+                tipdoc: "CC",
+                nrodoc: "12345678",
+                titulo: "Sr.",
+                nombres: "Juan Carlos",
+                apellidos: "García López",
+                fecnac: "15/05/1985",
+                genero: "M",
+                telefonos: "300-123-4567",
+                coddr: "DR001",
+                nomdoc: "Carlos",
+                apedoc: "Rodríguez",
+                cod_especialidad: "001",
+                nombre: "Cardiología",
+                cod_empresa: "EPS001",
+                nomempr: "EPS Salud Total",
+                nro_seguro: "SEG123456",
+                ide_asegurado: "ASG789",
+                tipo_seguro: "CONTRIBUTIVO",
+                respecotipdoc: "CC",
+                respeconrodoc: "87654321",
+                restitul: "Sra.",
+                resnom: "María",
+                resape: "García",
+                restel: "300-987-6543",
+                codins: "INS001",
+                instituto: "Hospital Central",
+                total: "150,000",
+                services: [
+                    { servicio: "LAB001", tipo: "LAB", urg: "NO", codigo: "HEM001", descripcion: "Hemograma Completo", cantidad: 1, precio: 25000 },
+                    { servicio: "RAD001", tipo: "RAD", urg: "SI", codigo: "RXT001", descripcion: "Radiografía de Tórax", cantidad: 1, precio: 45000 },
+                    { servicio: "CONS001", tipo: "CONS", urg: "NO", codigo: "CARD001", descripcion: "Consulta Cardiología", cantidad: 1, precio: 80000 }
+                ]
+            },
+            2: {
+                fichaclinica: "67890",
+                fec_ped: "26/01/2024",
+                nromov: "OS-2024-002",
+                tipdoc: "TI",
+                nrodoc: "98765432",
+                titulo: "Srta.",
+                nombres: "Ana Sofía",
+                apellidos: "Martínez Ruiz",
+                fecnac: "20/03/2000",
+                genero: "F",
+                telefonos: "310-555-7890",
+                coddr: "DR002",
+                nomdoc: "Diana",
+                apedoc: "López",
+                cod_especialidad: "002",
+                nombre: "Pediatría",
+                cod_empresa: "EPS002",
+                nomempr: "Nueva EPS",
+                nro_seguro: "NEP654321",
+                ide_asegurado: "ASG456",
+                tipo_seguro: "SUBSIDIADO",
+                respecotipdoc: "CC",
+                respeconrodoc: "11223344",
+                restitul: "Sr.",
+                resnom: "Roberto",
+                resape: "Martínez",
+                restel: "300-111-2222",
+                codins: "INS002",
+                instituto: "Clínica del Norte",
+                total: "95,000",
+                services: [
+                    { servicio: "LAB002", tipo: "LAB", urg: "NO", codigo: "URI001", descripcion: "Uroanálisis", cantidad: 1, precio: 15000 },
+                    { servicio: "ECO001", tipo: "ECO", urg: "NO", codigo: "ABDO001", descripcion: "Ecografía Abdominal", cantidad: 1, precio: 80000 }
+                ]
+            },
+            3: {
+                fichaclinica: "54321",
+                fec_ped: "27/01/2024",
+                nromov: "OS-2024-003",
+                tipdoc: "CE",
+                nrodoc: "1234567890",
+                titulo: "Dr.",
+                nombres: "Luis Fernando",
+                apellidos: "Hernández Silva",
+                fecnac: "10/12/1970",
+                genero: "M",
+                telefonos: "320-444-5555",
+                coddr: "DR003",
+                nomdoc: "Patricia",
+                apedoc: "González",
+                cod_especialidad: "003",
+                nombre: "Neurología",
+                cod_empresa: "EPS003",
+                nomempr: "Sanitas EPS",
+                nro_seguro: "SAN789012",
+                ide_asegurado: "ASG123",
+                tipo_seguro: "PREPAGADA",
+                respecotipdoc: "CC",
+                respeconrodoc: "55667788",
+                restitul: "Sra.",
+                resnom: "Carmen",
+                resape: "Silva",
+                restel: "300-333-4444",
+                codins: "INS003",
+                instituto: "Centro Médico Especializado",
+                total: "320,000",
+                services: [
+                    { servicio: "RMN001", tipo: "RMN", urg: "SI", codigo: "CEREBR001", descripcion: "Resonancia Magnética Cerebral", cantidad: 1, precio: 250000 },
+                    { servicio: "CONS002", tipo: "CONS", urg: "NO", codigo: "NEURO001", descripcion: "Consulta Neurología", cantidad: 1, precio: 70000 }
+                ]
+            }
+        };
+
+        function loadExample(num) {
+            const data = examples[num];
+            
+            // Cargar datos básicos
+            Object.keys(data).forEach(key => {
+                const element = document.getElementById(key);
+                if (element && key !== 'services') {
+                    element.textContent = data[key];
+                }
+            });
+            
+            // Cargar servicios
+            const tbody = document.getElementById('services-tbody');
+            tbody.innerHTML = '';
+            
+            data.services.forEach(service => {
+                const row = document.createElement('tr');
+                const urgBadge = service.urg === 'SI' ? 
+                    '<span class="urgent-badge">SI</span>' : 
+                    '<span class="normal-badge">NO</span>';
+                
+                row.innerHTML = `
+                    <td>${service.servicio}</td>
+                    <td>${service.tipo}</td>
+                    <td>${urgBadge}</td>
+                    <td>${service.codigo}</td>
+                    <td class="service-desc">${service.descripcion}</td>
+                    <td>${service.cantidad}</td>
+                    <td class="price">$${service.precio.toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Actualizar fecha/hora
+            const now = new Date();
+            document.getElementById('datetime').textContent = 
+                now.toLocaleDateString('es-CO') + ' - ' + now.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        // Cargar primer ejemplo al inicio
+        loadExample(1);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        loadExample(1);
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        loadExample(2);
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        loadExample(3);
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        window.print();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

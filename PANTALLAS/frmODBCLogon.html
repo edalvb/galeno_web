@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de sesión en MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-600 to-blue-800 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="mx-auto w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-user-md text-white text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">MEGASYS</h1>
+            <p class="text-gray-600">Sistema de Gestión Médica</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="txtUID" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre del usuario:
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" id="txtUID" name="txtUID" 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Ingrese su usuario">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="txtPWD" class="block text-sm font-medium text-gray-700 mb-2">
+                        Contraseña:
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="txtPWD" name="txtPWD" 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Ingrese su contraseña">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button type="submit" 
+                        class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Aceptar
+                </button>
+                <button type="button" onclick="window.close()" 
+                        class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-xs text-gray-500">MEGASYS v1.0 - Sistema de Gestión Médica</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const usuario = document.getElementById('txtUID').value;
+            const password = document.getElementById('txtPWD').value;
+            
+            if (usuario && password) {
+                // Simular autenticación
+                localStorage.setItem('megasys_user', usuario);
+                window.location.href = '../index.html';
+            } else {
+                alert('Por favor ingrese usuario y contraseña');
+            }
+        });
+    </script>
+</body>
+</html>

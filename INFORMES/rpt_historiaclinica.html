@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia Clínica - Sistema Galeno</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .ficha-numero {
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 15px 0 10px 0;
+            color: #34495e;
+        }
+        
+        .patient-info {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .patient-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .field {
+            min-width: 120px;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .field-value {
+            color: #495057;
+        }
+        
+        .doctor-info {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #e8f4fd;
+        }
+        
+        .service-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .clinical-data {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .clinical-sections {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .clinical-left, .clinical-right {
+            flex: 1;
+            min-height: 150px;
+        }
+        
+        .historia-detail {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+        
+        .historia-tipo {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .historia-content {
+            line-height: 1.4;
+            color: #495057;
+        }
+        
+        .procedures-section {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .procedures-left, .procedures-right {
+            flex: 1;
+        }
+        
+        .procedures-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .procedures-content {
+            border: 1px solid #ddd;
+            padding: 10px;
+            min-height: 80px;
+            background-color: #f8f9fa;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .page-info {
+            font-weight: bold;
+        }
+        
+        .separator-line {
+            border-top: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        
+        .navigation {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .nav-button:hover {
+            background: #0056b3;
+        }
+        
+        @media print {
+            body { 
+                background: white; 
+                padding: 0; 
+            }
+            .container { 
+                border: none; 
+                box-shadow: none; 
+                max-width: none; 
+            }
+            .navigation { 
+                display: none; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-title">HISTORIA CLÍNICA</div>
+        
+        <div id="historia-content">
+            <!-- Historia clínica dinámica se carga aquí -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" onclick="previousHistory()">← Anterior</button>
+            <button class="nav-button" onclick="nextHistory()">Siguiente →</button>
+            <button class="nav-button" onclick="printHistory()">🖨️ Imprimir</button>
+        </div>
+    </div>
+
+    <script>
+        const historiasClinicas = [
+            {
+                fichaclinica: "HC-001",
+                paciente: {
+                    titulo: "Sr.",
+                    tipdoc: "CI",
+                    nrodoc: "12345678",
+                    nombres: "Juan Carlos",
+                    apellidos: "González",
+                    apecasada: "",
+                    fecnac: "15/03/1980",
+                    genero: "Masculino"
+                },
+                servicio: {
+                    fecPed: "20/01/2024",
+                    nromov: "001",
+                    motivoingreso: "Dolor abdominal agudo con náuseas y vómitos de 6 horas de evolución"
+                },
+                doctor: {
+                    tituldoc: "Dr.",
+                    codDoctor: "DOC001",
+                    nomdoc: "María Elena",
+                    apedoc: "Rodríguez",
+                    casdoc: "de Pérez"
+                },
+                datosPorcionadosPor: "Paciente consciente y orientado",
+                datosmedicos: {
+                    infteccir: "Antecedentes de apendicectomía hace 5 años. Hipertensión arterial controlada con medicación.",
+                    evolucion: "Paciente presenta mejoría del dolor abdominal tras administración de analgésicos. Signos vitales estables."
+                },
+                historiaDetalle: [
+                    {
+                        tipo: "ANTECEDENTES FAMILIARES",
+                        historia: "Padre con diabetes mellitus tipo 2. Madre hipertensa. Hermano fallecido por infarto agudo de miocardio a los 45 años."
+                    },
+                    {
+                        tipo: "ANTECEDENTES PERSONALES",
+                        historia: "Hipertensión arterial diagnosticada hace 3 años, en tratamiento con Enalapril 10mg/día. Apendicectomía en 2019. No alergias conocidas."
+                    },
+                    {
+                        tipo: "EXAMEN FÍSICO",
+                        historia: "Paciente consciente, orientado, colaborador. TA: 140/85 mmHg, FC: 88 lpm, FR: 20 rpm, T°: 37.2°C. Abdomen blando, doloroso en fosa ilíaca derecha, sin signos de irritación peritoneal."
+                    },
+                    {
+                        tipo: "DIAGNÓSTICO",
+                        historia: "Dolor abdominal inespecífico. Síndrome dispéptico. Hipertensión arterial controlada."
+                    }
+                ],
+                procedimientos: "Hemograma completo\nBioquímica sanguínea\nEcografía abdominal\nElectrocardiograma",
+                medicamentos: "Omeprazol 40mg VO c/12h\nMetoclopramida 10mg VO c/8h\nParacetamol 500mg VO SOS dolor"
+            },
+            {
+                fichaclinica: "HC-002",
+                paciente: {
+                    titulo: "Sra.",
+                    tipdoc: "CI",
+                    nrodoc: "87654321",
+                    nombres: "Ana María",
+                    apellidos: "López",
+                    apecasada: "de Martínez",
+                    fecnac: "22/07/1975",
+                    genero: "Femenino"
+                },
+                servicio: {
+                    fecPed: "21/01/2024",
+                    nromov: "002",
+                    motivoingreso: "Control de embarazo de 32 semanas, primera consulta prenatal en esta institución"
+                },
+                doctor: {
+                    tituldoc: "Dra.",
+                    codDoctor: "DOC002",
+                    nomdoc: "Carlos Alberto",
+                    apedoc: "Mendoza",
+                    casdoc: ""
+                },
+                datosPorcionadosPor: "Paciente en compañía del esposo",
+                datosmedicos: {
+                    infteccir: "Embarazo de 32 semanas por FUM. Antecedente de 2 partos previos normales. No complicaciones obstétricas previas.",
+                    evolucion: "Embarazo de evolución normal. Feto único, vivo, presentación cefálica. Movimientos fetales presentes."
+                },
+                historiaDetalle: [
+                    {
+                        tipo: "ANTECEDENTES OBSTÉTRICOS",
+                        historia: "G3P2A0. Partos anteriores: 2010 y 2013, ambos eutócicos, sin complicaciones. Recién nacidos de término, peso adecuado."
+                    },
+                    {
+                        tipo: "EMBARAZO ACTUAL",
+                        historia: "Embarazo planificado. FUM: 15/05/2023. FPP: 22/02/2024. Controles prenatales regulares en centro de salud. Ecografías normales."
+                    },
+                    {
+                        tipo: "EXAMEN OBSTÉTRICO",
+                        historia: "Altura uterina: 30cm. FCF: 140 lpm. Presentación cefálica. Pelvis ginecoide. Cuello uterino cerrado. No contracciones."
+                    },
+                    {
+                        tipo: "LABORATORIOS",
+                        historia: "Hb: 11.2 g/dl, Glicemia: 92 mg/dl, VDRL: No reactivo, HIV: Negativo, Grupo sanguíneo: O positivo"
+                    }
+                ],
+                procedimientos: "Ecografía obstétrica\nMonitoreo fetal\nExamen de orina\nPerfil biofísico",
+                medicamentos: "Ácido fólico 5mg VO/día\nSulfato ferroso 300mg VO/día\nCalcio 1g VO/día"
+            }
+        ];
+
+        let currentIndex = 0;
+
+        function loadHistory(index) {
+            const historia = historiasClinicas[index];
+            const content = document.getElementById('historia-content');
+            
+            content.innerHTML = `
+                <div class="ficha-numero">FICHA CLÍNICA N° ${historia.fichaclinica}</div>
+                
+                <div class="section-title">DATOS DEL PACIENTE</div>
+                <div class="patient-info">
+                    <div class="patient-row">
+                        <div class="field">
+                            <span class="field-label">${historia.paciente.titulo}</span>
+                            <span class="field-value">${historia.paciente.tipdoc}: ${historia.paciente.nrodoc}</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-value">${historia.paciente.nombres} ${historia.paciente.apellidos}</span>
+                            ${historia.paciente.apecasada ? `<span class="field-value"> ${historia.paciente.apecasada}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="patient-row">
+                        <div class="field">
+                            <span class="field-label">FECNAC:</span>
+                            <span class="field-value">${historia.paciente.fecnac}</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-label">GÉNERO:</span>
+                            <span class="field-value">${historia.paciente.genero}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="separator-line"></div>
+                
+                <div class="section-title">FECHA Y NÚMERO DE SERVICIO</div>
+                <div class="service-info">
+                    <div class="field">
+                        <span class="field-label">Fecha:</span>
+                        <span class="field-value">${historia.servicio.fecPed}</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">N° Movimiento:</span>
+                        <span class="field-value">${historia.servicio.nromov}</span>
+                    </div>
+                </div>
+                
+                <div class="field" style="margin-bottom: 15px;">
+                    <span class="field-label">MOTIVO DE INGRESO:</span>
+                    <span class="field-value">${historia.servicio.motivoingreso}</span>
+                </div>
+                
+                <div class="doctor-info">
+                    <div class="field-label">DOCTOR:</div>
+                    <div class="patient-row">
+                        <div class="field">
+                            <span class="field-value">${historia.doctor.tituldoc} ${historia.doctor.codDoctor}</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-value">${historia.doctor.nomdoc} ${historia.doctor.apedoc}</span>
+                            ${historia.doctor.casdoc ? `<span class="field-value"> ${historia.doctor.casdoc}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field" style="margin-bottom: 15px;">
+                    <span class="field-label">DATOS PROPORCIONADOS POR:</span>
+                    <span class="field-value">${historia.datosPorcionadosPor}</span>
+                </div>
+                
+                <div class="section-title">DATOS MÉDICOS</div>
+                <div class="clinical-data">
+                    <div class="clinical-sections">
+                        <div class="clinical-left">
+                            <div style="font-weight: bold; margin-bottom: 10px;">INFORMACIÓN TÉCNICA:</div>
+                            <div style="line-height: 1.4;">${historia.datosmedicos.infteccir}</div>
+                        </div>
+                        <div class="clinical-right">
+                            <div style="font-weight: bold; text-decoration: underline; margin-bottom: 10px;">EVOLUCIÓN:</div>
+                            <div style="line-height: 1.4;">${historia.datosmedicos.evolucion}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-title">HISTORIA CLÍNICA DETALLADA</div>
+                ${historia.historiaDetalle.map(detalle => `
+                    <div class="historia-detail">
+                        <div class="historia-tipo">${detalle.tipo}</div>
+                        <div class="historia-content">${detalle.historia}</div>
+                    </div>
+                `).join('')}
+                
+                <div class="procedures-section">
+                    <div class="procedures-left">
+                        <div class="procedures-title">PROCEDIMIENTOS SOLICITADOS</div>
+                        <div class="procedures-content">${historia.procedimientos.replace(/\n/g, '<br>')}</div>
+                    </div>
+                    <div class="procedures-right">
+                        <div class="procedures-title">MEDICAMENTOS RECETADOS</div>
+                        <div class="procedures-content">${historia.medicamentos.replace(/\n/g, '<br>')}</div>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <div>
+                        <span>Fecha: ${new Date().toLocaleDateString('es-ES')}</span>
+                        <span style="margin-left: 20px;">Hora: ${new Date().toLocaleTimeString('es-ES')}</span>
+                    </div>
+                    <div class="page-info">PÁGINA: 1</div>
+                </div>
+            `;
+        }
+
+        function nextHistory() {
+            currentIndex = (currentIndex + 1) % historiasClinicas.length;
+            loadHistory(currentIndex);
+        }
+
+        function previousHistory() {
+            currentIndex = (currentIndex - 1 + historiasClinicas.length) % historiasClinicas.length;
+            loadHistory(currentIndex);
+        }
+
+        function printHistory() {
+            window.print();
+        }
+
+        // Cargar primera historia al inicio
+        loadHistory(0);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextHistory();
+            if (e.key === 'ArrowLeft') previousHistory();
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printHistory();
+            }
+        });
+    </script>
+</body>
+</html>

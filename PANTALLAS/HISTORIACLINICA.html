@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia Clínica - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">
+                <i class="fas fa-file-medical mr-2"></i>
+                Historia Clínica - MEGASYS
+            </h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm">Usuario: <span id="currentUser">Admin</span></span>
+                <button onclick="window.location.href='../index.html'" class="bg-blue-500 hover:bg-blue-700 px-3 py-1 rounded">
+                    <i class="fas fa-home mr-1"></i>
+                    Inicio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-6">
+        <!-- Patient Info Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-start">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Paciente</label>
+                        <div class="flex">
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="Buscar paciente" id="patientSearch">
+                            <button onclick="searchPatient()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-md">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Historia Clínica</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               value="HC-001234" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Atención</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               value="2025-01-11">
+                    </div>
+                </div>
+                <div class="ml-6">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iNDAiIGZpbGw9IiNFNUU3RUIiLz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOTQ5Nzk5Ij4KPHA7aCBkPSJtMTIgMTJjMi4yMSAwIDQtMS43OSA0LTRzLTEuNzktNC00LTQtNCAxLjc5LTQgNCAxLjc5IDQgNCA0em04IDI4djEuNWMwIDEuMzgtMS4xMiAyLjUtMi41IDIuNWgtMTVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41di0xLjVjMC0yLjY3IDUuMzMtOCA4LTgiLz4KPC9zdmc+Cjwvc3ZnPgo=" 
+                         alt="Foto del paciente" class="w-20 h-20 rounded-full border-2 border-gray-300">
+                </div>
+            </div>
+            
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-gray-700">Nombre:</span> 
+                    <span class="text-gray-900">Juan Pérez García</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">DNI:</span> 
+                    <span class="text-gray-900">12345678</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Edad:</span> 
+                    <span class="text-gray-900">45 años</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Obra Social:</span> 
+                    <span class="text-gray-900">OSDE</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column - Evolution -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-clipboard-list mr-2"></i>
+                        Evolución Médica
+                    </h3>
+                    <button onclick="searchCIE10()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-search mr-1"></i>
+                        CIE-10
+                    </button>
+                </div>
+                
+                <textarea class="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                          placeholder="Registrar evolución del paciente, síntomas, diagnóstico, etc."
+                          id="evolution"></textarea>
+                
+                <div class="mt-4">
+                    <button onclick="printDiagnosis()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">
+                        <i class="fas fa-print mr-1"></i>
+                        Imprimir Diagnóstico
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column - Procedures -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-procedures mr-2"></i>
+                        Procedimientos
+                    </h3>
+                    <button onclick="printProcedures()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-print mr-1"></i>
+                        Imprimir
+                    </button>
+                </div>
+                
+                <textarea class="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                          placeholder="Registrar procedimientos realizados, estudios solicitados, etc."
+                          id="procedures"></textarea>
+            </div>
+        </div>
+
+        <!-- Medications Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-pills mr-2"></i>
+                    Medicamentos Recetados
+                </h3>
+                <div class="space-x-2">
+                    <button onclick="searchMedications()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-search mr-1"></i>
+                        Buscar Medicamentos
+                    </button>
+                    <button onclick="printMedications()" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-print mr-1"></i>
+                        Imprimir Receta
+                    </button>
+                </div>
+            </div>
+            
+            <textarea class="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                      placeholder="Medicamentos recetados: dosis, frecuencia, duración del tratamiento"
+                      id="medications"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <button onclick="saveRecord()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-save mr-2"></i>
+                Guardar Historia
+            </button>
+            <button onclick="newRecord()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-plus mr-2"></i>
+                Nueva Consulta
+            </button>
+            <button onclick="viewHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-history mr-2"></i>
+                Ver Historia Completa
+            </button>
+            <button onclick="cancel()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+        </div>
+
+        <!-- History Table -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-list mr-2"></i>
+                Consultas Anteriores
+            </h3>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médico</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especialidad</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnóstico</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">10/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. García</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Cardiología</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Hipertensión arterial</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button class="text-green-600 hover:text-green-900">Imprimir</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">05/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. López</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Medicina General</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Control de rutina</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button class="text-green-600 hover:text-green-900">Imprimir</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function searchPatient() {
+            alert('Función de búsqueda de pacientes');
+        }
+
+        function searchCIE10() {
+            alert('Búsqueda de códigos CIE-10');
+        }
+
+        function searchMedications() {
+            alert('Búsqueda de medicamentos');
+        }
+
+        function printDiagnosis() {
+            alert('Imprimiendo diagnóstico...');
+        }
+
+        function printProcedures() {
+            alert('Imprimiendo procedimientos...');
+        }
+
+        function printMedications() {
+            alert('Imprimiendo receta médica...');
+        }
+
+        function saveRecord() {
+            if (document.getElementById('evolution').value.trim() === '') {
+                alert('Por favor ingrese la evolución médica');
+                return;
+            }
+            alert('Historia clínica guardada exitosamente');
+        }
+
+        function newRecord() {
+            if (confirm('¿Desea crear una nueva consulta?')) {
+                document.getElementById('evolution').value = '';
+                document.getElementById('procedures').value = '';
+                document.getElementById('medications').value = '';
+                document.querySelector('input[type="date"]').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function viewHistory() {
+            alert('Visualizando historia clínica completa');
+        }
+
+        function cancel() {
+            if (confirm('¿Desea cancelar y volver al menú principal?')) {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // Load user info
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('megasys_user') || 'Admin';
+            document.getElementById('currentUser').textContent = user;
+            
+            // Set current date
+            document.querySelector('input[type="date"]').value = new Date().toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

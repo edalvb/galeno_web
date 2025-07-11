@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEDIDO DE MATERIALES</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .pedido-info {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 200px;
+            color: #333;
+        }
+        .info-value {
+            color: #666;
+            flex: 1;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            padding: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+        .table-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .column-headers {
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+            border-bottom: 2px solid #ddd;
+        }
+        .column-headers th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+            border-right: 1px solid #ddd;
+        }
+        .column-headers th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .codigo-column {
+            width: 150px;
+        }
+        .nombre-column {
+            width: auto;
+        }
+        .cantidad-column {
+            width: 100px;
+            text-align: center;
+        }
+        .signature-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 2px solid #333;
+            width: 300px;
+            margin: 0 auto 10px auto;
+        }
+        .signature-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container, .pedido-info, .signature-section {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PEDIDO DE MATERIALES</h1>
+    </div>
+
+    <div class="pedido-info">
+        <div class="info-row">
+            <span class="info-label">Fecha de Pedido:</span>
+            <span class="info-value" id="fecha-pedido">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Nº de Pedido:</span>
+            <span class="info-value" id="numero-pedido">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Área:</span>
+            <span class="info-value" id="area">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Código del Proveedor:</span>
+            <span class="info-value" id="codigo-proveedor">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Nombre del proveedor:</span>
+            <span class="info-value" id="nombre-proveedor">--</span>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h3>Detalle de Materiales Solicitados</h3>
+        </div>
+        <table>
+            <thead class="column-headers">
+                <tr>
+                    <th class="codigo-column">Código del material</th>
+                    <th class="nombre-column">Nombre del Material</th>
+                    <th class="cantidad-column">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody id="materiales-data">
+                <tr>
+                    <td colspan="3" class="no-data">
+                        Cargando datos del pedido...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div class="signature-label">Firma de Solicitante</div>
+    </div>
+
+    <script>
+        // Datos de ejemplo del pedido
+        const pedidoData = {
+            fechaPedido: new Date().toLocaleDateString('es-ES'),
+            numeroPedido: "PED-2025-001",
+            area: "URGENCIAS",
+            codigoProveedor: "PROV-001",
+            nombreProveedor: "DISTRIBUIDORA MÉDICA LTDA",
+            materiales: [
+                {
+                    codigo: "001",
+                    nombre: "JERINGA DESECHABLE 5ml",
+                    cantidad: 50
+                },
+                {
+                    codigo: "002", 
+                    nombre: "GUANTES DESECHABLES TALLA M",
+                    cantidad: 100
+                },
+                {
+                    codigo: "003",
+                    nombre: "MASCARILLAS QUIRÚRGICAS",
+                    cantidad: 200
+                },
+                {
+                    codigo: "004",
+                    nombre: "ALCOHOL ANTISÉPTICO 500ml",
+                    cantidad: 20
+                },
+                {
+                    codigo: "005",
+                    nombre: "VENDAS ELÁSTICAS 10cm",
+                    cantidad: 30
+                },
+                {
+                    codigo: "006",
+                    nombre: "TERMÓMETRO DIGITAL",
+                    cantidad: 5
+                },
+                {
+                    codigo: "007",
+                    nombre: "GASAS ESTÉRILES 10x10cm",
+                    cantidad: 75
+                },
+                {
+                    codigo: "008",
+                    nombre: "SUERO FISIOLÓGICO 500ml",
+                    cantidad: 40
+                },
+                {
+                    codigo: "009",
+                    nombre: "CATÉTER VENOSO No. 20",
+                    cantidad: 25
+                },
+                {
+                    codigo: "010",
+                    nombre: "ESPARADRAPO QUIRÚRGICO",
+                    cantidad: 15
+                }
+            ]
+        };
+
+        // Cargar información del pedido
+        function loadPedidoInfo() {
+            document.getElementById('fecha-pedido').textContent = pedidoData.fechaPedido;
+            document.getElementById('numero-pedido').textContent = pedidoData.numeroPedido;
+            document.getElementById('area').textContent = pedidoData.area;
+            document.getElementById('codigo-proveedor').textContent = pedidoData.codigoProveedor;
+            document.getElementById('nombre-proveedor').textContent = pedidoData.nombreProveedor;
+        }
+
+        // Cargar datos de materiales
+        function loadMateriales() {
+            const tbody = document.getElementById('materiales-data');
+            
+            if (pedidoData.materiales.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="no-data">No hay materiales en este pedido</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = pedidoData.materiales.map(material => `
+                <tr>
+                    <td class="codigo-column">${material.codigo}</td>
+                    <td class="nombre-column">${material.nombre}</td>
+                    <td class="cantidad-column">${material.cantidad}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Funcionalidad para generar nuevo pedido
+        function generarNuevoPedido() {
+            const fechaActual = new Date().toLocaleDateString('es-ES');
+            const numeroPedido = `PED-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000) + 1).padStart(3, '0')}`;
+            
+            pedidoData.fechaPedido = fechaActual;
+            pedidoData.numeroPedido = numeroPedido;
+            
+            loadPedidoInfo();
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPedidoInfo();
+            loadMateriales();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

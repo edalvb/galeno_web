@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE INSUMOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .codigo-column {
+            width: 150px;
+        }
+        .nombre-column {
+            width: 250px;
+        }
+        .linea-column {
+            width: 120px;
+            text-align: center;
+        }
+        .existencia-column {
+            width: 120px;
+            text-align: right;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .stock-low {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .stock-medium {
+            color: #ffa726;
+            font-weight: bold;
+        }
+        .stock-high {
+            color: #66bb6a;
+            font-weight: bold;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE INSUMOS</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span id="page-info">Página: 1</span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="codigo-column">CODIGO MATERIAL</th>
+                    <th class="nombre-column">NOMBRE</th>
+                    <th class="linea-column">CODIGO LINEA</th>
+                    <th class="existencia-column">EN EXISTENCIA</th>
+                </tr>
+            </thead>
+            <tbody id="materiales-data">
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Cargando datos de insumos...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span id="footer-page">Página: 1</span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de insumos/materiales médicos
+        const materiales = [
+            {
+                codigo: "001",
+                nombre: "JERINGA DESECHABLE 5ml",
+                codigoLinea: "001",
+                existencia: 150
+            },
+            {
+                codigo: "002", 
+                nombre: "GUANTES DESECHABLES TALLA M",
+                codigoLinea: "002",
+                existencia: 25
+            },
+            {
+                codigo: "003",
+                nombre: "MASCARILLAS QUIRÚRGICAS",
+                codigoLinea: "002",
+                existencia: 300
+            },
+            {
+                codigo: "004",
+                nombre: "ALCOHOL ANTISÉPTICO 500ml",
+                codigoLinea: "003",
+                existencia: 75
+            },
+            {
+                codigo: "005",
+                nombre: "VENDAS ELÁSTICAS 10cm",
+                codigoLinea: "004",
+                existencia: 5
+            },
+            {
+                codigo: "006",
+                nombre: "TERMÓMETRO DIGITAL",
+                codigoLinea: "005",
+                existencia: 12
+            },
+            {
+                codigo: "007",
+                nombre: "GASAS ESTÉRILES 10x10cm",
+                codigoLinea: "004",
+                existencia: 200
+            },
+            {
+                codigo: "008",
+                nombre: "SUERO FISIOLÓGICO 500ml",
+                codigoLinea: "006",
+                existencia: 45
+            },
+            {
+                codigo: "009",
+                nombre: "CATÉTER VENOSO No. 20",
+                codigoLinea: "001",
+                existencia: 35
+            },
+            {
+                codigo: "010",
+                nombre: "ESPARADRAPO QUIRÚRGICO",
+                codigoLinea: "004",
+                existencia: 85
+            },
+            {
+                codigo: "011",
+                nombre: "OXÍMETRO DE PULSO",
+                codigoLinea: "005",
+                existencia: 3
+            },
+            {
+                codigo: "012",
+                nombre: "HISOPOS ESTÉRILES",
+                codigoLinea: "002",
+                existencia: 120
+            },
+            {
+                codigo: "013",
+                nombre: "CÁNULA NASAL PARA OXÍGENO",
+                codigoLinea: "007",
+                existencia: 18
+            },
+            {
+                codigo: "014",
+                nombre: "BOLSA RECOLECTORA DE ORINA",
+                codigoLinea: "008",
+                existencia: 55
+            },
+            {
+                codigo: "015",
+                nombre: "ELECTRODOS PARA ECG",
+                codigoLinea: "005",
+                existencia: 90
+            }
+        ];
+
+        // Función para determinar el color del stock
+        function getStockClass(cantidad) {
+            if (cantidad <= 10) return 'stock-low';
+            if (cantidad <= 50) return 'stock-medium';
+            return 'stock-high';
+        }
+
+        // Cargar datos de materiales
+        function loadMateriales() {
+            const tbody = document.getElementById('materiales-data');
+            
+            if (materiales.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay datos de insumos disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = materiales.map(material => `
+                <tr>
+                    <td class="codigo-column">${material.codigo}</td>
+                    <td class="nombre-column">${material.nombre}</td>
+                    <td class="linea-column">${material.codigoLinea}</td>
+                    <td class="existencia-column ${getStockClass(material.existencia)}">${material.existencia}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadMateriales();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

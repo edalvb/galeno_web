@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios OLAP por Institutos - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">
+                <i class="fas fa-chart-pie mr-2"></i>
+                Servicios OLAP por Institutos - MEGASYS
+            </h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm">Usuario: <span id="currentUser">Admin</span></span>
+                <button onclick="window.location.href='../index.html'" class="bg-blue-500 hover:bg-blue-700 px-3 py-1 rounded">
+                    <i class="fas fa-home mr-1"></i>
+                    Inicio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-6">
+        <!-- Controls Panel -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-filter mr-2"></i>
+                Filtros de Análisis
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="period">
+                        <option value="month">Mes actual</option>
+                        <option value="quarter">Trimestre actual</option>
+                        <option value="year">Año actual</option>
+                        <option value="custom">Personalizado</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Instituto</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="institute">
+                        <option value="all">Todos</option>
+                        <option value="inst1">Hospital Central</option>
+                        <option value="inst2">Clínica San José</option>
+                        <option value="inst3">Instituto del Corazón</option>
+                        <option value="inst4">Centro Médico Norte</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Especialidad</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="specialty">
+                        <option value="all">Todas</option>
+                        <option value="cardio">Cardiología</option>
+                        <option value="neuro">Neurología</option>
+                        <option value="general">Medicina General</option>
+                        <option value="trauma">Traumatología</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Métrica</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="metric">
+                        <option value="count">Cantidad de Servicios</option>
+                        <option value="revenue">Facturación</option>
+                        <option value="patients">Pacientes Únicos</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="updateAnalysis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-sync mr-1"></i>
+                    Actualizar
+                </button>
+                <button onclick="exportData()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-download mr-1"></i>
+                    Exportar
+                </button>
+                <button onclick="printReport()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-print mr-1"></i>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-hospital text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Institutos</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="totalInstitutes">4</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-user-md text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Servicios Totales</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="totalServices">1,256</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-dollar-sign text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Facturación</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="totalRevenue">$2,845,230</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Pacientes</dt>
+                            <dd class="text-lg font-medium text-gray-900" id="totalPatients">892</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Services by Institute Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    Servicios por Instituto
+                </h3>
+                <div class="relative h-64">
+                    <canvas id="instituteChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Revenue Trend Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Tendencia de Facturación
+                </h3>
+                <div class="relative h-64">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Specialty Distribution -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    Distribución por Especialidad
+                </h3>
+                <div class="relative h-64">
+                    <canvas id="specialtyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    Indicadores de Rendimiento
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Ocupación Promedio</span>
+                        <div class="flex items-center">
+                            <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 78%"></div>
+                            </div>
+                            <span class="text-sm text-gray-900">78%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Satisfacción Pacientes</span>
+                        <div class="flex items-center">
+                            <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="bg-green-600 h-2 rounded-full" style="width: 92%"></div>
+                            </div>
+                            <span class="text-sm text-gray-900">92%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Eficiencia Operativa</span>
+                        <div class="flex items-center">
+                            <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="bg-yellow-500 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                            <span class="text-sm text-gray-900">85%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Tiempo Promedio Espera</span>
+                        <div class="flex items-center">
+                            <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="bg-red-500 h-2 rounded-full" style="width: 45%"></div>
+                            </div>
+                            <span class="text-sm text-gray-900">18 min</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-table mr-2"></i>
+                    Detalle por Instituto
+                </h3>
+                <div class="space-x-2">
+                    <button onclick="toggleView('table')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-table mr-1"></i>
+                        Tabla
+                    </button>
+                    <button onclick="toggleView('pivot')" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-th mr-1"></i>
+                        Tabla Dinámica
+                    </button>
+                </div>
+            </div>
+            
+            <div id="tableView" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instituto</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicios</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pacientes</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Facturación</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Promedio</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crecimiento</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Hospital Central</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">456</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">342</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,234,500</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$2,706</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">+15.2%</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Clínica San José</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">298</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">245</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$678,900</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$2,278</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">+8.7%</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Instituto del Corazón</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">312</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">198</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$567,830</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,820</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">-2.1%</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Centro Médico Norte</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">190</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">107</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$364,000</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,916</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">+11.5%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart configurations
+        let instituteChart, revenueChart, specialtyChart;
+
+        function initCharts() {
+            // Institute Distribution Pie Chart
+            const instituteCtx = document.getElementById('instituteChart').getContext('2d');
+            instituteChart = new Chart(instituteCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Hospital Central', 'Clínica San José', 'Instituto del Corazón', 'Centro Médico Norte'],
+                    datasets: [{
+                        data: [456, 298, 312, 190],
+                        backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Revenue Trend Line Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Facturación',
+                        data: [245000, 267000, 289000, 234000, 312000, 298000],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Specialty Bar Chart
+            const specialtyCtx = document.getElementById('specialtyChart').getContext('2d');
+            specialtyChart = new Chart(specialtyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Cardiología', 'Neurología', 'Medicina General', 'Traumatología', 'Pediatría'],
+                    datasets: [{
+                        label: 'Servicios',
+                        data: [234, 187, 345, 156, 98],
+                        backgroundColor: '#10B981',
+                        borderColor: '#059669',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAnalysis() {
+            alert('Actualizando análisis con los filtros seleccionados...');
+            // In a real application, this would fetch new data and update charts
+        }
+
+        function exportData() {
+            const format = prompt('Seleccione formato de exportación:\n1. Excel\n2. CSV\n3. PDF', '1');
+            switch(format) {
+                case '1':
+                    alert('Exportando a Excel...');
+                    break;
+                case '2':
+                    alert('Exportando a CSV...');
+                    break;
+                case '3':
+                    alert('Exportando a PDF...');
+                    break;
+                default:
+                    alert('Formato no válido');
+            }
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function toggleView(view) {
+            if (view === 'table') {
+                alert('Vista de tabla activa');
+            } else {
+                alert('Cambiar a vista de tabla dinámica');
+            }
+        }
+
+        // Load user info and initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('megasys_user') || 'Admin';
+            document.getElementById('currentUser').textContent = user;
+            
+            // Initialize charts
+            initCharts();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (instituteChart) instituteChart.resize();
+            if (revenueChart) revenueChart.resize();
+            if (specialtyChart) specialtyChart.resize();
+        });
+    </script>
+</body>
+</html>

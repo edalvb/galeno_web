@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE EMPRESAS ASEGURADORAS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE EMPRESAS ASEGURADORAS</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span id="page-info">Página: 1</span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th>CODIGO</th>
+                    <th>NOMBRE</th>
+                    <th>TELEFONO</th>
+                    <th>DIRECCION</th>
+                </tr>
+            </thead>
+            <tbody id="aseguradoras-data">
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Cargando datos de aseguradoras...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span id="footer-page">Página: 1</span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de aseguradoras
+        const aseguradoras = [
+            {
+                id: "001",
+                nombre: "SEGUROS BOLÍVAR S.A.",
+                telefono: "018000915623",
+                direccion: "CARRERA 7 NO. 72-21"
+            },
+            {
+                id: "002", 
+                nombre: "SURAMERICANA S.A.",
+                telefono: "5114040",
+                direccion: "CALLE 26 NO. 85A-19"
+            },
+            {
+                id: "003",
+                nombre: "MAPFRE SEGUROS COLOMBIA",
+                telefono: "018000126273",
+                direccion: "CARRERA 9A NO. 99-02"
+            },
+            {
+                id: "004",
+                nombre: "LIBERTY SEGUROS S.A.",
+                telefono: "3440088",
+                direccion: "CARRERA 13 NO. 27-00"
+            },
+            {
+                id: "005",
+                nombre: "ALLIANZ SEGUROS S.A.",
+                telefono: "3208800",
+                direccion: "CARRERA 11A NO. 98-50"
+            }
+        ];
+
+        // Cargar datos de aseguradoras
+        function loadAseguradoras() {
+            const tbody = document.getElementById('aseguradoras-data');
+            
+            if (aseguradoras.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay datos de aseguradoras disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = aseguradoras.map(aseguradora => `
+                <tr>
+                    <td>${aseguradora.id}</td>
+                    <td>${aseguradora.nombre}</td>
+                    <td>${aseguradora.telefono}</td>
+                    <td>${aseguradora.direccion}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadAseguradoras();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

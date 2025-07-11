@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquidaciones Médicas - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">
+                <i class="fas fa-calculator mr-2"></i>
+                Liquidaciones Médicas - MEGASYS
+            </h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm">Usuario: <span id="currentUser">Admin</span></span>
+                <button onclick="window.location.href='../index.html'" class="bg-blue-500 hover:bg-blue-700 px-3 py-1 rounded">
+                    <i class="fas fa-home mr-1"></i>
+                    Inicio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-6">
+        <!-- Filter Panel -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-filter mr-2"></i>
+                Filtros de Liquidación
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Médico</label>
+                    <div class="flex">
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Seleccionar médico" id="doctorSearch">
+                        <button onclick="searchDoctor()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-md">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
+                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           id="dateFrom">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
+                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           id="dateTo">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="liquidado">Liquidado</option>
+                        <option value="pagado">Pagado</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="generateLiquidation()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-calculator mr-1"></i>
+                    Generar Liquidación
+                </button>
+                <button onclick="searchLiquidations()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-search mr-1"></i>
+                    Buscar
+                </button>
+                <button onclick="clearFilters()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-eraser mr-1"></i>
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-file-invoice-dollar text-2xl text-blue-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Consultas</dt>
+                            <dd class="text-lg font-medium text-gray-900">156</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-dollar-sign text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total a Liquidar</dt>
+                            <dd class="text-lg font-medium text-gray-900">$125,450</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Liquidados</dt>
+                            <dd class="text-lg font-medium text-gray-900">$89,320</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Pendientes</dt>
+                            <dd class="text-lg font-medium text-gray-900">$36,130</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liquidations Table -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-table mr-2"></i>
+                    Detalle de Liquidaciones
+                </h3>
+                <div class="space-x-2">
+                    <button onclick="exportExcel()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-file-excel mr-1"></i>
+                        Excel
+                    </button>
+                    <button onclick="printReport()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-print mr-1"></i>
+                        Imprimir
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <input type="checkbox" class="rounded" onchange="toggleAllRows(this)">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médico</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obra Social</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Honorario</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="liquidationsTable">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="rounded row-checkbox">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">11/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. García</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Juan Pérez</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">OSDE</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">420101</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Consulta Cardiología</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$2,500</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Pendiente
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewDetail(1)" class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button onclick="liquidate(1)" class="text-green-600 hover:text-green-900">Liquidar</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="rounded row-checkbox">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">10/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. López</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">María González</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Swiss Medical</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">420102</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Consulta General</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,800</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Liquidado
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewDetail(2)" class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button onclick="printReceipt(2)" class="text-purple-600 hover:text-purple-900">Imprimir</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="rounded row-checkbox">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">09/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. Martínez</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Carlos Rodríguez</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">PAMI</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">420103</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Consulta Neurología</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$3,200</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Pendiente
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewDetail(3)" class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button onclick="liquidate(3)" class="text-green-600 hover:text-green-900">Liquidar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Anterior
+                    </button>
+                    <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Siguiente
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Mostrando <span class="font-medium">1</span> a <span class="font-medium">10</span> de <span class="font-medium">97</span> resultados
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">1</button>
+                            <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">2</button>
+                            <button class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">3</button>
+                            <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-tasks mr-2"></i>
+                Acciones en Lote
+            </h3>
+            
+            <div class="flex flex-wrap gap-4">
+                <button onclick="bulkLiquidate()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-calculator mr-1"></i>
+                    Liquidar Seleccionados
+                </button>
+                <button onclick="bulkPrint()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-print mr-1"></i>
+                    Imprimir Seleccionados
+                </button>
+                <button onclick="bulkExport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <i class="fas fa-download mr-1"></i>
+                    Exportar Seleccionados
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function searchDoctor() {
+            alert('Búsqueda de médicos');
+        }
+
+        function generateLiquidation() {
+            alert('Generando nueva liquidación...');
+        }
+
+        function searchLiquidations() {
+            alert('Buscando liquidaciones...');
+        }
+
+        function clearFilters() {
+            document.getElementById('doctorSearch').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.querySelector('select').selectedIndex = 0;
+        }
+
+        function exportExcel() {
+            alert('Exportando a Excel...');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function toggleAllRows(checkbox) {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+        }
+
+        function viewDetail(id) {
+            alert(`Viendo detalle de liquidación ${id}`);
+        }
+
+        function liquidate(id) {
+            if (confirm(`¿Confirma liquidar el registro ${id}?`)) {
+                alert(`Registro ${id} liquidado exitosamente`);
+                // Update status in the table
+                location.reload();
+            }
+        }
+
+        function printReceipt(id) {
+            alert(`Imprimiendo recibo de liquidación ${id}`);
+        }
+
+        function bulkLiquidate() {
+            const selected = document.querySelectorAll('.row-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Por favor seleccione al menos un registro');
+                return;
+            }
+            if (confirm(`¿Confirma liquidar ${selected.length} registros seleccionados?`)) {
+                alert(`${selected.length} registros liquidados exitosamente`);
+            }
+        }
+
+        function bulkPrint() {
+            const selected = document.querySelectorAll('.row-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Por favor seleccione al menos un registro');
+                return;
+            }
+            alert(`Imprimiendo ${selected.length} registros seleccionados`);
+        }
+
+        function bulkExport() {
+            const selected = document.querySelectorAll('.row-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Por favor seleccione al menos un registro');
+                return;
+            }
+            alert(`Exportando ${selected.length} registros seleccionados`);
+        }
+
+        // Load user info and set default dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('megasys_user') || 'Admin';
+            document.getElementById('currentUser').textContent = user;
+            
+            // Set default date range (last 30 days)
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

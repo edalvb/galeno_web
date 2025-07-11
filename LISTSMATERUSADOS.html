@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Control de Insumos Usados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-table { width: 100% !important; font-size: 11px !important; }
+            .print-header { text-align: center !important; margin-bottom: 20px !important; }
+        }
+        .consumo-alto { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .consumo-medio { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .consumo-bajo { background: linear-gradient(135deg, #10b981, #059669); }
+        .categoria-laboratorio { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .categoria-radiologia { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .categoria-quirofano { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .categoria-urgencias { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .categoria-hospitalizacion { background: linear-gradient(135deg, #10b981, #059669); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-chart-bar text-3xl text-blue-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Control de Insumos Usados</h1>
+                        <p class="text-sm text-gray-600">Seguimiento de consumo de materiales por análisis</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 no-print">
+                    <button onclick="registrarUso()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Registrar Uso
+                    </button>
+                    <button onclick="imprimirReporte()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="exportarExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-file-excel mr-2"></i>Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                    <input type="text" id="buscarUso" placeholder="Análisis, material, código..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Servicio</label>
+                    <select id="filtroServicio" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los servicios</option>
+                        <option value="Laboratorio">Laboratorio</option>
+                        <option value="Radiología">Radiología</option>
+                        <option value="Quirófano">Quirófano</option>
+                        <option value="Urgencias">Urgencias</option>
+                        <option value="Hospitalización">Hospitalización</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Rango de Fechas</label>
+                    <select id="filtroFecha" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas las fechas</option>
+                        <option value="hoy">Hoy</option>
+                        <option value="semana">Esta semana</option>
+                        <option value="mes">Este mes</option>
+                        <option value="trimestre">Este trimestre</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vista</label>
+                    <div class="flex space-x-2">
+                        <button onclick="cambiarVista('consumo')" id="btnConsumo" 
+                                class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-chart-pie mr-1"></i>Consumo
+                        </button>
+                        <button onclick="cambiarVista('tabla')" id="btnTabla" 
+                                class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            <i class="fas fa-table mr-1"></i>Tabla
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+                <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="totalUsos">0</div>
+                    <div class="text-xs text-blue-800">Total Usos</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="totalMateriales">0</div>
+                    <div class="text-xs text-green-800">Materiales</div>
+                </div>
+                <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="totalAnalisis">0</div>
+                    <div class="text-xs text-purple-800">Análisis</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="costoTotal">$0</div>
+                    <div class="text-xs text-yellow-800">Costo Total</div>
+                </div>
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600" id="alertasStock">0</div>
+                    <div class="text-xs text-red-800">Alertas Stock</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Consumo -->
+    <div id="vistaConsumo" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Top Materiales Más Usados -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>Materiales Más Utilizados
+                </h3>
+                <div id="topMateriales" class="space-y-3">
+                    <!-- Se generará dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Consumo por Servicio -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-chart-pie text-blue-500 mr-2"></i>Consumo por Servicio
+                </h3>
+                <div id="consumoServicios" class="space-y-3">
+                    <!-- Se generará dinámicamente -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de Usos Recientes -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-clock text-green-500 mr-2"></i>Usos Recientes
+                </h3>
+            </div>
+            <div id="contenedorUsosRecientes" class="divide-y divide-gray-200">
+                <!-- Se generará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista de Tabla -->
+    <div id="vistaTabla" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 print-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código Análisis</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicio</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidad</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Unit.</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contenedorTablaUsos" class="bg-white divide-y divide-gray-200">
+                        <!-- Las filas se generarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro/Edición -->
+    <div id="modalUsoMaterial" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex items-center mb-6">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-chart-bar text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Registro de Uso de Material</h3>
+                            <p class="text-sm text-gray-500">Control de consumo de insumos por análisis</p>
+                        </div>
+                    </div>
+                    
+                    <form id="formUsoMaterial" class="space-y-6">
+                        <!-- Información del Análisis -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Información del Análisis</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Código de Análisis</label>
+                                    <input type="text" id="modalCodAnalisis" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nombre del Servicio</label>
+                                    <input type="text" id="modalNomServicio" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Servicio/Área</label>
+                                    <select id="modalServicioArea" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="Laboratorio">Laboratorio</option>
+                                        <option value="Radiología">Radiología</option>
+                                        <option value="Quirófano">Quirófano</option>
+                                        <option value="Urgencias">Urgencias</option>
+                                        <option value="Hospitalización">Hospitalización</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Fecha de Movimiento</label>
+                                    <input type="date" id="modalFechaMovimiento" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información del Material -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Material Utilizado</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Código del Material</label>
+                                    <input type="text" id="modalCodMaterial" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nombre del Material</label>
+                                    <input type="text" id="modalNomMaterial" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Cantidad Utilizada</label>
+                                    <input type="number" min="0" step="0.01" id="modalCantidad" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Unidad de Medida</label>
+                                    <select id="modalUnidad" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="mL">Mililitros (mL)</option>
+                                        <option value="µL">Microlitros (µL)</option>
+                                        <option value="mg">Miligramos (mg)</option>
+                                        <option value="g">Gramos (g)</option>
+                                        <option value="unidad">Unidades</option>
+                                        <option value="tubos">Tubos</option>
+                                        <option value="placas">Placas</option>
+                                        <option value="tiras">Tiras</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Costos -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="text-lg font-medium text-gray-900 mb-4">Información de Costos</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Costo Unitario</label>
+                                    <input type="number" min="0" step="0.01" id="modalCostoUnitario" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Costo Total</label>
+                                    <input type="number" readonly id="modalCostoTotal" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Proveedor</label>
+                                    <input type="text" id="modalProveedor" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="guardarUsoMaterial()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                    <button type="button" onclick="cerrarModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo de usos de materiales
+        let usosMateria = [
+            {
+                id: 1,
+                codAnalisis: "HGB001",
+                nomServicio: "Hemoglobina",
+                servicioArea: "Laboratorio",
+                codMaterial: "MAT001",
+                nomMaterial: "Reactivo Hemoglobina",
+                cantidad: 0.5,
+                unidad: "mL",
+                fechaMovimiento: "2024-01-15",
+                costoUnitario: 2500,
+                costoTotal: 1250,
+                proveedor: "Laboratorios XYZ"
+            },
+            {
+                id: 2,
+                codAnalisis: "GLU001",
+                nomServicio: "Glucosa",
+                servicioArea: "Laboratorio",
+                codMaterial: "MAT002",
+                nomMaterial: "Tiras Reactivas Glucosa",
+                cantidad: 1,
+                unidad: "unidad",
+                fechaMovimiento: "2024-01-15",
+                costoUnitario: 1200,
+                costoTotal: 1200,
+                proveedor: "MedSupply"
+            },
+            {
+                id: 3,
+                codAnalisis: "RX001",
+                nomServicio: "Radiografía Tórax",
+                servicioArea: "Radiología",
+                codMaterial: "MAT003",
+                nomMaterial: "Placa Radiográfica",
+                cantidad: 2,
+                unidad: "placas",
+                fechaMovimiento: "2024-01-14",
+                costoUnitario: 8500,
+                costoTotal: 17000,
+                proveedor: "RadioMed"
+            },
+            {
+                id: 4,
+                codAnalisis: "CIR001",
+                nomServicio: "Cirugía Menor",
+                servicioArea: "Quirófano",
+                codMaterial: "MAT004",
+                nomMaterial: "Guantes Quirúrgicos",
+                cantidad: 4,
+                unidad: "unidad",
+                fechaMovimiento: "2024-01-14",
+                costoUnitario: 800,
+                costoTotal: 3200,
+                proveedor: "SurgicalPro"
+            },
+            {
+                id: 5,
+                codAnalisis: "URG001",
+                nomServicio: "Atención Urgencias",
+                servicioArea: "Urgencias",
+                codMaterial: "MAT005",
+                nomMaterial: "Suero Fisiológico",
+                cantidad: 500,
+                unidad: "mL",
+                fechaMovimiento: "2024-01-13",
+                costoUnitario: 10,
+                costoTotal: 5000,
+                proveedor: "FarmaMed"
+            },
+            {
+                id: 6,
+                codAnalisis: "CREA001",
+                nomServicio: "Creatinina",
+                servicioArea: "Laboratorio",
+                codMaterial: "MAT006",
+                nomMaterial: "Kit Creatinina",
+                cantidad: 1,
+                unidad: "unidad",
+                fechaMovimiento: "2024-01-13",
+                costoUnitario: 3200,
+                costoTotal: 3200,
+                proveedor: "Laboratorios XYZ"
+            },
+            {
+                id: 7,
+                codAnalisis: "ECG001",
+                nomServicio: "Electrocardiograma",
+                servicioArea: "Urgencias",
+                codMaterial: "MAT007",
+                nomMaterial: "Electrodos ECG",
+                cantidad: 10,
+                unidad: "unidad",
+                fechaMovimiento: "2024-01-12",
+                costoUnitario: 450,
+                costoTotal: 4500,
+                proveedor: "CardioTech"
+            },
+            {
+                id: 8,
+                codAnalisis: "COL001",
+                nomServicio: "Colesterol Total",
+                servicioArea: "Laboratorio",
+                codMaterial: "MAT008",
+                nomMaterial: "Reactivo Colesterol",
+                cantidad: 0.2,
+                unidad: "mL",
+                fechaMovimiento: "2024-01-12",
+                costoUnitario: 4500,
+                costoTotal: 900,
+                proveedor: "BioReactivos"
+            }
+        ];
+
+        let vistaActual = 'consumo';
+        let usosFiltrados = [...usosMateria];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarVista();
+            configurarFiltros();
+            actualizarEstadisticas();
+            configurarCalculoCosto();
+            document.getElementById('modalFechaMovimiento').value = new Date().toISOString().split('T')[0];
+        });
+
+        function configurarFiltros() {
+            const buscar = document.getElementById('buscarUso');
+            const filtroServicio = document.getElementById('filtroServicio');
+            const filtroFecha = document.getElementById('filtroFecha');
+
+            [buscar, filtroServicio, filtroFecha].forEach(elemento => {
+                elemento.addEventListener('input', aplicarFiltros);
+            });
+        }
+
+        function configurarCalculoCosto() {
+            const cantidad = document.getElementById('modalCantidad');
+            const costoUnitario = document.getElementById('modalCostoUnitario');
+            const costoTotal = document.getElementById('modalCostoTotal');
+
+            [cantidad, costoUnitario].forEach(campo => {
+                campo.addEventListener('input', function() {
+                    const cant = parseFloat(cantidad.value) || 0;
+                    const unit = parseFloat(costoUnitario.value) || 0;
+                    costoTotal.value = (cant * unit).toFixed(2);
+                });
+            });
+        }
+
+        function aplicarFiltros() {
+            const textoBusqueda = document.getElementById('buscarUso').value.toLowerCase();
+            const servicioSeleccionado = document.getElementById('filtroServicio').value;
+            const fechaSeleccionada = document.getElementById('filtroFecha').value;
+
+            usosFiltrados = usosMateria.filter(uso => {
+                const coincideTexto = 
+                    uso.codAnalisis.toLowerCase().includes(textoBusqueda) ||
+                    uso.nomServicio.toLowerCase().includes(textoBusqueda) ||
+                    uso.nomMaterial.toLowerCase().includes(textoBusqueda) ||
+                    uso.codMaterial.toLowerCase().includes(textoBusqueda);
+
+                const coincideServicio = !servicioSeleccionado || uso.servicioArea === servicioSeleccionado;
+
+                let coincideFecha = true;
+                if (fechaSeleccionada) {
+                    const fechaUso = new Date(uso.fechaMovimiento);
+                    const hoy = new Date();
+                    
+                    switch (fechaSeleccionada) {
+                        case 'hoy':
+                            coincideFecha = fechaUso.toDateString() === hoy.toDateString();
+                            break;
+                        case 'semana':
+                            const semanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            coincideFecha = fechaUso >= semanaAtras;
+                            break;
+                        case 'mes':
+                            coincideFecha = fechaUso.getMonth() === hoy.getMonth() && fechaUso.getFullYear() === hoy.getFullYear();
+                            break;
+                    }
+                }
+
+                return coincideTexto && coincideServicio && coincideFecha;
+            });
+
+            actualizarVista();
+            actualizarEstadisticas();
+        }
+
+        function cambiarVista(nuevaVista) {
+            vistaActual = nuevaVista;
+            
+            const btnConsumo = document.getElementById('btnConsumo');
+            const btnTabla = document.getElementById('btnTabla');
+            const vistaConsumo = document.getElementById('vistaConsumo');
+            const vistaTabla = document.getElementById('vistaTabla');
+
+            if (nuevaVista === 'consumo') {
+                btnConsumo.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnTabla.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaConsumo.classList.remove('hidden');
+                vistaTabla.classList.add('hidden');
+            } else {
+                btnTabla.className = 'flex-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors';
+                btnConsumo.className = 'flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors';
+                vistaTabla.classList.remove('hidden');
+                vistaConsumo.classList.add('hidden');
+            }
+
+            actualizarVista();
+        }
+
+        function actualizarVista() {
+            if (vistaActual === 'consumo') {
+                mostrarVistaConsumo();
+            } else {
+                mostrarTablaUsos();
+            }
+        }
+
+        function obtenerClaseServicio(servicio) {
+            const clases = {
+                'Laboratorio': 'categoria-laboratorio',
+                'Radiología': 'categoria-radiologia',
+                'Quirófano': 'categoria-quirofano',
+                'Urgencias': 'categoria-urgencias',
+                'Hospitalización': 'categoria-hospitalizacion'
+            };
+            return clases[servicio] || 'categoria-laboratorio';
+        }
+
+        function obtenerIconoServicio(servicio) {
+            const iconos = {
+                'Laboratorio': 'fas fa-flask',
+                'Radiología': 'fas fa-x-ray',
+                'Quirófano': 'fas fa-user-md',
+                'Urgencias': 'fas fa-ambulance',
+                'Hospitalización': 'fas fa-bed'
+            };
+            return iconos[servicio] || 'fas fa-hospital';
+        }
+
+        function mostrarVistaConsumo() {
+            mostrarTopMateriales();
+            mostrarConsumoServicios();
+            mostrarUsosRecientes();
+        }
+
+        function mostrarTopMateriales() {
+            const contenedor = document.getElementById('topMateriales');
+            
+            // Agrupar por material y sumar cantidades
+            const materialesAgrupados = usosFiltrados.reduce((acc, uso) => {
+                const key = uso.codMaterial;
+                if (!acc[key]) {
+                    acc[key] = {
+                        codMaterial: uso.codMaterial,
+                        nomMaterial: uso.nomMaterial,
+                        totalCantidad: 0,
+                        totalCosto: 0,
+                        usos: 0
+                    };
+                }
+                acc[key].totalCantidad += uso.cantidad;
+                acc[key].totalCosto += uso.costoTotal;
+                acc[key].usos++;
+                return acc;
+            }, {});
+
+            const topMateriales = Object.values(materialesAgrupados)
+                .sort((a, b) => b.totalCosto - a.totalCosto)
+                .slice(0, 5);
+
+            contenedor.innerHTML = topMateriales.map((material, index) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-yellow-${500 - index * 100} text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">${material.nomMaterial}</div>
+                            <div class="text-sm text-gray-500">${material.codMaterial} • ${material.usos} usos</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-gray-900">$${material.totalCosto.toLocaleString()}</div>
+                        <div class="text-sm text-gray-500">${material.totalCantidad} unidades</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarConsumoServicios() {
+            const contenedor = document.getElementById('consumoServicios');
+            
+            // Agrupar por servicio
+            const serviciosAgrupados = usosFiltrados.reduce((acc, uso) => {
+                const servicio = uso.servicioArea;
+                if (!acc[servicio]) {
+                    acc[servicio] = {
+                        servicio: servicio,
+                        totalCosto: 0,
+                        totalUsos: 0
+                    };
+                }
+                acc[servicio].totalCosto += uso.costoTotal;
+                acc[servicio].totalUsos++;
+                return acc;
+            }, {});
+
+            const totalGeneral = Object.values(serviciosAgrupados).reduce((sum, s) => sum + s.totalCosto, 0);
+
+            contenedor.innerHTML = Object.values(serviciosAgrupados)
+                .sort((a, b) => b.totalCosto - a.totalCosto)
+                .map(servicio => {
+                    const porcentaje = totalGeneral > 0 ? (servicio.totalCosto / totalGeneral * 100) : 0;
+                    return `
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <i class="${obtenerIconoServicio(servicio.servicio)} text-gray-600"></i>
+                                    <span class="font-medium">${servicio.servicio}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold">$${servicio.totalCosto.toLocaleString()}</div>
+                                    <div class="text-sm text-gray-500">${servicio.totalUsos} usos</div>
+                                </div>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full ${obtenerClaseServicio(servicio.servicio)}" style="width: ${porcentaje}%"></div>
+                            </div>
+                            <div class="text-sm text-gray-500 text-right">${porcentaje.toFixed(1)}%</div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        function mostrarUsosRecientes() {
+            const contenedor = document.getElementById('contenedorUsosRecientes');
+            
+            const usosRecientes = [...usosFiltrados]
+                .sort((a, b) => new Date(b.fechaMovimiento) - new Date(a.fechaMovimiento))
+                .slice(0, 10);
+
+            contenedor.innerHTML = usosRecientes.map(uso => `
+                <div class="px-6 py-4 hover:bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 ${obtenerClaseServicio(uso.servicioArea)} rounded-full flex items-center justify-center text-white">
+                                <i class="${obtenerIconoServicio(uso.servicioArea)}"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-900">${uso.nomServicio}</div>
+                                <div class="text-sm text-gray-500">${uso.codAnalisis} • ${uso.nomMaterial}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-gray-900">$${uso.costoTotal.toLocaleString()}</div>
+                            <div class="text-sm text-gray-500">${uso.cantidad} ${uso.unidad} • ${new Date(uso.fechaMovimiento).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function mostrarTablaUsos() {
+            const contenedor = document.getElementById('contenedorTablaUsos');
+            
+            if (usosFiltrados.length === 0) {
+                contenedor.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="px-6 py-12 text-center">
+                            <i class="fas fa-chart-bar text-4xl text-gray-300 mb-4"></i>
+                            <div class="text-lg font-medium text-gray-900 mb-2">No se encontraron usos</div>
+                            <div class="text-gray-500">No hay registros que coincidan con los filtros seleccionados.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = usosFiltrados.map(uso => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${new Date(uso.fechaMovimiento).toLocaleDateString()}
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${uso.codAnalisis}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex items-center">
+                            <i class="${obtenerIconoServicio(uso.servicioArea)} mr-2 text-gray-600"></i>
+                            ${uso.servicioArea}
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-900">
+                        <div class="font-medium">${uso.nomMaterial}</div>
+                        <div class="text-gray-500">${uso.codMaterial}</div>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${uso.cantidad}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${uso.unidad}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">$${uso.costoUnitario.toLocaleString()}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">$${uso.costoTotal.toLocaleString()}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarUso(${uso.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarUso(${uso.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarEstadisticas() {
+            const totalUsos = usosFiltrados.length;
+            const materialesUnicos = new Set(usosFiltrados.map(u => u.codMaterial)).size;
+            const analisisUnicos = new Set(usosFiltrados.map(u => u.codAnalisis)).size;
+            const costoTotal = usosFiltrados.reduce((sum, uso) => sum + uso.costoTotal, 0);
+            
+            // Simular alertas de stock bajo
+            const alertasStock = Math.floor(materialesUnicos * 0.15);
+
+            document.getElementById('totalUsos').textContent = totalUsos;
+            document.getElementById('totalMateriales').textContent = materialesUnicos;
+            document.getElementById('totalAnalisis').textContent = analisisUnicos;
+            document.getElementById('costoTotal').textContent = `$${costoTotal.toLocaleString()}`;
+            document.getElementById('alertasStock').textContent = alertasStock;
+        }
+
+        function registrarUso() {
+            document.getElementById('modal-title').textContent = 'Nuevo Registro de Uso';
+            document.getElementById('formUsoMaterial').reset();
+            document.getElementById('modalFechaMovimiento').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modalUsoMaterial').classList.remove('hidden');
+        }
+
+        function editarUso(id) {
+            const uso = usosMateria.find(u => u.id === id);
+            if (uso) {
+                document.getElementById('modal-title').textContent = `Editar: ${uso.nomServicio}`;
+                llenarFormulario(uso);
+                document.getElementById('modalUsoMaterial').classList.remove('hidden');
+            }
+        }
+
+        function llenarFormulario(uso) {
+            document.getElementById('modalCodAnalisis').value = uso.codAnalisis;
+            document.getElementById('modalNomServicio').value = uso.nomServicio;
+            document.getElementById('modalServicioArea').value = uso.servicioArea;
+            document.getElementById('modalFechaMovimiento').value = uso.fechaMovimiento;
+            document.getElementById('modalCodMaterial').value = uso.codMaterial;
+            document.getElementById('modalNomMaterial').value = uso.nomMaterial;
+            document.getElementById('modalCantidad').value = uso.cantidad;
+            document.getElementById('modalUnidad').value = uso.unidad;
+            document.getElementById('modalCostoUnitario').value = uso.costoUnitario;
+            document.getElementById('modalCostoTotal').value = uso.costoTotal;
+            document.getElementById('modalProveedor').value = uso.proveedor || '';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalUsoMaterial').classList.add('hidden');
+        }
+
+        function guardarUsoMaterial() {
+            // Aquí iría la lógica para guardar los cambios
+            cerrarModal();
+            // Simular actualización
+            setTimeout(() => {
+                actualizarVista();
+                actualizarEstadisticas();
+            }, 100);
+        }
+
+        function eliminarUso(id) {
+            if (confirm('¿Está seguro de que desea eliminar este registro de uso?')) {
+                // Aquí iría la lógica para eliminar
+                console.log('Eliminando uso:', id);
+            }
+        }
+
+        function imprimirReporte() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const datos = usosFiltrados.map(uso => ({
+                'Fecha': new Date(uso.fechaMovimiento).toLocaleDateString(),
+                'Código Análisis': uso.codAnalisis,
+                'Servicio': uso.nomServicio,
+                'Área': uso.servicioArea,
+                'Código Material': uso.codMaterial,
+                'Material': uso.nomMaterial,
+                'Cantidad': uso.cantidad,
+                'Unidad': uso.unidad,
+                'Costo Unitario': uso.costoUnitario,
+                'Costo Total': uso.costoTotal,
+                'Proveedor': uso.proveedor || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Insumos Usados');
+            XLSX.writeFile(workbook, 'insumos_usados.xlsx');
+        }
+    </script>
+
+    <!-- Incluir XLSX para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEG@SYS - Lista de Ciudades</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-blue': '#2563eb',
+                        'medical-green': '#059669',
+                        'medical-red': '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { print-color-adjust: exact; }
+            .print-header { display: block !important; }
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .city-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        .departamento-card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        .municipio-card {
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg no-print">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-map-marked-alt text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Sistema MEG@SYS</h1>
+                        <p class="text-blue-100">Gestión de Ciudades y Municipios</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-print mr-2"></i>Imprimir
+                    </button>
+                    <button onclick="window.history.back()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Print Header -->
+    <div class="print-header hidden">
+        <div class="text-center border-b-2 border-blue-600 pb-4 mb-6">
+            <h1 class="text-2xl font-bold text-blue-800">LISTADO DE CIUDADES</h1>
+            <p class="text-gray-600">Sistema MEG@SYS - Reporte Generado el <span id="print-date"></span></p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por código, descripción o tipo..." 
+                               class="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <select id="tipoFiltro" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos los Tipos</option>
+                        <option value="DEPARTAMENTO">Departamento</option>
+                        <option value="MUNICIPIO">Municipio</option>
+                        <option value="CIUDAD">Ciudad</option>
+                        <option value="DISTRITO">Distrito</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">Vista:</span>
+                    <button id="viewCards" onclick="toggleView('cards')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-th-large mr-1"></i>Tarjetas
+                    </button>
+                    <button id="viewTable" onclick="toggleView('table')" class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors">
+                        <i class="fas fa-table mr-1"></i>Tabla
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="stats-card text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm uppercase tracking-wide">Total Lugares</p>
+                        <p class="text-3xl font-bold" id="totalCiudades">0</p>
+                    </div>
+                    <i class="fas fa-map-marked-alt text-4xl text-blue-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm uppercase tracking-wide">Departamentos</p>
+                        <p class="text-3xl font-bold" id="totalDepartamentos">0</p>
+                    </div>
+                    <i class="fas fa-map text-4xl text-green-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-purple-400 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm uppercase tracking-wide">Municipios</p>
+                        <p class="text-3xl font-bold" id="totalMunicipios">0</p>
+                    </div>
+                    <i class="fas fa-building text-4xl text-purple-200"></i>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-400 to-orange-600 text-white p-6 rounded-lg shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm uppercase tracking-wide">Ciudades</p>
+                        <p class="text-3xl font-bold" id="totalCiudadesOnly">0</p>
+                    </div>
+                    <i class="fas fa-city text-4xl text-orange-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add New Button -->
+        <div class="mb-6 no-print">
+            <button onclick="agregarCiudad()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors shadow-lg">
+                <i class="fas fa-plus mr-2"></i>Agregar Nueva Ciudad
+            </button>
+        </div>
+
+        <!-- Cards View -->
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be generated here -->
+        </div>
+
+        <!-- Table View -->
+        <div id="tableContainer" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Código</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Descripción</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div id="modalCiudad" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 no-print">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                    <h3 class="text-lg font-semibold" id="modalTitle">Agregar Nueva Ciudad</h3>
+                </div>
+                <form id="formCiudad" class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                        <select id="modalTipo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Seleccionar tipo</option>
+                            <option value="DEPARTAMENTO">Departamento</option>
+                            <option value="MUNICIPIO">Municipio</option>
+                            <option value="CIUDAD">Ciudad</option>
+                            <option value="DISTRITO">Distrito</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Código</label>
+                        <input type="text" id="modalCodigo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                        <input type="text" id="modalDescripcion" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let ciudades = [
+            {
+                tipo: 'DEPARTAMENTO',
+                codigo: 'DEP001',
+                descripcion: 'ANTIOQUIA'
+            },
+            {
+                tipo: 'MUNICIPIO',
+                codigo: 'MUN001',
+                descripcion: 'MEDELLÍN'
+            },
+            {
+                tipo: 'CIUDAD',
+                codigo: 'CIU001',
+                descripcion: 'BOGOTÁ D.C.'
+            },
+            {
+                tipo: 'DEPARTAMENTO',
+                codigo: 'DEP002',
+                descripcion: 'CUNDINAMARCA'
+            },
+            {
+                tipo: 'MUNICIPIO',
+                codigo: 'MUN002',
+                descripcion: 'ENVIGADO'
+            },
+            {
+                tipo: 'CIUDAD',
+                codigo: 'CIU002',
+                descripcion: 'CALI'
+            },
+            {
+                tipo: 'DEPARTAMENTO',
+                codigo: 'DEP003',
+                descripcion: 'VALLE DEL CAUCA'
+            },
+            {
+                tipo: 'MUNICIPIO',
+                codigo: 'MUN003',
+                descripcion: 'BELLO'
+            },
+            {
+                tipo: 'DISTRITO',
+                codigo: 'DIS001',
+                descripcion: 'BARRANQUILLA'
+            },
+            {
+                tipo: 'CIUDAD',
+                codigo: 'CIU003',
+                descripcion: 'CARTAGENA'
+            }
+        ];
+
+        let currentView = 'cards';
+        let editingIndex = null;
+
+        function initializeApp() {
+            renderCiudades();
+            updateStatistics();
+            setupEventListeners();
+            updatePrintDate();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterCiudades);
+            document.getElementById('tipoFiltro').addEventListener('change', filterCiudades);
+            document.getElementById('formCiudad').addEventListener('submit', guardarCiudad);
+        }
+
+        function updatePrintDate() {
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('es-ES');
+        }
+
+        function renderCiudades() {
+            if (currentView === 'cards') {
+                renderCards();
+            } else {
+                renderTable();
+            }
+        }
+
+        function getCardClass(tipo) {
+            switch(tipo) {
+                case 'DEPARTAMENTO': return 'departamento-card';
+                case 'MUNICIPIO': return 'municipio-card';
+                case 'CIUDAD': return 'city-card';
+                case 'DISTRITO': return 'city-card';
+                default: return 'city-card';
+            }
+        }
+
+        function getIconClass(tipo) {
+            switch(tipo) {
+                case 'DEPARTAMENTO': return 'fas fa-map';
+                case 'MUNICIPIO': return 'fas fa-building';
+                case 'CIUDAD': return 'fas fa-city';
+                case 'DISTRITO': return 'fas fa-map-marked-alt';
+                default: return 'fas fa-map-marker-alt';
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            const filteredData = getFilteredCiudades();
+            
+            container.innerHTML = filteredData.map((ciudad, index) => `
+                <div class="${getCardClass(ciudad.tipo)} rounded-lg shadow-lg card-hover transition-all duration-300">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-white bg-opacity-30 p-3 rounded-full">
+                                    <i class="${getIconClass(ciudad.tipo)} text-2xl text-gray-700"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800">${ciudad.descripcion}</h3>
+                                    <p class="text-gray-600">Código: ${ciudad.codigo}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-white bg-opacity-70 rounded-full text-sm font-medium text-gray-700">
+                                ${ciudad.tipo}
+                            </span>
+                        </div>
+                        
+                        <div class="flex space-x-2 no-print">
+                            <button onclick="editarCiudad(${index})" 
+                                    class="flex-1 bg-white bg-opacity-70 hover:bg-opacity-90 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Editar
+                            </button>
+                            <button onclick="eliminarCiudad(${index})" 
+                                    class="flex-1 bg-red-500 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const filteredData = getFilteredCiudades();
+            
+            tbody.innerHTML = filteredData.map((ciudad, index) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoBadgeClass(ciudad.tipo)}">
+                            <i class="${getIconClass(ciudad.tipo)} mr-1"></i>
+                            ${ciudad.tipo}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${ciudad.codigo}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${ciudad.descripcion}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                        <button onclick="editarCiudad(${index})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarCiudad(${index})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getTipoBadgeClass(tipo) {
+            switch(tipo) {
+                case 'DEPARTAMENTO': return 'bg-green-100 text-green-800';
+                case 'MUNICIPIO': return 'bg-blue-100 text-blue-800';
+                case 'CIUDAD': return 'bg-purple-100 text-purple-800';
+                case 'DISTRITO': return 'bg-orange-100 text-orange-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getFilteredCiudades() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tipoFiltro = document.getElementById('tipoFiltro').value;
+            
+            return ciudades.filter(ciudad => {
+                const matchesSearch = !searchTerm || 
+                    ciudad.codigo.toLowerCase().includes(searchTerm) ||
+                    ciudad.descripcion.toLowerCase().includes(searchTerm) ||
+                    ciudad.tipo.toLowerCase().includes(searchTerm);
+                
+                const matchesTipo = !tipoFiltro || ciudad.tipo === tipoFiltro;
+                
+                return matchesSearch && matchesTipo;
+            });
+        }
+
+        function filterCiudades() {
+            renderCiudades();
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            
+            const cardsContainer = document.getElementById('cardsContainer');
+            const tableContainer = document.getElementById('tableContainer');
+            const viewCards = document.getElementById('viewCards');
+            const viewTable = document.getElementById('viewTable');
+            
+            if (view === 'cards') {
+                cardsContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                viewCards.classList.remove('bg-gray-300', 'text-gray-700');
+                viewCards.classList.add('bg-blue-500', 'text-white');
+                viewTable.classList.remove('bg-blue-500', 'text-white');
+                viewTable.classList.add('bg-gray-300', 'text-gray-700');
+            } else {
+                cardsContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                viewTable.classList.remove('bg-gray-300', 'text-gray-700');
+                viewTable.classList.add('bg-blue-500', 'text-white');
+                viewCards.classList.remove('bg-blue-500', 'text-white');
+                viewCards.classList.add('bg-gray-300', 'text-gray-700');
+            }
+            
+            renderCiudades();
+        }
+
+        function updateStatistics() {
+            const total = ciudades.length;
+            const departamentos = ciudades.filter(c => c.tipo === 'DEPARTAMENTO').length;
+            const municipios = ciudades.filter(c => c.tipo === 'MUNICIPIO').length;
+            const ciudadesOnly = ciudades.filter(c => c.tipo === 'CIUDAD').length;
+            
+            document.getElementById('totalCiudades').textContent = total;
+            document.getElementById('totalDepartamentos').textContent = departamentos;
+            document.getElementById('totalMunicipios').textContent = municipios;
+            document.getElementById('totalCiudadesOnly').textContent = ciudadesOnly;
+        }
+
+        function agregarCiudad() {
+            editingIndex = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Nueva Ciudad';
+            document.getElementById('formCiudad').reset();
+            document.getElementById('modalCiudad').classList.remove('hidden');
+        }
+
+        function editarCiudad(index) {
+            editingIndex = index;
+            const ciudad = ciudades[index];
+            
+            document.getElementById('modalTitle').textContent = 'Editar Ciudad';
+            document.getElementById('modalTipo').value = ciudad.tipo;
+            document.getElementById('modalCodigo').value = ciudad.codigo;
+            document.getElementById('modalDescripcion').value = ciudad.descripcion;
+            
+            document.getElementById('modalCiudad').classList.remove('hidden');
+        }
+
+        function guardarCiudad(event) {
+            event.preventDefault();
+            
+            const formData = {
+                tipo: document.getElementById('modalTipo').value.trim(),
+                codigo: document.getElementById('modalCodigo').value.trim(),
+                descripcion: document.getElementById('modalDescripcion').value.trim()
+            };
+            
+            if (editingIndex !== null) {
+                // Edit existing
+                ciudades[editingIndex] = formData;
+            } else {
+                // Add new
+                if (ciudades.find(c => c.codigo === formData.codigo)) {
+                    alert('Ya existe una ciudad con ese código');
+                    return;
+                }
+                ciudades.push(formData);
+            }
+            
+            renderCiudades();
+            updateStatistics();
+            cerrarModal();
+        }
+
+        function eliminarCiudad(index) {
+            if (confirm('¿Está seguro de que desea eliminar esta ciudad?')) {
+                ciudades.splice(index, 1);
+                renderCiudades();
+                updateStatistics();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalCiudad').classList.add('hidden');
+            editingIndex = null;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

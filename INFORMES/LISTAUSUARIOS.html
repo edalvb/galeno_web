@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LISTADO DE USUARIOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-header {
+            background-color: #e0e0e0;
+            border: 2px solid #ff0000;
+        }
+        .table-header th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            border-right: 1px solid #ccc;
+        }
+        .table-header th:last-child {
+            border-right: none;
+        }
+        tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        tbody td {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border-right: 1px solid #eee;
+        }
+        tbody td:last-child {
+            border-right: none;
+        }
+        .codigo-column {
+            width: 150px;
+            text-align: center;
+        }
+        .nombre-column {
+            width: auto;
+        }
+        .clave-column {
+            width: 150px;
+            text-align: center;
+            font-family: monospace;
+        }
+        .admin-column {
+            width: 120px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        .admin-si {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .admin-no {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .clave-oculta {
+            color: #999;
+            font-style: italic;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .table-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LISTADO DE USUARIOS</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PAGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead class="table-header">
+                <tr>
+                    <th class="codigo-column">CODIGO USUARIO:</th>
+                    <th class="nombre-column">NOMBRE:</th>
+                    <th class="clave-column">CLAVE:</th>
+                    <th class="admin-column">ADMINISTRADOR:</th>
+                </tr>
+            </thead>
+            <tbody id="usuarios-data">
+                <tr>
+                    <td colspan="4" class="no-data">
+                        Cargando datos de usuarios...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>PAGINA: <span id="footer-page">1</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de usuarios del sistema
+        const usuarios = [
+            {
+                codigo: "ADMIN001",
+                nombre: "ADMINISTRADOR SISTEMA",
+                clave: "********",
+                administrador: true
+            },
+            {
+                codigo: "DOC001",
+                nombre: "DR. CARLOS GARCÍA LÓPEZ",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "ENF001",
+                nombre: "ENFERMERA MARÍA RODRÍGUEZ",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "LAB001",
+                nombre: "LABORATORISTA JUAN MARTÍNEZ",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "SEC001",
+                nombre: "SECRETARIA SANDRA RAMÍREZ",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "DOC002",
+                nombre: "DRA. ANA FERNÁNDEZ GÓMEZ",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "RECEP001",
+                nombre: "RECEPCIONISTA GLORIA VALENCIA",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "ENF002",
+                nombre: "ENFERMERO LUIS TORRES",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "DOC003",
+                nombre: "DR. DIEGO VARGAS HERRERA",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "CONT001",
+                nombre: "CONTADORA MÓNICA CORREA",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "LAB002",
+                nombre: "AUXILIAR LAB CATALINA JIMÉNEZ",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "DOC004",
+                nombre: "DR. RICARDO SALAZAR MENDOZA",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "SUPER001",
+                nombre: "SUPERVISOR SISTEMA",
+                clave: "********",
+                administrador: true
+            },
+            {
+                codigo: "ENF003",
+                nombre: "ENFERMERA BEATRIZ MORENO",
+                clave: "********",
+                administrador: false
+            },
+            {
+                codigo: "DOC005",
+                nombre: "DRA. PATRICIA DELGADO CAMPOS",
+                clave: "********",
+                administrador: false
+            }
+        ];
+
+        // Formatear el estado de administrador
+        function formatAdministrador(esAdmin) {
+            if (esAdmin) {
+                return '<span class="admin-si">SÍ</span>';
+            } else {
+                return '<span class="admin-no">NO</span>';
+            }
+        }
+
+        // Cargar datos de usuarios
+        function loadUsuarios() {
+            const tbody = document.getElementById('usuarios-data');
+            
+            if (usuarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No hay datos de usuarios disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = usuarios.map(usuario => `
+                <tr>
+                    <td class="codigo-column">${usuario.codigo}</td>
+                    <td class="nombre-column">${usuario.nombre}</td>
+                    <td class="clave-column clave-oculta">${usuario.clave}</td>
+                    <td class="admin-column">${formatAdministrador(usuario.administrador)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadUsuarios();
+        });
+
+        // Funcionalidad de impresión
+        function printReport() {
+            window.print();
+        }
+
+        // Agregar evento de teclado para imprimir (Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReport();
+            }
+        });
+    </script>
+</body>
+</html>

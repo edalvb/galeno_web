@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEGASYS - Mantenimiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">
+                <i class="fas fa-cogs mr-2"></i>
+                MEGASYS - Mantenimiento
+            </h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm">Usuario: <span id="currentUser">Admin</span></span>
+                <button onclick="window.location.href='../index.html'" class="bg-blue-500 hover:bg-blue-700 px-3 py-1 rounded">
+                    <i class="fas fa-home mr-1"></i>
+                    Inicio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-6">
+        <!-- Navigation Tabs -->
+        <div class="mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showTab('pacientes')" class="tab-button py-2 px-4 border-b-2 border-blue-500 text-blue-600 font-medium">
+                        <i class="fas fa-users mr-2"></i>
+                        Pacientes
+                    </button>
+                    <button onclick="showTab('personal')" class="tab-button py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-user-tie mr-2"></i>
+                        Personal
+                    </button>
+                    <button onclick="showTab('doctores')" class="tab-button py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-user-md mr-2"></i>
+                        Doctores
+                    </button>
+                    <button onclick="showTab('especialidades')" class="tab-button py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-stethoscope mr-2"></i>
+                        Especialidades
+                    </button>
+                    <button onclick="showTab('insumos')" class="tab-button py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-box mr-2"></i>
+                        Insumos
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <!-- Toolbar -->
+            <div class="flex flex-wrap gap-2 mb-6 p-4 bg-gray-50 rounded-lg">
+                <button class="btn-toolbar bg-green-500 hover:bg-green-600" onclick="addNew()">
+                    <i class="fas fa-plus mr-1"></i>
+                    Nuevo
+                </button>
+                <button class="btn-toolbar bg-blue-500 hover:bg-blue-600" onclick="edit()">
+                    <i class="fas fa-edit mr-1"></i>
+                    Editar
+                </button>
+                <button class="btn-toolbar bg-red-500 hover:bg-red-600" onclick="deleteRecord()">
+                    <i class="fas fa-trash mr-1"></i>
+                    Eliminar
+                </button>
+                <button class="btn-toolbar bg-gray-500 hover:bg-gray-600" onclick="save()">
+                    <i class="fas fa-save mr-1"></i>
+                    Guardar
+                </button>
+                <button class="btn-toolbar bg-yellow-500 hover:bg-yellow-600" onclick="cancel()">
+                    <i class="fas fa-times mr-1"></i>
+                    Cancelar
+                </button>
+                <button class="btn-toolbar bg-purple-500 hover:bg-purple-600" onclick="search()">
+                    <i class="fas fa-search mr-1"></i>
+                    Buscar
+                </button>
+                <button class="btn-toolbar bg-indigo-500 hover:bg-indigo-600" onclick="print()">
+                    <i class="fas fa-print mr-1"></i>
+                    Imprimir
+                </button>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="flex justify-center space-x-2 mb-6">
+                <button class="nav-btn" onclick="firstRecord()">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="nav-btn" onclick="previousRecord()">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <span class="px-4 py-2 bg-gray-100 rounded">
+                    Registro <span id="currentRecord">1</span> de <span id="totalRecords">100</span>
+                </span>
+                <button class="nav-btn" onclick="nextRecord()">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button class="nav-btn" onclick="lastRecord()">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+
+            <!-- Content Panels -->
+            <div id="pacientes-panel" class="tab-panel">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Información del Paciente</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                                <input type="text" class="form-input" placeholder="Auto-generado" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Historia Clínica</label>
+                                <input type="text" class="form-input" placeholder="Número de historia">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                            <input type="text" class="form-input" placeholder="Apellidos y nombres">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Documento</label>
+                                <select class="form-input">
+                                    <option>DNI</option>
+                                    <option>Pasaporte</option>
+                                    <option>Cedula</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Número Documento</label>
+                                <input type="text" class="form-input" placeholder="Número de documento">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Nacimiento</label>
+                                <input type="date" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                                <select class="form-input">
+                                    <option>Masculino</option>
+                                    <option>Femenino</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Datos de Contacto</h3>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                            <textarea class="form-input" rows="2" placeholder="Dirección completa"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                <input type="tel" class="form-input" placeholder="Teléfono">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Celular</label>
+                                <input type="tel" class="form-input" placeholder="Celular">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" class="form-input" placeholder="correo@ejemplo.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Obra Social</label>
+                            <div class="flex">
+                                <input type="text" class="form-input rounded-r-none" placeholder="Seleccionar obra social">
+                                <button class="bg-gray-300 hover:bg-gray-400 px-3 rounded-r-md">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                            <textarea class="form-input" rows="3" placeholder="Observaciones del paciente"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other panels (hidden by default) -->
+            <div id="personal-panel" class="tab-panel hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Personal</h3>
+                <p class="text-gray-600">Panel de gestión de personal médico y administrativo.</p>
+            </div>
+
+            <div id="doctores-panel" class="tab-panel hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Doctores</h3>
+                <p class="text-gray-600">Panel de gestión de doctores y médicos especialistas.</p>
+            </div>
+
+            <div id="especialidades-panel" class="tab-panel hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Especialidades</h3>
+                <p class="text-gray-600">Panel de gestión de especialidades médicas.</p>
+            </div>
+
+            <div id="insumos-panel" class="tab-panel hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Insumos</h3>
+                <p class="text-gray-600">Panel de gestión de insumos médicos y materiales.</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .btn-toolbar {
+            @apply text-white px-3 py-1 rounded text-sm font-medium transition-colors duration-200;
+        }
+        
+        .nav-btn {
+            @apply bg-gray-300 hover:bg-gray-400 px-3 py-2 rounded transition-colors duration-200;
+        }
+        
+        .form-input {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+        }
+        
+        .tab-button.active {
+            @apply border-blue-500 text-blue-600;
+        }
+    </style>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+            // Show selected panel
+            document.getElementById(tabName + '-panel').classList.remove('hidden');
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            event.target.classList.add('border-blue-500', 'text-blue-600');
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+        }
+
+        function addNew() {
+            // Clear all form inputs
+            document.querySelectorAll('.form-input').forEach(input => {
+                if (input.type !== 'button') input.value = '';
+            });
+            alert('Modo: Nuevo registro');
+        }
+
+        function edit() {
+            alert('Modo: Editar registro');
+        }
+
+        function deleteRecord() {
+            if (confirm('¿Está seguro de eliminar este registro?')) {
+                alert('Registro eliminado');
+            }
+        }
+
+        function save() {
+            alert('Registro guardado exitosamente');
+        }
+
+        function cancel() {
+            if (confirm('¿Desea cancelar los cambios?')) {
+                alert('Cambios cancelados');
+            }
+        }
+
+        function search() {
+            alert('Función de búsqueda');
+        }
+
+        function print() {
+            window.print();
+        }
+
+        function firstRecord() {
+            document.getElementById('currentRecord').textContent = '1';
+        }
+
+        function previousRecord() {
+            let current = parseInt(document.getElementById('currentRecord').textContent);
+            if (current > 1) {
+                document.getElementById('currentRecord').textContent = (current - 1).toString();
+            }
+        }
+
+        function nextRecord() {
+            let current = parseInt(document.getElementById('currentRecord').textContent);
+            let total = parseInt(document.getElementById('totalRecords').textContent);
+            if (current < total) {
+                document.getElementById('currentRecord').textContent = (current + 1).toString();
+            }
+        }
+
+        function lastRecord() {
+            let total = document.getElementById('totalRecords').textContent;
+            document.getElementById('currentRecord').textContent = total;
+        }
+
+        // Load user info
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('megasys_user') || 'Admin';
+            document.getElementById('currentUser').textContent = user;
+        });
+    </script>
+</body>
+</html>

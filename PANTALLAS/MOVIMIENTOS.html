@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Órdenes de Servicios - MEGASYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">
+                <i class="fas fa-clipboard-list mr-2"></i>
+                Órdenes de Servicios - MEGASYS
+            </h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm">Usuario: <span id="currentUser">Admin</span></span>
+                <button onclick="window.location.href='../index.html'" class="bg-blue-500 hover:bg-blue-700 px-3 py-1 rounded">
+                    <i class="fas fa-home mr-1"></i>
+                    Inicio
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-6">
+        <!-- Patient Selection Panel -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-user mr-2"></i>
+                Selección de Paciente
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Paciente</label>
+                    <div class="flex">
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Buscar paciente" id="patientSearch">
+                        <button onclick="searchPatient()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-md">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Historia Clínica</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           value="HC-001234" readonly id="clinicalHistory">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Orden</label>
+                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           id="orderDate">
+                </div>
+            </div>
+            
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm bg-gray-50 p-4 rounded">
+                <div>
+                    <span class="font-medium text-gray-700">Nombre:</span> 
+                    <span class="text-gray-900" id="patientName">Juan Pérez García</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">DNI:</span> 
+                    <span class="text-gray-900" id="patientDNI">12345678</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Edad:</span> 
+                    <span class="text-gray-900" id="patientAge">45 años</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Obra Social:</span> 
+                    <span class="text-gray-900" id="patientInsurance">OSDE</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Selection Panel -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-medical-kit mr-2"></i>
+                Selección de Servicios
+            </h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Service Selection Form -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Médico</label>
+                        <div class="flex">
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="Seleccionar médico" id="doctorSearch">
+                            <button onclick="searchDoctor()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-md">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Especialidad</label>
+                        <div class="flex">
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="Seleccionar especialidad" id="specialtySearch">
+                            <button onclick="searchSpecialty()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-md">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Servicio/Procedimiento</label>
+                        <div class="flex">
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="Buscar servicio" id="serviceSearch">
+                            <button onclick="searchService()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-md">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   id="serviceCode" placeholder="Código del servicio">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                   id="servicePrice" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                  rows="3" placeholder="Observaciones del servicio" id="serviceObservations"></textarea>
+                    </div>
+
+                    <button onclick="addService()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar Servicio
+                    </button>
+                </div>
+
+                <!-- Services List -->
+                <div>
+                    <h4 class="text-md font-semibold text-gray-800 mb-3">Servicios Agregados</h4>
+                    <div class="border border-gray-300 rounded-md max-h-96 overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="servicesTable">
+                                <!-- Services will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 bg-gray-50 p-4 rounded">
+                        <div class="flex justify-between items-center font-semibold text-lg">
+                            <span>Total:</span>
+                            <span id="totalAmount">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-4 mb-6">
+            <button onclick="saveOrder()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-save mr-2"></i>
+                Guardar Orden
+            </button>
+            <button onclick="printOrder()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-print mr-2"></i>
+                Imprimir Orden
+            </button>
+            <button onclick="newOrder()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-plus mr-2"></i>
+                Nueva Orden
+            </button>
+            <button onclick="cancel()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+        </div>
+
+        <!-- Orders History -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-history mr-2"></i>
+                    Órdenes Recientes
+                </h3>
+                <div class="space-x-2">
+                    <button onclick="searchOrders()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-search mr-1"></i>
+                        Buscar
+                    </button>
+                    <button onclick="exportOrders()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm">
+                        <i class="fas fa-download mr-1"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médico</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicios</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">11/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Juan Pérez</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. García</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Consulta Cardiología, ECG</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$3,200</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Completado
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewOrder(1)" class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button onclick="printOrder(1)" class="text-purple-600 hover:text-purple-900">Imprimir</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">10/01/2025</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">María González</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dr. López</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Consulta General</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,800</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Pendiente
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewOrder(2)" class="text-blue-600 hover:text-blue-900 mr-2">Ver</button>
+                                <button onclick="editOrder(2)" class="text-green-600 hover:text-green-900">Editar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let services = [];
+        let serviceCounter = 1;
+
+        function searchPatient() {
+            alert('Búsqueda de pacientes');
+        }
+
+        function searchDoctor() {
+            alert('Búsqueda de médicos');
+        }
+
+        function searchSpecialty() {
+            alert('Búsqueda de especialidades');
+        }
+
+        function searchService() {
+            alert('Búsqueda de servicios');
+        }
+
+        function addService() {
+            const code = document.getElementById('serviceCode').value;
+            const description = document.getElementById('serviceSearch').value;
+            const price = parseFloat(document.getElementById('servicePrice').value) || 0;
+            const observations = document.getElementById('serviceObservations').value;
+
+            if (!code || !description || price <= 0) {
+                alert('Por favor complete todos los campos del servicio');
+                return;
+            }
+
+            const service = {
+                id: serviceCounter++,
+                code: code,
+                description: description,
+                price: price,
+                observations: observations
+            };
+
+            services.push(service);
+            updateServicesTable();
+            clearServiceForm();
+        }
+
+        function updateServicesTable() {
+            const tbody = document.getElementById('servicesTable');
+            tbody.innerHTML = '';
+
+            let total = 0;
+            services.forEach(service => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-2 text-sm text-gray-900">${service.code}</td>
+                    <td class="px-4 py-2 text-sm text-gray-900">${service.description}</td>
+                    <td class="px-4 py-2 text-sm text-gray-900">$${service.price.toFixed(2)}</td>
+                    <td class="px-4 py-2 text-sm font-medium">
+                        <button onclick="removeService(${service.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                total += service.price;
+            });
+
+            document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function removeService(id) {
+            services = services.filter(service => service.id !== id);
+            updateServicesTable();
+        }
+
+        function clearServiceForm() {
+            document.getElementById('serviceCode').value = '';
+            document.getElementById('serviceSearch').value = '';
+            document.getElementById('servicePrice').value = '';
+            document.getElementById('serviceObservations').value = '';
+        }
+
+        function saveOrder() {
+            if (services.length === 0) {
+                alert('Por favor agregue al menos un servicio');
+                return;
+            }
+            
+            const patientName = document.getElementById('patientName').textContent;
+            if (patientName === 'Juan Pérez García') {
+                // This is the default placeholder
+                if (!document.getElementById('patientSearch').value) {
+                    alert('Por favor seleccione un paciente');
+                    return;
+                }
+            }
+
+            alert('Orden guardada exitosamente');
+            newOrder();
+        }
+
+        function printOrder() {
+            if (services.length === 0) {
+                alert('No hay servicios para imprimir');
+                return;
+            }
+            alert('Imprimiendo orden de servicios...');
+        }
+
+        function newOrder() {
+            if (services.length > 0 && !confirm('¿Desea crear una nueva orden? Se perderán los datos actuales.')) {
+                return;
+            }
+            
+            services = [];
+            serviceCounter = 1;
+            updateServicesTable();
+            clearServiceForm();
+            
+            document.getElementById('patientSearch').value = '';
+            document.getElementById('doctorSearch').value = '';
+            document.getElementById('specialtySearch').value = '';
+            document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function cancel() {
+            if (services.length > 0 && !confirm('¿Desea cancelar? Se perderán todos los datos.')) {
+                return;
+            }
+            window.location.href = '../index.html';
+        }
+
+        function searchOrders() {
+            alert('Búsqueda de órdenes');
+        }
+
+        function exportOrders() {
+            alert('Exportando órdenes...');
+        }
+
+        function viewOrder(id) {
+            alert(`Visualizando orden ${id}`);
+        }
+
+        function editOrder(id) {
+            alert(`Editando orden ${id}`);
+        }
+
+        // Load user info and set default date
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = localStorage.getItem('megasys_user') || 'Admin';
+            document.getElementById('currentUser').textContent = user;
+            
+            // Set current date
+            document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

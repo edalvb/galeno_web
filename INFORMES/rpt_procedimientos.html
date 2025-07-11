@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Órdenes del Médico - Sistema Galeno</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .report-container {
+            max-width: 21cm;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 29.7cm;
+            position: relative;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .patient-info {
+            background: #f8f9fa;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .patient-header {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 15px -20px;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .patient-data {
+            display: grid;
+            grid-template-columns: auto 1fr auto 1fr auto 2fr;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .patient-data label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .patient-data .value {
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 3px 8px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .orders-section {
+            background: white;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            min-height: 400px;
+        }
+
+        .orders-header {
+            background: #3498db;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+        }
+
+        .orders-content {
+            min-height: 300px;
+            padding: 20px;
+            border: 1px dashed #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .order-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        .order-number {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .order-text {
+            text-align: justify;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .signature-section {
+            background: #fff3cd;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .signature-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #856404;
+            text-decoration: underline;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .signature-box {
+            height: 80px;
+            border: 2px dashed #856404;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #856404;
+            font-style: italic;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        .doctor-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .doctor-field {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .doctor-field label {
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .doctor-field .value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .footer-line {
+            border-top: 2px solid #333;
+            margin-top: 50px;
+            padding-top: 15px;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .navigation h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .navigation button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .navigation button:hover {
+            background: #2980b9;
+        }
+
+        .add-button {
+            background: #27ae60 !important;
+        }
+
+        .add-button:hover {
+            background: #229954 !important;
+        }
+
+        .print-button {
+            background: #e74c3c !important;
+        }
+
+        .print-button:hover {
+            background: #c0392b !important;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .navigation {
+                display: none;
+            }
+            
+            .report-container {
+                border: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .patient-data {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .doctor-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        .editable {
+            background: #f0f8ff !important;
+            border: 1px dashed #3498db !important;
+            cursor: text;
+        }
+
+        .editable:focus {
+            outline: 2px solid #3498db;
+            background: white !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="navigation">
+        <h3>📋 Navegación</h3>
+        <button onclick="loadExample(1)">👤 Ejemplo 1</button>
+        <button onclick="loadExample(2)">👤 Ejemplo 2</button>
+        <button onclick="loadExample(3)">👤 Ejemplo 3</button>
+        <button class="add-button" onclick="addOrder()">➕ Agregar Orden</button>
+        <button class="print-button" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+
+    <div class="report-container">
+        <div class="header">
+            <h1>👨‍⚕️ Órdenes del Médico</h1>
+            <div class="header-info">
+                <span id="datetime">25/01/2024 - 14:30</span>
+                <span>Sistema Galeno - Órdenes Médicas</span>
+                <span>Página: 1</span>
+            </div>
+        </div>
+
+        <div class="patient-info">
+            <div class="patient-header">
+                📋 Información del Paciente
+            </div>
+            <div class="patient-data">
+                <label>FICHACLINICA:</label>
+                <span class="value" id="fichaclinica">12345</span>
+                <label>Tipo Doc:</label>
+                <span class="value" id="tipdoc">CC</span>
+                <label>Número:</label>
+                <span class="value" id="nrodoc">12345678</span>
+                <label>Paciente:</label>
+                <span class="value" id="nompaciente">Juan Carlos García López</span>
+            </div>
+        </div>
+
+        <div class="orders-section">
+            <div class="orders-header">
+                📝 Órdenes y Procedimientos Médicos
+            </div>
+            <div class="orders-content" id="orders-content">
+                <div class="order-item">
+                    <div class="order-number">📋 ORDEN #1</div>
+                    <div class="order-text" contenteditable="true">
+                        1. Realizar Hemograma Completo (incluir recuento diferencial de leucocitos)
+                        2. Solicitar Química Sanguínea: Glucosa, Urea, Creatinina, Ácido úrico
+                        3. Perfil lipídico completo en ayunas de 12 horas
+                        4. Examen general de orina con sedimento
+                    </div>
+                </div>
+                
+                <div class="order-item">
+                    <div class="order-number">📋 ORDEN #2</div>
+                    <div class="order-text" contenteditable="true">
+                        1. Radiografía de Tórax PA y Lateral
+                        2. Electrocardiograma de 12 derivaciones en reposo
+                        3. Ecocardiograma Doppler color
+                    </div>
+                </div>
+                
+                <div class="order-item">
+                    <div class="order-number">📋 ORDEN #3</div>
+                    <div class="order-text" contenteditable="true">
+                        MEDICAMENTOS:
+                        - Enalapril 10mg: 1 tableta cada 12 horas por vía oral
+                        - Metformina 850mg: 1 tableta cada 8 horas con las comidas
+                        - Aspirina 100mg: 1 tableta diaria en la noche
+                        - Control médico en 15 días
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-title">
+                ✍️ Firma y Sello del Médico
+            </div>
+            <div class="signature-box">
+                Espacio para firma y sello médico
+            </div>
+            <div class="doctor-info">
+                <div class="doctor-field">
+                    <label>Nombre del Médico:</label>
+                    <div class="value" id="doctor-name" contenteditable="true">Dr. Carlos Rodríguez Silva</div>
+                </div>
+                <div class="doctor-field">
+                    <label>Registro Médico:</label>
+                    <div class="value" id="doctor-reg" contenteditable="true">RM12345</div>
+                </div>
+                <div class="doctor-field">
+                    <label>Especialidad:</label>
+                    <div class="value" id="doctor-specialty" contenteditable="true">Medicina Interna</div>
+                </div>
+                <div class="doctor-field">
+                    <label>Fecha:</label>
+                    <div class="value" id="order-date" contenteditable="true">25/01/2024</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-line">
+            📄 Este documento constituye una orden médica oficial - Sistema Galeno
+        </div>
+    </div>
+
+    <script>
+        const examples = {
+            1: {
+                fichaclinica: "12345",
+                tipdoc: "CC",
+                nrodoc: "12345678",
+                nompaciente: "Juan Carlos García López",
+                doctorName: "Dr. Carlos Rodríguez Silva",
+                doctorReg: "RM12345",
+                doctorSpecialty: "Medicina Interna",
+                orders: [
+                    {
+                        title: "ORDEN #1",
+                        text: "1. Realizar Hemograma Completo (incluir recuento diferencial de leucocitos)\n2. Solicitar Química Sanguínea: Glucosa, Urea, Creatinina, Ácido úrico\n3. Perfil lipídico completo en ayunas de 12 horas\n4. Examen general de orina con sedimento"
+                    },
+                    {
+                        title: "ORDEN #2", 
+                        text: "1. Radiografía de Tórax PA y Lateral\n2. Electrocardiograma de 12 derivaciones en reposo\n3. Ecocardiograma Doppler color"
+                    },
+                    {
+                        title: "ORDEN #3",
+                        text: "MEDICAMENTOS:\n- Enalapril 10mg: 1 tableta cada 12 horas por vía oral\n- Metformina 850mg: 1 tableta cada 8 horas con las comidas\n- Aspirina 100mg: 1 tableta diaria en la noche\n- Control médico en 15 días"
+                    }
+                ]
+            },
+            2: {
+                fichaclinica: "67890",
+                tipdoc: "TI",
+                nrodoc: "98765432",
+                nompaciente: "Ana Sofía Martínez Ruiz",
+                doctorName: "Dra. Patricia González López",
+                doctorReg: "RM67890",
+                doctorSpecialty: "Pediatría",
+                orders: [
+                    {
+                        title: "ORDEN #1",
+                        text: "1. Hemograma completo pediátrico\n2. Proteína C reactiva\n3. Velocidad de sedimentación globular\n4. Coprocultivo y parasitológico seriado x3"
+                    },
+                    {
+                        title: "ORDEN #2",
+                        text: "1. Radiografía de Tórax AP\n2. Ecografía abdominal total\n3. Control de peso y talla"
+                    },
+                    {
+                        title: "ORDEN #3",
+                        text: "MEDICAMENTOS:\n- Acetaminofén jarabe: 5ml cada 6 horas si hay fiebre\n- Suero oral: 1 sobre en 200ml de agua, dar pequeños sorbos\n- Dieta blanda, abundantes líquidos\n- Control en 48 horas o antes si empeora"
+                    }
+                ]
+            },
+            3: {
+                fichaclinica: "54321",
+                tipdoc: "CE",
+                nrodoc: "1234567890",
+                nompaciente: "Luis Fernando Hernández Silva",
+                doctorName: "Dr. Roberto Jiménez Castro",
+                doctorReg: "RM54321",
+                doctorSpecialty: "Cardiología",
+                orders: [
+                    {
+                        title: "ORDEN #1",
+                        text: "1. Troponinas seriadas (0, 6 y 12 horas)\n2. CK-MB masa\n3. BNP o Pro-BNP\n4. Dímero D\n5. Gasometría arterial"
+                    },
+                    {
+                        title: "ORDEN #2",
+                        text: "1. Ecocardiograma transtorácico urgente\n2. Holter de ritmo 24 horas\n3. Prueba de esfuerzo post-estabilización\n4. Angiografía coronaria si indicado"
+                    },
+                    {
+                        title: "ORDEN #3",
+                        text: "MEDICAMENTOS:\n- Clopidogrel 75mg: 1 tableta diaria\n- Atorvastatina 40mg: 1 tableta en la noche\n- Carvedilol 6.25mg: 1/2 tableta cada 12 horas\n- Ramipril 2.5mg: 1 tableta diaria\n- Control cardiológico en 7 días - URGENTE"
+                    }
+                ]
+            }
+        };
+
+        function loadExample(num) {
+            const data = examples[num];
+            
+            // Cargar datos del paciente
+            document.getElementById('fichaclinica').textContent = data.fichaclinica;
+            document.getElementById('tipdoc').textContent = data.tipdoc;
+            document.getElementById('nrodoc').textContent = data.nrodoc;
+            document.getElementById('nompaciente').textContent = data.nompaciente;
+            
+            // Cargar datos del médico
+            document.getElementById('doctor-name').textContent = data.doctorName;
+            document.getElementById('doctor-reg').textContent = data.doctorReg;
+            document.getElementById('doctor-specialty').textContent = data.doctorSpecialty;
+            
+            // Cargar órdenes
+            const ordersContent = document.getElementById('orders-content');
+            ordersContent.innerHTML = '';
+            
+            data.orders.forEach((order, index) => {
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'order-item';
+                orderDiv.innerHTML = `
+                    <div class="order-number">📋 ${order.title}</div>
+                    <div class="order-text" contenteditable="true">${order.text.replace(/\n/g, '<br>')}</div>
+                `;
+                ordersContent.appendChild(orderDiv);
+            });
+            
+            // Actualizar fecha
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-CO');
+            document.getElementById('order-date').textContent = dateStr;
+            document.getElementById('datetime').textContent = 
+                dateStr + ' - ' + now.toLocaleTimeString('es-CO', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        function addOrder() {
+            const ordersContent = document.getElementById('orders-content');
+            const orderCount = ordersContent.children.length + 1;
+            
+            const orderDiv = document.createElement('div');
+            orderDiv.className = 'order-item';
+            orderDiv.innerHTML = `
+                <div class="order-number">📋 ORDEN #${orderCount}</div>
+                <div class="order-text editable" contenteditable="true">
+                    Escriba aquí la nueva orden médica...
+                </div>
+            `;
+            
+            ordersContent.appendChild(orderDiv);
+            
+            // Enfocar el nuevo campo
+            const newOrderText = orderDiv.querySelector('.order-text');
+            newOrderText.focus();
+            
+            // Seleccionar todo el texto placeholder
+            if (window.getSelection) {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(newOrderText);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+
+        // Mejorar la experiencia de edición
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar clases de edición a elementos editables
+            const editables = document.querySelectorAll('[contenteditable="true"]');
+            editables.forEach(element => {
+                element.addEventListener('focus', function() {
+                    this.classList.add('editable');
+                });
+                
+                element.addEventListener('blur', function() {
+                    this.classList.remove('editable');
+                });
+            });
+        });
+
+        // Cargar primer ejemplo al inicio
+        loadExample(1);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        loadExample(1);
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        loadExample(2);
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        loadExample(3);
+                        break;
+                    case 'a':
+                        e.preventDefault();
+                        addOrder();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        window.print();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIAGNÓSTICO MÉDICO</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ff0000;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 0;
+        }
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            color: #666;
+        }
+        .diagnosis-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+            min-height: 600px;
+        }
+        .patient-info {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #ff0000;
+        }
+        .patient-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .patient-field {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .field-label {
+            font-weight: bold;
+            color: #333;
+            min-width: 120px;
+        }
+        .field-value {
+            color: #666;
+            font-weight: bold;
+        }
+        .separator-line {
+            border-bottom: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .diagnosis-section {
+            margin-top: 30px;
+        }
+        .diagnosis-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            text-decoration: underline;
+        }
+        .diagnosis-content {
+            min-height: 300px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .diagnosis-items {
+            list-style-type: none;
+            padding: 0;
+        }
+        .diagnosis-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: white;
+            border-left: 3px solid #007bff;
+            border-radius: 3px;
+        }
+        .diagnosis-code {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 11px;
+        }
+        .diagnosis-description {
+            margin-top: 5px;
+            color: #333;
+        }
+        .signature-section {
+            margin-top: 60px;
+            text-align: right;
+        }
+        .signature-box {
+            display: inline-block;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .signature-line {
+            width: 300px;
+            border-top: 2px solid #333;
+            margin-bottom: 10px;
+        }
+        .signature-text {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+            text-decoration: underline;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #ff0000;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .primary-diagnosis {
+            border-left-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        .secondary-diagnosis {
+            border-left-color: #ffc107;
+            background-color: #fffef5;
+        }
+        .differential-diagnosis {
+            border-left-color: #28a745;
+            background-color: #f5fff5;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                background-color: white;
+            }
+            .diagnosis-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DIAGNÓSTICO MÉDICO</h1>
+    </div>
+
+    <div class="report-info">
+        <span id="report-date"></span>
+        <span id="report-time"></span>
+        <span>PÁGINA: <span id="page-info">1</span></span>
+    </div>
+
+    <div class="diagnosis-container">
+        <!-- Información del Paciente -->
+        <div class="patient-info">
+            <div class="patient-row">
+                <div class="patient-field">
+                    <span class="field-label">FICHA CLÍNICA:</span>
+                    <span class="field-value" id="fichaclinica">FC-2025-001</span>
+                </div>
+            </div>
+            <div class="patient-row">
+                <div class="patient-field">
+                    <span class="field-label">PACIENTE:</span>
+                    <span class="field-value" id="tipo-doc">CC</span>
+                    <span class="field-value" id="numero-doc">1234567890</span>
+                    <span class="field-value" id="nombre-paciente">MARÍA ELENA RODRÍGUEZ LÓPEZ</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="separator-line"></div>
+
+        <!-- Sección de Diagnóstico -->
+        <div class="diagnosis-section">
+            <div class="diagnosis-title">DIAGNÓSTICO</div>
+            
+            <div class="diagnosis-content" id="diagnosis-content">
+                <ul class="diagnosis-items" id="diagnosis-list">
+                    <li class="diagnosis-item primary-diagnosis">
+                        <div class="diagnosis-code">DIAGNÓSTICO PRINCIPAL - CIE10: I10</div>
+                        <div class="diagnosis-description">HIPERTENSIÓN ARTERIAL ESENCIAL</div>
+                    </li>
+                    <li class="diagnosis-item secondary-diagnosis">
+                        <div class="diagnosis-code">DIAGNÓSTICO SECUNDARIO - CIE10: E78.0</div>
+                        <div class="diagnosis-description">HIPERCOLESTEROLEMIA PURA</div>
+                    </li>
+                    <li class="diagnosis-item secondary-diagnosis">
+                        <div class="diagnosis-code">DIAGNÓSTICO SECUNDARIO - CIE10: E11.9</div>
+                        <div class="diagnosis-description">DIABETES MELLITUS TIPO 2 SIN COMPLICACIONES</div>
+                    </li>
+                    <li class="diagnosis-item differential-diagnosis">
+                        <div class="diagnosis-code">DIAGNÓSTICO DIFERENCIAL - CIE10: I25.9</div>
+                        <div class="diagnosis-description">ENFERMEDAD CARDÍACA ISQUÉMICA CRÓNICA, NO ESPECIFICADA</div>
+                    </li>
+                </ul>
+                
+                <div style="margin-top: 30px; padding: 15px; background-color: #e8f4f8; border-radius: 5px;">
+                    <h4 style="margin: 0 0 10px 0; color: #0066cc;">OBSERVACIONES CLÍNICAS:</h4>
+                    <p style="margin: 0; line-height: 1.6;">
+                        Paciente femenina de 45 años con antecedentes familiares de hipertensión arterial y diabetes mellitus. 
+                        Consulta por cefalea occipital de moderada intensidad, episodios de mareo y visión borrosa ocasional 
+                        de 3 semanas de evolución. Al examen físico se evidencia tensión arterial elevada (160/95 mmHg), 
+                        sobrepeso (IMC: 28.5 kg/m²). 
+                        
+                        Laboratorios revelan glicemia en ayunas de 145 mg/dl, colesterol total 280 mg/dl, 
+                        triglicéridos 190 mg/dl. EKG sin alteraciones significativas.
+                        
+                        Se establece diagnóstico de hipertensión arterial esencial con factores de riesgo cardiovascular 
+                        asociados. Se inicia manejo farmacológico y medidas no farmacológicas.
+                    </p>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-radius: 5px;">
+                    <h4 style="margin: 0 0 10px 0; color: #856404;">PLAN DE MANEJO:</h4>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Inicio de IECA (Enalapril 10mg c/12h)</li>
+                        <li>Estatina (Atorvastatina 20mg/día)</li>
+                        <li>Metformina 500mg c/8h</li>
+                        <li>Dieta hiposódica e hipocalórica</li>
+                        <li>Ejercicio aeróbico moderado</li>
+                        <li>Control en 15 días</li>
+                        <li>Laboratorios de control en 1 mes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Firma -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-text">FIRMA Y SELLO DEL MÉDICO</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span id="footer-date"></span>
+        <span id="footer-time"></span>
+        <span>DIAGNÓSTICO: <span id="diagnosis-number">DX-2025-001</span></span>
+    </div>
+
+    <script>
+        // Configurar fecha y hora actual
+        function setupDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-ES');
+            const timeStr = now.toLocaleTimeString('es-ES');
+            
+            document.getElementById('report-date').textContent = dateStr;
+            document.getElementById('report-time').textContent = timeStr;
+            document.getElementById('footer-date').textContent = dateStr;
+            document.getElementById('footer-time').textContent = timeStr;
+        }
+
+        // Datos de ejemplo de diagnósticos
+        const diagnosticosEjemplo = [
+            {
+                fichaClinica: "FC-2025-001",
+                tipoDoc: "CC",
+                numeroDoc: "1234567890",
+                nombrePaciente: "MARÍA ELENA RODRÍGUEZ LÓPEZ",
+                diagnosticos: [
+                    {
+                        tipo: "principal",
+                        codigo: "I10",
+                        descripcion: "HIPERTENSIÓN ARTERIAL ESENCIAL"
+                    },
+                    {
+                        tipo: "secundario",
+                        codigo: "E78.0",
+                        descripcion: "HIPERCOLESTEROLEMIA PURA"
+                    },
+                    {
+                        tipo: "secundario",
+                        codigo: "E11.9",
+                        descripcion: "DIABETES MELLITUS TIPO 2 SIN COMPLICACIONES"
+                    }
+                ],
+                observaciones: "Paciente con factores de riesgo cardiovascular múltiples. Requiere manejo integral.",
+                plan: ["IECA", "Estatina", "Metformina", "Dieta", "Ejercicio", "Control en 15 días"]
+            },
+            {
+                fichaClinica: "FC-2025-002",
+                tipoDoc: "CC",
+                numeroDoc: "9876543210",
+                nombrePaciente: "CARLOS ANDRÉS JIMÉNEZ MORA",
+                diagnosticos: [
+                    {
+                        tipo: "principal",
+                        codigo: "J06.9",
+                        descripcion: "INFECCIÓN AGUDA DE LAS VÍAS RESPIRATORIAS SUPERIORES, NO ESPECIFICADA"
+                    },
+                    {
+                        tipo: "secundario",
+                        codigo: "R50.9",
+                        descripcion: "FIEBRE, NO ESPECIFICADA"
+                    }
+                ],
+                observaciones: "Cuadro viral típico. Evolución favorable esperada.",
+                plan: ["Sintomáticos", "Reposo", "Hidratación", "Control si empeora"]
+            }
+        ];
+
+        let diagnosticoActual = 0;
+
+        // Cargar diagnóstico
+        function loadDiagnostico(index = 0) {
+            const diagnostico = diagnosticosEjemplo[index];
+            
+            document.getElementById('fichaclinica').textContent = diagnostico.fichaClinica;
+            document.getElementById('tipo-doc').textContent = diagnostico.tipoDoc;
+            document.getElementById('numero-doc').textContent = diagnostico.numeroDoc;
+            document.getElementById('nombre-paciente').textContent = diagnostico.nombrePaciente;
+            
+            // Generar lista de diagnósticos
+            const diagnosisList = document.getElementById('diagnosis-list');
+            diagnosisList.innerHTML = '';
+            
+            diagnostico.diagnosticos.forEach(dx => {
+                const li = document.createElement('li');
+                li.className = `diagnosis-item ${dx.tipo === 'principal' ? 'primary-diagnosis' : 'secondary-diagnosis'}`;
+                li.innerHTML = `
+                    <div class="diagnosis-code">DIAGNÓSTICO ${dx.tipo.toUpperCase()} - CIE10: ${dx.codigo}</div>
+                    <div class="diagnosis-description">${dx.descripcion}</div>
+                `;
+                diagnosisList.appendChild(li);
+            });
+            
+            document.getElementById('diagnosis-number').textContent = `DX-2025-${String(index + 1).padStart(3, '0')}`;
+        }
+
+        // Función para agregar nuevo diagnóstico
+        function addDiagnosis() {
+            const diagnosisList = document.getElementById('diagnosis-list');
+            const newItem = document.createElement('li');
+            newItem.className = 'diagnosis-item secondary-diagnosis';
+            newItem.innerHTML = `
+                <div class="diagnosis-code">DIAGNÓSTICO SECUNDARIO - CIE10: <input type="text" style="border:none; background:transparent; width:80px;" placeholder="Código"></div>
+                <div class="diagnosis-description"><input type="text" style="border:none; background:transparent; width:100%;" placeholder="Descripción del diagnóstico"></div>
+            `;
+            diagnosisList.appendChild(newItem);
+        }
+
+        // Función para cambiar de diagnóstico
+        function nextDiagnosis() {
+            diagnosticoActual = (diagnosticoActual + 1) % diagnosticosEjemplo.length;
+            loadDiagnostico(diagnosticoActual);
+        }
+
+        function prevDiagnosis() {
+            diagnosticoActual = (diagnosticoActual - 1 + diagnosticosEjemplo.length) % diagnosticosEjemplo.length;
+            loadDiagnostico(diagnosticoActual);
+        }
+
+        // Función de impresión
+        function printDiagnosis() {
+            window.print();
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDateTime();
+            loadDiagnostico(0);
+            
+            // Agregar eventos de teclado
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'p') {
+                    e.preventDefault();
+                    printDiagnosis();
+                }
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    addDiagnosis();
+                }
+                if (e.key === 'ArrowRight') {
+                    nextDiagnosis();
+                }
+                if (e.key === 'ArrowLeft') {
+                    prevDiagnosis();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

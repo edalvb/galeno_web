@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquidación de Paciente - Sistema Galeno</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+        
+        .ficha-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .field {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: #2c3e50;
+        }
+        
+        .field-value {
+            color: #495057;
+            font-weight: bold;
+        }
+        
+        .services-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .services-table th {
+            background-color: #34495e;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            border: 1px solid #2c3e50;
+        }
+        
+        .services-table td {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+        }
+        
+        .services-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .services-table tbody tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .date-column {
+            text-align: center;
+            width: 80px;
+        }
+        
+        .service-column {
+            text-align: left;
+            width: 200px;
+        }
+        
+        .quantity-column, .value-column {
+            text-align: right;
+            width: 80px;
+        }
+        
+        .total-section {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .payment-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #e8f4fd;
+        }
+        
+        .payment-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .footer {
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .page-info {
+            font-weight: bold;
+        }
+        
+        .navigation {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .nav-button:hover {
+            background: #0056b3;
+        }
+        
+        .currency {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-paid {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        @media print {
+            body { 
+                background: white; 
+                padding: 0; 
+            }
+            .container { 
+                border: none; 
+                box-shadow: none; 
+                max-width: none; 
+            }
+            .navigation { 
+                display: none; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-title">LIQUIDACIÓN DE PACIENTE</div>
+        
+        <div id="liquidacion-content">
+            <!-- Contenido de liquidación dinámico se carga aquí -->
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-button" onclick="previousLiquidacion()">← Anterior</button>
+            <button class="nav-button" onclick="nextLiquidacion()">Siguiente →</button>
+            <button class="nav-button" onclick="printLiquidacion()">🖨️ Imprimir</button>
+        </div>
+    </div>
+
+    <script>
+        const liquidacionesPaciente = [
+            {
+                fichaclinica: "HC-001",
+                paciente: {
+                    nombres: "Juan Carlos González",
+                    apellidos: "Rodríguez",
+                    tipdoc: "CI",
+                    nrodoc: "12345678",
+                    telefono: "(604) 123-4567",
+                    direccion: "Calle 45 # 23-15"
+                },
+                servicios: [
+                    {
+                        fecha: "20/01/2024",
+                        servicio: "Consulta Médica General",
+                        cantidad: 1,
+                        valorUnitario: 50000,
+                        valorTotal: 50000
+                    },
+                    {
+                        fecha: "20/01/2024",
+                        servicio: "Hemograma Completo",
+                        cantidad: 1,
+                        valorUnitario: 25000,
+                        valorTotal: 25000
+                    },
+                    {
+                        fecha: "20/01/2024",
+                        servicio: "Bioquímica Sanguínea",
+                        cantidad: 1,
+                        valorUnitario: 35000,
+                        valorTotal: 35000
+                    },
+                    {
+                        fecha: "25/01/2024",
+                        servicio: "Ecografía Abdominal",
+                        cantidad: 1,
+                        valorUnitario: 80000,
+                        valorTotal: 80000
+                    }
+                ],
+                descuentos: 10000,
+                impuestos: 0,
+                copago: 15000,
+                estado: "PENDIENTE",
+                observaciones: "Paciente con copago pendiente de pago. Favor coordinar con administración."
+            },
+            {
+                fichaclinica: "HC-002",
+                paciente: {
+                    nombres: "Ana María López",
+                    apellidos: "de Martínez",
+                    tipdoc: "CI",
+                    nrodoc: "87654321",
+                    telefono: "(604) 987-6543",
+                    direccion: "Carrera 30 # 50-25"
+                },
+                servicios: [
+                    {
+                        fecha: "22/01/2024",
+                        servicio: "Control Prenatal",
+                        cantidad: 1,
+                        valorUnitario: 60000,
+                        valorTotal: 60000
+                    },
+                    {
+                        fecha: "22/01/2024",
+                        servicio: "Ecografía Obstétrica",
+                        cantidad: 1,
+                        valorUnitario: 90000,
+                        valorTotal: 90000
+                    },
+                    {
+                        fecha: "22/01/2024",
+                        servicio: "Perfil Obstétrico",
+                        cantidad: 1,
+                        valorUnitario: 45000,
+                        valorTotal: 45000
+                    }
+                ],
+                descuentos: 5000,
+                impuestos: 0,
+                copago: 0,
+                estado: "PAGADO",
+                observaciones: "Liquidación completa. Servicios cubiertos al 100% por EPS."
+            }
+        ];
+
+        let currentIndex = 0;
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function calculateTotals(servicios, descuentos, impuestos, copago) {
+            const subtotal = servicios.reduce((sum, servicio) => sum + servicio.valorTotal, 0);
+            const totalDescuentos = descuentos || 0;
+            const totalImpuestos = impuestos || 0;
+            const totalCopago = copago || 0;
+            const total = subtotal - totalDescuentos + totalImpuestos + totalCopago;
+            
+            return {
+                subtotal,
+                descuentos: totalDescuentos,
+                impuestos: totalImpuestos,
+                copago: totalCopago,
+                total
+            };
+        }
+
+        function loadLiquidacion(index) {
+            const liquidacion = liquidacionesPaciente[index];
+            const content = document.getElementById('liquidacion-content');
+            const totales = calculateTotals(liquidacion.servicios, liquidacion.descuentos, liquidacion.impuestos, liquidacion.copago);
+            
+            content.innerHTML = `
+                <div class="ficha-section">
+                    <div class="field">
+                        <span class="field-label">FICHA CLÍNICA:</span>
+                        <span class="field-value">${liquidacion.fichaclinica}</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">PACIENTE:</span>
+                        <span class="field-value">${liquidacion.paciente.nombres} ${liquidacion.paciente.apellidos}</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">DOCUMENTO:</span>
+                        <span class="field-value">${liquidacion.paciente.tipdoc} ${liquidacion.paciente.nrodoc}</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">TELÉFONO:</span>
+                        <span class="field-value">${liquidacion.paciente.telefono}</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">DIRECCIÓN:</span>
+                        <span class="field-value">${liquidacion.paciente.direccion}</span>
+                    </div>
+                </div>
+                
+                <div class="services-section">
+                    <div class="section-title">SERVICIOS PRESTADOS</div>
+                    
+                    <div class="table-container">
+                        <table class="services-table">
+                            <thead>
+                                <tr>
+                                    <th class="date-column">FECHA</th>
+                                    <th class="service-column">SERVICIO</th>
+                                    <th class="quantity-column">CANT.</th>
+                                    <th class="value-column">VALOR UNIT.</th>
+                                    <th class="value-column">VALOR TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${liquidacion.servicios.map(servicio => `
+                                    <tr>
+                                        <td class="date-column">${servicio.fecha}</td>
+                                        <td class="service-column">${servicio.servicio}</td>
+                                        <td class="quantity-column">${servicio.cantidad}</td>
+                                        <td class="value-column currency">${formatCurrency(servicio.valorUnitario)}</td>
+                                        <td class="value-column currency">${formatCurrency(servicio.valorTotal)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="total-section">
+                    <div class="total-row">
+                        <span>SUBTOTAL:</span>
+                        <span class="currency">${formatCurrency(totales.subtotal)}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>DESCUENTOS:</span>
+                        <span class="currency">- ${formatCurrency(totales.descuentos)}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>IMPUESTOS:</span>
+                        <span class="currency">${formatCurrency(totales.impuestos)}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>COPAGO:</span>
+                        <span class="currency">${formatCurrency(totales.copago)}</span>
+                    </div>
+                    <div class="total-row" style="border-top: 1px solid white; padding-top: 8px; margin-top: 8px;">
+                        <span><strong>TOTAL A PAGAR:</strong></span>
+                        <span class="currency"><strong>${formatCurrency(totales.total)}</strong></span>
+                    </div>
+                </div>
+                
+                <div class="payment-section">
+                    <div class="section-title">INFORMACIÓN DE PAGO</div>
+                    <div class="payment-info">
+                        <div>
+                            <div class="field">
+                                <span class="field-label">ESTADO:</span>
+                                <span class="field-value ${liquidacion.estado === 'PAGADO' ? 'status-paid' : 'status-pending'}">${liquidacion.estado}</span>
+                            </div>
+                            <div class="field">
+                                <span class="field-label">FECHA EMISIÓN:</span>
+                                <span class="field-value">${new Date().toLocaleDateString('es-ES')}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="field">
+                                <span class="field-label">MÉTODO PAGO:</span>
+                                <span class="field-value">${liquidacion.estado === 'PAGADO' ? 'EPS' : 'Pendiente'}</span>
+                            </div>
+                            <div class="field">
+                                <span class="field-label">REFERENCIA:</span>
+                                <span class="field-value">LIQ-${String(index + 1).padStart(3, '0')}-2024</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <div class="field-label">OBSERVACIONES:</div>
+                        <div style="margin-top: 5px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: 11px;">
+                            ${liquidacion.observaciones}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <div>
+                        <span>Fecha: ${new Date().toLocaleDateString('es-ES')}</span>
+                        <span style="margin-left: 20px;">Hora: ${new Date().toLocaleTimeString('es-ES')}</span>
+                    </div>
+                    <div class="page-info">PÁGINA: 1</div>
+                </div>
+            `;
+        }
+
+        function nextLiquidacion() {
+            currentIndex = (currentIndex + 1) % liquidacionesPaciente.length;
+            loadLiquidacion(currentIndex);
+        }
+
+        function previousLiquidacion() {
+            currentIndex = (currentIndex - 1 + liquidacionesPaciente.length) % liquidacionesPaciente.length;
+            loadLiquidacion(currentIndex);
+        }
+
+        function printLiquidacion() {
+            window.print();
+        }
+
+        // Cargar primera liquidación al inicio
+        loadLiquidacion(0);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextLiquidacion();
+            if (e.key === 'ArrowLeft') previousLiquidacion();
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printLiquidacion();
+            }
+        });
+    </script>
+</body>
+</html>
