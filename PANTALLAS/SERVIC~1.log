@@ -1,0 +1,19 @@
+Línea 266: la clase MSDataGridLib.DataGrid del control grd_servicios no era una clase de control cargada.
+Línea 698: la clase MSComctlLib.TabStrip del control TAB_SERVICIOS no era una clase de control cargada.
+Línea 272: el nombre de la propiedad _ExtentX de grd_servicios no es válido.
+Línea 273: el nombre de la propiedad _ExtentY de grd_servicios no es válido.
+Línea 274: el nombre de la propiedad _Version de grd_servicios no es válido.
+Línea 275: el nombre de la propiedad AllowUpdate de grd_servicios no es válido.
+Línea 277: el nombre de la propiedad HeadLines de grd_servicios no es válido.
+Línea 278: el nombre de la propiedad RowHeight de grd_servicios no es válido.
+Línea 287: el nombre de la propiedad HeadFont de grd_servicios no es válido.
+Línea 297: el nombre de la propiedad Caption de grd_servicios no es válido.
+Línea 298: el nombre de la propiedad ColumnCount de grd_servicios no es válido.
+Línea 311: el nombre de la propiedad Column00 de grd_servicios no es válido.
+Línea 324: el nombre de la propiedad Column01 de grd_servicios no es válido.
+Línea 325: el nombre de la propiedad SplitCount de grd_servicios no es válido.
+Línea 331: el nombre de la propiedad Split0 de grd_servicios no es válido.
+Línea 704: el nombre de la propiedad _ExtentX de TAB_SERVICIOS no es válido.
+Línea 705: el nombre de la propiedad _ExtentY de TAB_SERVICIOS no es válido.
+Línea 706: el nombre de la propiedad _Version de TAB_SERVICIOS no es válido.
+Línea 713: el nombre de la propiedad Tabs de TAB_SERVICIOS no es válido.

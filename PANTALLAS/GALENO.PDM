@@ -1,0 +1,310 @@
+[Root]
+Most Recent Package=Paquete de instalación estándar 1
+
+[Package|Paquete de instalación estándar 1|SGLAC]
+Icon1=SGLAC.exe
+Title1=SGLAC
+StartIn1=$(AppPath)
+Key1=Icon1
+
+
+[Package|Paquete de instalación estándar 1|SGLAC Versión 1.0]
+Icon1=SGLAC.exe
+Title1=SGLAC Versión 1.0
+StartIn1=$(AppPath)
+Key1=Icon1
+
+[Package|Paquete de instalación estándar 1|Root]
+SubWizProgID=PDWizard.SetupPkgSubWiz
+BuildFolder=C:\GALENO\PAQUETE
+
+[Package|Paquete de instalación estándar 1|Configure DAO ISAMs]
+Applicable=Yes
+Text=Yes
+Paradox=Yes
+Excel=Yes
+Xbase=Yes
+Jet 2.x=Yes
+
+[Package|Paquete de instalación estándar 1|Configure DAO ODBC]
+JetWorkspace=Yes
+ODBCDirect=Yes
+
+[Package|Paquete de instalación estándar 1|Files Found]
+
+[Package|Paquete de instalación estándar 1|Files Released]
+SSCSDK32.DLL=
+
+[Package|Paquete de instalación estándar 1|Missing Dependency Information]
+C:\Archivos de programa\Microsoft Office\Office\MSOWC.DLL=
+C:\WINDOWS\SYSTEM\DAXCTLE.OCX=
+C:\Archivos de programa\Archivos comunes\SYSTEM\ADO\MSADO20.TLB=
+C:\Windows\SYSTEM32\DBLIST32.OCX=
+C:\Windows\SYSTEM32\PICCLP32.OCX=
+C:\Windows\SYSTEM32\MSRDC20.OCX=
+C:\Windows\SYSTEM32\MSOWC.DLL=
+C:\Windows\SYSTEM32\MSHFLXGD.OCX=
+C:\Windows\SYSTEM32\MSCOMCTL.OCX=
+C:\Windows\SYSTEM32\MSDATREP.OCX=
+C:\Windows\SYSTEM32\DBGRID32.OCX=
+C:\Windows\SYSTEM32\MSDATLST.OCX=
+C:\Windows\SYSTEM32\MSDATGRD.OCX=
+C:\Windows\SYSTEM32\daxctle.ocx=
+C:\Windows\SYSTEM32\Msmask32.ocx=
+C:\Windows\SYSTEM32\MSADODC.OCX=
+C:\Windows\SYSTEM32\MSDBRPTR.DLL=
+C:\Windows\SYSTEM32\MSSTDFMT.DLL=
+C:\Windows\SYSTEM32\MSBIND.DLL=
+C:\Windows\SYSTEM32\odbccp32.dll=
+C:\WINNT\system32\FM20.DLL=
+C:\Archivos de programa\Archivos comunes\Microsoft Shared\Triedit\DTCRT.DLL=
+C:\Archivos de programa\Microsoft Office\Office10\MSOWC.DLL=
+C:\WINNT\system32\odbccp32.dll=
+
+[Package|Paquete de instalación estándar 1|Out-of-Date Dependency Information]
+C:\WINNT\system32\MSRDO20.DLL=
+C:\WINNT\system32\Comdlg32.ocx=
+C:\WINNT\system32\Mscomctl.ocx=
+C:\WINNT\system32\MSSTDFMT.DLL=
+
+[Package|Paquete de instalación estándar 1|Files Added]
+
+[Package|Paquete de instalación estándar 1|Files Removed]
+
+[Package|Paquete de instalación estándar 1|Files In Project]
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\COMCAT.DLL=Yes
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\MDAC_TYP.EXE=Yes
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\SETUP.EXE=Yes
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\SETUP1.EXE=Yes
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\ST6UNST.EXE=Yes
+C:\GALENO\GALENO.exe=Yes
+C:\WINNT\system32\msvbvm60.dll=Yes
+C:\WINNT\system32\oleaut32.dll=Yes
+C:\WINNT\system32\olepro32.dll=Yes
+C:\WINNT\system32\asycfilt.dll=Yes
+C:\WINNT\system32\stdole2.tlb=Yes
+C:\WINNT\system32\VB6ES.DLL=Yes
+C:\WINNT\system32\odbccp32.dll=Yes
+C:\WINNT\system32\MSSTDFMT.DLL=Yes
+C:\WINNT\system32\STDFTES.DLL=Yes
+C:\WINNT\system32\MSBIND.DLL=Yes
+C:\Archivos de programa\Archivos comunes\System\ado\msado20.tlb=Yes
+C:\WINNT\system32\MSADODC.OCX=Yes
+C:\WINNT\system32\ADODCES.DLL=Yes
+C:\WINNT\system32\MSMASK32.OCX=Yes
+C:\WINNT\system32\MSMSKES.DLL=Yes
+C:\WINNT\system32\MSDATGRD.OCX=Yes
+C:\WINNT\system32\DATGDES.DLL=Yes
+C:\WINNT\system32\MSDATLST.OCX=Yes
+C:\WINNT\system32\DATLSES.DLL=Yes
+C:\WINNT\system32\Mscomctl.ocx=Yes
+C:\WINNT\system32\MSCMCES.DLL=Yes
+C:\WINNT\system32\MSHFLXGD.OCX=Yes
+C:\WINNT\system32\MSHFGES.DLL=Yes
+C:\Archivos de programa\Microsoft Office\Office10\MSOWC.DLL=Yes
+C:\WINNT\system32\Comdlg32.ocx=Yes
+C:\WINNT\system32\CMDLGES.DLL=Yes
+C:\Archivos de programa\Archivos comunes\Microsoft Shared\DAO\DAO350.DLL=Yes
+C:\WINNT\system32\MSJET35.DLL=Yes
+C:\WINNT\system32\MSJTER35.DLL=Yes
+C:\WINNT\system32\MSJINT35.DLL=Yes
+C:\WINNT\system32\vbajet32.dll=Yes
+C:\WINNT\system32\expsrv.dll=Yes
+C:\WINNT\system32\MSRD2X35.DLL=Yes
+C:\WINNT\system32\MSREPL35.DLL=Yes
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\MSVCRT40.DLL=Yes
+C:\WINNT\system32\VB5DB.DLL=Yes
+C:\WINNT\system32\MSCOMCT2.OCX=Yes
+C:\WINNT\system32\MSCC2ES.DLL=Yes
+C:\Archivos de programa\Seagate Software\Crystal Reports\craxdrt.dll=Yes
+C:\WINNT\system32\implode.dll=Yes
+C:\WINNT\system32\crpaig32.dll=Yes
+C:\WINNT\system32\p2smon.dll=Yes
+C:\WINNT\system32\MSDBRPTR.DLL=Yes
+C:\WINNT\system32\DBRPRES.DLL=Yes
+C:\Archivos de programa\Archivos comunes\Microsoft Shared\Triedit\DTCRT.DLL=Yes
+C:\WINNT\system32\FM20.DLL=Yes
+C:\WINNT\system32\MSEXCL35.dll=Yes
+C:\WINNT\system32\MSRDO20.DLL=Yes
+C:\WINNT\system32\RDOCURS.DLL=Yes
+C:\WINNT\system32\RDO20ES.DLL=Yes
+C:\WINNT\system32\MSPDOX35.DLL=Yes
+C:\WINNT\system32\MSTEXT35.DLL=Yes
+C:\WINNT\system32\MSXBSE35.DLL=Yes
+C:\WINNT\system32\VB6STKIT.DLL=Yes
+
+[Package|Paquete de instalación estándar 1|Configure Registry Files]
+Applicable=No
+
+[Package|Paquete de instalación estándar 1|Configure Remote Servers]
+Applicable=No
+
+[Package|Paquete de instalación estándar 1|Install Locations]
+C:\ARTURO\sglac\TESISCOM\SGLAC.exe=$(AppPath)
+C:\WINDOWS\SYSTEM\MSVBVM60.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\OLEAUT32.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\OLEPRO32.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\ASYCFILT.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\STDOLE2.TLB=$(WinSysPathSysFile)
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\COMCAT.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\VB6ES.DLL=$(WinSysPath)
+C:\Archivos de programa\Archivos comunes\SYSTEM\ADO\MSADO20.TLB=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSBIND.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSSTDFMT.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\STDFTES.DLL=$(WinSysPath)
+C:\Archivos de programa\Archivos comunes\designer\MSDERUN.DLL=$(CommonFiles)\designer
+C:\WINDOWS\SYSTEM\MSDBRPTR.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DBRPRES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSADODC.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\ADODCES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\Msmask32.ocx=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSMSKES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DAXCTLE.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSDATGRD.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DATGDES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSDATLST.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DATLSES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\dbgrid32.ocx=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DBGRDES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSDATREP.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DATRPES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSCOMCTL.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSCMCES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSHFLXGD.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSHFGES.DLL=$(WinSysPath)
+C:\Archivos de programa\Microsoft Office\Office\MSOWC.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSRDC20.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\MSRDO20.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\RDOCURS.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\RDO20ES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\RDC20ES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\PICCLP32.OCX=$(WinSysPath)
+C:\WINDOWS\SYSTEM\PCCLPES.DLL=$(WinSysPath)
+C:\WINDOWS\SYSTEM\dblist32.ocx=$(WinSysPath)
+C:\WINDOWS\SYSTEM\DBLSTES.DLL=$(WinSysPath)
+C:\Archivos de programa\Archivos comunes\Microsoft Shared\DAO\DAO350.DLL=$(MSDAOPath)
+C:\WINDOWS\SYSTEM\MSJET35.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\MSJTER35.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\MSJINT35.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\VBAJET32.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\EXPSRV.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\MSRD2X35.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\MSREPL35.DLL=$(WinSysPathSysFile)
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\MSVCRT40.DLL=$(WinSysPathSysFile)
+C:\WINDOWS\SYSTEM\VB5DB.DLL=$(WinSysPath)
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\MDAC_TYP.EXE=$(AppPath)
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\SETUP.EXE=$(AppPath)
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\SETUP1.EXE=$(WinPath)
+C:\WINDOWS\SYSTEM\VB6STKIT.DLL=$(WinSysPathSysFile)
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\ST6UNST.EXE=$(WinPath)
+C:\sglac\Ejecutable\SGLAC.exe=$(AppPath)
+C:\Windows\SYSTEM32\msvbvm60.dll=$(WinSysPathSysFile)
+C:\Windows\SYSTEM32\oleaut32.dll=$(WinSysPathSysFile)
+C:\Windows\SYSTEM32\olepro32.dll=$(WinSysPathSysFile)
+C:\Windows\SYSTEM32\asycfilt.dll=$(WinSysPathSysFile)
+C:\Windows\SYSTEM32\stdole2.tlb=$(WinSysPathSysFile)
+C:\Windows\SYSTEM32\VB6ES.DLL=$(WinSysPath)
+C:\Windows\SYSTEM32\odbccp32.dll=$(WinSysPath)
+C:\Windows\SYSTEM32\MSBIND.DLL=$(WinSysPath)
+C:\Windows\SYSTEM32\MSSTDFMT.DLL=$(WinSysPath)
+C:\Windows\SYSTEM32\MSDBRPTR.DLL=$(WinSysPath)
+C:\Windows\SYSTEM32\MSADODC.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\Msmask32.ocx=$(WinSysPath)
+C:\Windows\SYSTEM32\daxctle.ocx=$(WinSysPath)
+C:\Windows\SYSTEM32\MSDATGRD.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\MSDATLST.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\DBGRID32.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\MSDATREP.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\MSCOMCTL.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\MSHFLXGD.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\MSOWC.DLL=$(WinSysPath)
+C:\Windows\SYSTEM32\MSRDC20.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\PICCLP32.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\DBLIST32.OCX=$(WinSysPath)
+C:\Windows\SYSTEM32\VB6STKIT.DLL=$(WinSysPathSysFile)
+C:\GALENO\GALENO.exe=$(AppPath)
+C:\WINNT\system32\msvbvm60.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\oleaut32.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\olepro32.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\asycfilt.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\stdole2.tlb=$(WinSysPathSysFile)
+C:\WINNT\system32\VB6ES.DLL=$(WinSysPath)
+C:\WINNT\system32\odbccp32.dll=$(WinSysPath)
+C:\WINNT\system32\MSSTDFMT.DLL=$(WinSysPath)
+C:\WINNT\system32\STDFTES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSBIND.DLL=$(WinSysPath)
+C:\WINNT\system32\MSADODC.OCX=$(WinSysPath)
+C:\WINNT\system32\ADODCES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSMASK32.OCX=$(WinSysPath)
+C:\WINNT\system32\MSMSKES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSDATGRD.OCX=$(WinSysPath)
+C:\WINNT\system32\DATGDES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSDATLST.OCX=$(WinSysPath)
+C:\WINNT\system32\DATLSES.DLL=$(WinSysPath)
+C:\WINNT\system32\Mscomctl.ocx=$(WinSysPath)
+C:\WINNT\system32\MSCMCES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSHFLXGD.OCX=$(WinSysPath)
+C:\WINNT\system32\MSHFGES.DLL=$(WinSysPath)
+C:\Archivos de programa\Microsoft Office\Office10\MSOWC.DLL=$(WinSysPath)
+C:\WINNT\system32\Comdlg32.ocx=$(WinSysPath)
+C:\WINNT\system32\CMDLGES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSJET35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\MSJTER35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\MSJINT35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\vbajet32.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\expsrv.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\MSRD2X35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\MSREPL35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\VB5DB.DLL=$(WinSysPath)
+C:\WINNT\system32\MSCOMCT2.OCX=$(WinSysPath)
+C:\WINNT\system32\MSCC2ES.DLL=$(WinSysPath)
+C:\Archivos de programa\Seagate Software\Crystal Reports\craxdrt.dll=$(WinSysPath)
+C:\WINNT\system32\implode.dll=$(AppPath)
+C:\WINNT\system32\crpaig32.dll=$(WinSysPath)
+C:\WINNT\system32\p2smon.dll=$(WinSysPath)
+C:\WINNT\system32\MSDBRPTR.DLL=$(WinSysPath)
+C:\WINNT\system32\DBRPRES.DLL=$(WinSysPath)
+C:\Archivos de programa\Archivos comunes\Microsoft Shared\Triedit\DTCRT.DLL=$(WinSysPath)
+C:\WINNT\system32\FM20.DLL=$(WinSysPath)
+C:\WINNT\system32\MSEXCL35.dll=$(WinSysPathSysFile)
+C:\WINNT\system32\MSRDO20.DLL=$(WinSysPath)
+C:\WINNT\system32\RDOCURS.DLL=$(WinSysPath)
+C:\WINNT\system32\RDO20ES.DLL=$(WinSysPath)
+C:\WINNT\system32\MSPDOX35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\MSTEXT35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\MSXBSE35.DLL=$(WinSysPathSysFile)
+C:\WINNT\system32\VB6STKIT.DLL=$(WinSysPathSysFile)
+
+[Package|Paquete de instalación estándar 1|Configure Shared Files]
+Applicable=Yes
+C:\ARTURO\sglac\TESISCOM\SGLAC.exe=No
+C:\Archivos de programa\Microsoft Visual Studio\VB98\Wizards\PDWizard\Redist\MDAC_TYP.EXE=No
+C:\sglac\Ejecutable\SGLAC.exe=No
+C:\GALENO\GALENO.exe=Yes
+C:\WINNT\system32\implode.dll=No
+
+[Package|Paquete de instalación estándar 1|Distribution]
+Type=single
+Size=1.44 MB
+Title=GALENO Versión 1.0
+
+[Package|Paquete de instalación estándar 1|IconGroups]
+Group0=GALENO
+PrivateGroup0=Falso
+Parent0=$(Programs)
+
+[Package|Paquete de instalación estándar 1|GALENO]
+Icon1=GALENO.exe
+Title1=GALENO
+StartIn1=$(AppPath)
+Key1=Icon1
+
+[Package|Paquete de instalación estándar 1|Package]
+PackageFolder=C:\GALENO\PAQUETE
+ProjectFolder=C:\GALENO\PANTALLAS
+ServerSideCab=
+File1=C:\GALENO\PAQUETE\setup.exe
+File2=C:\GALENO\PAQUETE\Setup.Lst
+File3=C:\GALENO\PAQUETE\GALENO.CAB
+Handler1=PDWizard.FolderDplySubWiz
+Handler2=PDWizard.WebPostDplySubWiz
