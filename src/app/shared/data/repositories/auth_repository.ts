@@ -9,6 +9,7 @@ export abstract class IAuthRepository {
   abstract signIn(
     request: LoginRequestDto,
   ): Promise<ResponseMutationModel<string>>;
+  abstract verifyAndRefreshToken(): Promise<ResponseMutationModel<string>>;
 }
 
 @injectable()
@@ -42,6 +43,34 @@ export class AuthRepository extends IAuthRepository {
           error instanceof AxiosError
             ? error.response?.data.error.message
             : "Error logging in. Please try again.",
+      });
+    }
+  }
+
+  async verifyAndRefreshToken(): Promise<ResponseMutationModel<string>> {
+    try {
+      const response = await this.axiosClient.post({
+        url: `/api/v1/auth/verify-and-refresh-token`,
+      });
+
+      if (response.status === 201) {
+        const responseDto = new ResponseWrapperDto<string>(response.data);
+
+        return new ResponseMutationModel({
+          success: true,
+          message: responseDto.message ?? "Token verified and refreshed",
+          data: responseDto.data,
+        });
+      } else {
+        throw new Error(response.data.error.message);
+      }
+    } catch (error) {
+      return new ResponseMutationModel({
+        success: false,
+        message:
+          error instanceof AxiosError
+            ? error.response?.data?.error?.message
+            : "Error verifying and refreshing token",
       });
     }
   }

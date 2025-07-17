@@ -1,8 +1,9 @@
 import { LoginRequestDto } from "@shared/data/dtos/request/request_login_dto";
 import { ResponseJwtDto } from "@shared/data/dtos/response/response_jwt_dto";
 import { IAuthRepository } from "@shared/data/repositories/auth_repository";
+import { RoleType } from "@shared/domain";
 import { ResponseMutationModel } from "@shared/domain/response_mutation_model";
-import { RoleType, UserSessionModel } from "@shared/domain/user_session_model";
+import { UserSessionModel } from "@shared/domain/user_session_model";
 import { sessionDataStateProvider } from "@shared/presentation/states/session_data";
 import { sl } from "@utils/dependency_injection";
 import { Keys } from "@utils/keys";
