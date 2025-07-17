@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+      font-family: 'Sora', sans-serif;
+      scroll-behavior: smooth;
+    }
+  }
+
+/* src/index.css o src/app/globals.css */
+.notification-dropdown-menu {
+  position: absolute !important;
+  left: auto !important;
+  right: 0 !important;
+  top: 100% !important;
+  margin-top: 0.5rem !important;
+  z-index: 9999 !important;
+  min-width: 20rem !important;
+  width: 20rem !important;
+  max-width: 90vw !important;
+}
